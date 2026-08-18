@@ -31,9 +31,9 @@ in the same target repo (`CMS-external-integrations`) since both are `backend` k
 
 | # | Decision | Rationale | Affects | Cited by |
 |---|----------|-----------|---------|----------|
-| XD-0001 | Both units are stateless server-side proxies; provider/system credentials and base URLs are read from secure configuration and never appear in any response body sent to a browser | ARCH-4, ARCH-5, G2, G4 — this is the one property M1 measures across both integrations | U1, U2 | _pending units_ |
-| XD-0002 | The address-suggest response item shape (`{ line1, city, state, zip }`) exactly matches CAP-CMS-0003/XD-0004's address sub-resource shape | Lets CAP-CMS-0003's frontend fill a form field-for-field from a suggestion with no reshaping | U1, and (cross-capability) CAP-CMS-0003 | _pending units_ |
-| XD-0003 | The policy-read response includes a server-computed `deepLinkUrl` per policy (healthcare vs. underwriter page, per `classId` 15/16/17), rather than returning the raw base URL and producer id for the client to assemble | Keeps FR-POL-3's configuration values (base URL, producer id) off the browser entirely — the client only ever receives a ready-to-open link, satisfying XD-0001 for this specific case | U2 | _pending units_ |
+| XD-0001 | Both units are stateless server-side proxies; provider/system credentials and base URLs are read from secure configuration and never appear in any response body sent to a browser | ARCH-4, ARCH-5, G2, G4 — this is the one property M1 measures across both integrations | U1, U2 | UNIT-CMS-0009, UNIT-CMS-0010 |
+| XD-0002 | The address-suggest response item shape (`{ line1, city, state, zip }`) exactly matches CAP-CMS-0003/XD-0004's address sub-resource shape | Lets CAP-CMS-0003's frontend fill a form field-for-field from a suggestion with no reshaping | U1, and (cross-capability) CAP-CMS-0003 | UNIT-CMS-0009 |
+| XD-0003 | The policy-read response includes a server-computed `deepLinkUrl` per policy (healthcare vs. underwriter page, per `classId` 15/16/17), rather than returning the raw base URL and producer id for the client to assemble | Keeps FR-POL-3's configuration values (base URL, producer id) off the browser entirely — the client only ever receives a ready-to-open link, satisfying XD-0001 for this specific case | U2 | UNIT-CMS-0010 |
 
 ## Shared database schema
 
