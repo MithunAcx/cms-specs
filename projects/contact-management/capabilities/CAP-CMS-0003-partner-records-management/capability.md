@@ -22,6 +22,8 @@ updated: 2026-08-18
 >
 > **FR-BRK-2** — On save, the system shall persist the brokerage (reusing the legacy `PPSP_AddBrokerageEntry` logic or an equivalent parameterized insert), obtain the new `ProducerNumber`, and navigate the user to the Brokerage Detail screen for the new record so brokers and activity can be added immediately.
 >
+> **FR-BRK-3** — Address entry shall be assisted by US address autocomplete (§5.8). A cancel action returns to the Directory.
+>
 > **FR-BRK-4** — The system shall let an Editor view and edit a brokerage's master details: name, address, city, state, zip, phone, fax, tax id, assigned underwriter, status, contract-received date, and history flag.
 >
 > **FR-BRK-5** — Phone and fax shall display in formatted `(nnn) nnn-nnnn` form and be normalized on save; the read-only ePay/AccountCode shall be displayed.
@@ -38,6 +40,8 @@ updated: 2026-08-18
 >
 > **FR-AGY-2** — On save, the system shall persist the agency and run account-code generation (equivalent of `ppsp_add_accountcode`), then confirm via a dialog offering two choices: go to Agency Detail for the new agency, or add another agency.
 >
+> **FR-AGY-3** — Address entry shall use US autocomplete.
+>
 > **FR-AGY-4** — The system shall let an Editor view and edit an agency's master details: name, address, city, state, zip, phone, billing contact, billing contact phone, notes, agency number ("G1 Agency ID"), and the High Potential, Premium Financing, and History flags.
 >
 > **FR-AGY-5** — Phone numbers shall be normalized (punctuation stripped) on save.
@@ -48,9 +52,11 @@ updated: 2026-08-18
 >
 > **FR-CGA-1** — The system shall let an Editor view and edit CGA records in a grid keyed by CGA id, supporting inline add and edit of: agent name, address, city, state, zip, email, phone, and associated agency id.
 >
+> **FR-CGA-2** — Address entry shall use US autocomplete, filling city/state/zip for the edited row.
+>
 > **FR-CGA-3** — CGA inserts shall write to the **CGA table** (`PP_Agency_CGA`) — correcting the legacy bug that inserted into `pp_agent`.
 >
-> **FR-CGA-4** — CGA phone shall be handled as a string (not a float), preserving formatting.
+> **FR-CGA-4** — CGA phone shall be handled as a string (not a float), preserving formatting; a back action returns to the Directory.
 >
 > **FR-REF-1** — The system shall maintain and serve lookup lists that populate dropdowns: US states, broker types, agent types, broker statuses, and task/activity statuses (the last filtered by `TskType_ID = 2` and ordered by `orderBy`).
 >
@@ -93,6 +99,7 @@ updated: 2026-08-18
 - Search/discovery of partners — owned by CAP-CMS-0002 (Partner Directory & Search); this capability starts from "I already know which brokerage/agency/CGA I want."
 - Contact-activity logging against a brokerage or agency — owned by CAP-CMS-0004 (Contact Activity & Follow-up Tracking), even though its grid is embedded in the Brokerage/Agency Detail screens this capability owns.
 - Policy display/deep-linking on the Brokerage/Agency Detail screens — owned by CAP-CMS-0005 (External Integrations).
+- The US address-autocomplete mechanism itself (FR-BRK-3, FR-AGY-3, FR-CGA-2's "use US autocomplete" clauses) — owned by CAP-CMS-0005 (External Integrations); this capability only consumes that capability's suggest-and-fill contract on its address forms, and owns the surrounding navigation (e.g. cancel/back returns to the Directory) those same FR rows also specify.
 - Promoting "Assigned Underwriter" to a managed reference entity — confirmed to stay free text (intake Q7); `BAssignedUW` remains a plain field on the brokerage record, not a lookup this capability administers.
 - The one-time cutover of existing legacy data into this capability's new schema — owned by CAP-CMS-0006 (Legacy Data Migration); this capability defines the target schema and CRUD behavior, migration owns getting existing rows into it.
 - Single sign-on, corporate identity-provider federation, and how requests are authenticated — owned by CAP-CMS-0001.
