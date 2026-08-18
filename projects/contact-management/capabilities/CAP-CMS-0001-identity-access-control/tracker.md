@@ -17,7 +17,7 @@ and still be missing a baseline on M2 — that is what this file is for.
 **Capability status:** draft
 **Derived status:** draft — no units exist yet
 **Units:** 0
-**Next action:** Step 2 — Outcome measures — M3 needs an intake `O<n>` citation (or an intake addendum); run `ba-capability-split`
+**Next action:** Step 7 — Units scaffolded — PR `capability.md` + `capability-design.md` for `pm-spec-review` (capability mode), get it merged, then run `ba-unit-split`
 **Last updated:** 2026-08-18
 
 ---
@@ -27,7 +27,7 @@ and still be missing a baseline on M2 — that is what this file is for.
 | # | Step | Artifact | Owning skill | Status |
 |---|------|----------|--------------|--------|
 | 1 | Ask frozen | `capability.md` § Original ask | `ba-capability-split` | ✅ Done |
-| 2 | Outcome measures | § Outcome measures | `ba-capability-split` | 🟡 In Progress |
+| 2 | Outcome measures | § Outcome measures | `ba-capability-split` | ✅ Done |
 | 3 | Outcome-level acceptance | § Outcome-level acceptance | `ba-capability-split` | ✅ Done |
 | 4 | Non-goals | § Non-goals | `ba-capability-split` | ✅ Done |
 | 5 | Constraints | § Constraints | `ba-capability-split` | ✅ Done |
@@ -70,7 +70,7 @@ than an opinion.
 - [x] every row has a **baseline** — or `baseline: unknown` with an owner and a date
 - [x] every row has a **target**
 - [x] every row states how it is measured
-- [ ] every row carries a `From` column citing `intake O<n>`
+- [x] every row carries a `From` column citing `intake O<n>`
 - [x] no row uses `O<n>` as its own ID
 
 A measure with no baseline cannot be proven later, so the capability can never be

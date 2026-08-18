@@ -18,7 +18,7 @@ for.
 **Project status:** active
 **Capabilities:** 6 · draft 6
 **Units:** 0
-**Next action:** Step 4 — Capabilities split — full sentence-level ask-placement pass still outstanding; then PR each capability and get `pm-spec-review` (capability mode) + merge before `ba-unit-split`
+**Next action:** Step 4 — Capabilities split — full sentence-level ask-placement pass still outstanding (spot-checked, not exhaustive); all 6 capabilities are merged on `main` with `capability-design.md` in place (Step 4a done) — `ba-unit-split`'s own gate still needs a `pm-spec-review` verdict at the actual merge commit for each, since fix commits landed after the original verdicts
 **Last updated:** 2026-08-18
 
 ---
@@ -31,7 +31,7 @@ for.
 | 2 | Stack declared | `stack.md` | `pm-project-init` | ✅ Done |
 | 3 | Requirements intake | `intake/<date>-<slug>.md` | `ba-requirements-intake` | ✅ Done |
 | 4 | Capabilities split | `capabilities/CAP-*/capability.md` | `ba-capability-split` | 🟡 In Progress |
-| 4a | Capability designs | `capabilities/CAP-*/capability-design.md` | `architect-detailed-design` | ⬜ Not Started |
+| 4a | Capability designs | `capabilities/CAP-*/capability-design.md` | `architect-detailed-design` | ✅ Done |
 | 5 | Units scaffolded | `.../units/UNIT-*/` | `ba-unit-split` | ⬜ Not Started |
 | 6 | Units specified | unit ledgers | `architect-unit-tasks` | ⬜ Not Started |
 | 7 | Units handed off | unit ledgers | `ba-unit-handoff` | ⬜ Not Started |
@@ -106,9 +106,9 @@ gate doing its job, and `ba-capability-split` must not run past it.
 **Goal:** every multi-unit capability has its shared schema, contract family and
 cross-unit flows settled **before** its units are cut.
 
-- [ ] every capability projecting >1 unit has a `capability-design.md`
-- [ ] each one names its prospective units, and no entity has two writing units
-- [ ] a capability projecting exactly 1 unit records the skip rather than leaving a gap
+- [x] every capability projecting >1 unit has a `capability-design.md`
+- [x] each one names its prospective units, and no entity has two writing units
+- [x] a capability projecting exactly 1 unit records the skip rather than leaving a gap — n/a, all 6 project 2 units
 
 `🟡` while some capabilities have a design and others do not. This runs before Step 5,
 not after: the design is what the split cuts along.
@@ -200,5 +200,5 @@ Derived signals worth a look — not failures.
 | Item | Why |
 |------|-----|
 | Volume figures (intake Q8) | Answered only as a rough order of magnitude ("small scale"). Sufficient to proceed, but `architect-unit-design` should get an exact count before finalizing NFR-PERF acceptance thresholds. |
-| CAP-CMS-0001 M3, CAP-CMS-0006 M1/M2 | These measures trace to raw-ask sections directly rather than a numbered intake `O<n>`, because intake's O1–O6 didn't anticipate an audit-trail-specific or migration-specific outcome. Non-blocking; recommend `ba-requirements-intake` add addendum outcomes on its next pass. |
+| CAP-CMS-0004 M1, CAP-CMS-0006 M1/M2 | These measures trace to raw-ask sections directly rather than a numbered intake `O<n>`. CAP-CMS-0004/M1 is deliberately not O-sourced — it was re-scoped off intake O6 during `pm-spec-review` reconciliation (O6's audit-trail promise now lives solely at CAP-CMS-0001/M3), leaving M1 as its own claim about the `UsrName` stamp. CAP-CMS-0006/M1-M2 remain unclaimed because intake's O1–O6 didn't anticipate a migration-specific outcome. Non-blocking; recommend `ba-requirements-intake` add an addendum outcome for the migration case. |
 | Capability split — ask-placement pass | `ba-capability-split` placed every FR/NFR/G/DR/MIG item it identified into a capability's scope or constraints, but did not certify a sentence-by-sentence reconciliation against the full raw ask. Recommend `pm-spec-review` (capability mode) verify this before merge. |

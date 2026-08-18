@@ -66,7 +66,7 @@ updated: 2026-08-18
 |---|---------|----------|--------|--------------|------|
 | M1 | Mutating API endpoints that declare and server-side-enforce a minimum role | Legacy: authorization essentially unused | 100% of mutating endpoints enforce a declared minimum role, independent of the UI | Endpoint-by-endpoint audit against the role table in the raw ask §3.3 | intake O4 |
 | M2 | Login/authentication data-access paths built with parameterized queries / an ORM | Legacy: login query built by string-concatenating user input | 0% string-concatenated SQL in the login/auth path | Code review of every auth data-access path | intake O2 |
-| M3 | Create/update/delete operations recorded in the audit log with actor, timestamp, entity, and action | Legacy: no audit log | 100% of mutating operations across the system produce a matching audit-log entry | Audit-log completeness check against a sample of mutating operations across all capabilities | derived directly from raw ask AUTHZ-4/NFR-AUD-1 — not separately numbered as an intake `O<n>`; see Open questions |
+| M3 | Create/update/delete operations recorded in the audit log with actor, timestamp, entity, and action | Legacy: no audit log | 100% of mutating operations across the system produce a matching audit-log entry | Audit-log completeness check against a sample of mutating operations across all capabilities | intake O6 |
 
 ## Outcome-level acceptance
 
@@ -116,7 +116,7 @@ them together is the natural business-capability seam.
 
 | # | Question | Owner | Status |
 |---|----------|-------|--------|
-| Q1 | M3 (audit-log completeness) traces to AUTHZ-4/NFR-AUD-1 directly rather than to a numbered intake `O<n>` — the intake's candidate outcomes (O1–O6) did not include a standalone audit-trail outcome distinct from RBAC enforcement. Should the intake be amended with an addendum `O<n>` for this, so future capabilities can cite it the same way the others cite O1–O6? | @MithunAcx | open — non-blocking, recorded for `ba-requirements-intake` to consider on its next pass |
+| Q1 | Resolved 2026-08-18, recorded for history: this row originally claimed intake's O1–O6 didn't include a standalone audit-trail outcome, which was wrong — O6 ("Complete audit trail for all mutations") is exactly that outcome. It had been misassigned to CAP-CMS-0004/M1 instead, producing a duplicate promise (caught by `pm-spec-review` on PR #2 and #5). Reconciled: M3 now correctly cites `intake O6`; CAP-CMS-0004/M1 was re-scoped to the `UsrName`-stamp fact alone, which is genuinely its own claim. | @MithunAcx | resolved |
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
