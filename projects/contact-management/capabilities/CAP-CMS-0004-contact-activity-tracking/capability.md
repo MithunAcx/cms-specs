@@ -89,6 +89,7 @@ column is set, which is an implementation detail, not a capability boundary.
 |---|---|---|
 | upstream | Identity & Access Control (CAP-CMS-0001) | Editor role required to create/edit/delete; every mutation's audit-log entry lands in that capability's audit trail |
 | upstream | Partner Records Management (CAP-CMS-0003) | Every activity entry must reference an existing brokerage or agency record owned there |
+| downstream | Legacy Data Migration (CAP-CMS-0006) | That capability migrates existing activity records into this capability's schema, including its soft-delete convention (XD-0002 of this capability's design) |
 
 ## Open questions
 
