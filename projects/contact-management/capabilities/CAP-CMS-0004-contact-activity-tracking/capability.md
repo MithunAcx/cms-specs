@@ -43,7 +43,7 @@ updated: 2026-08-18
 
 | # | Measure | Baseline | Target | How measured | From |
 |---|---------|----------|--------|--------------|------|
-| M1 | Activity-record mutations that retain the server-derived `UsrName`/actor stamp | Legacy: `UsrName` stamped on insert, no formal audit trail beyond the stamp itself | 100% of activity create/update/(soft-)delete operations retain a server-derived actor stamp and produce a matching audit-log entry | Sample-based audit check across activity mutations, cross-referenced against the audit log owned by CAP-CMS-0001 | intake O6 |
+| M1 | Activity records carrying a server-derived, client-unsuppliable `UsrName`/actor stamp | Legacy: `UsrName` stamped on insert, but never validated as server-derived — a client-supplied value was structurally possible | 100% of activity create/update operations carry a `UsrName` set by the server from the authenticated request, with zero code paths accepting a client-supplied value | Code review of every activity write path, plus a contract test asserting a client-supplied `UsrName` is ignored/rejected | raw ask AUTHZ-2/NFR-AUD-2 directly — not a numbered intake `O<n>`; this capability's own audit-log-entry production (previously double-counted here) is CAP-CMS-0001/M3's measure, not a separate claim of this capability's — see Open questions |
 
 ## Outcome-level acceptance
 
@@ -94,6 +94,7 @@ column is set, which is an implementation detail, not a capability boundary.
 
 | # | Question | Owner | Status |
 |---|----------|-------|--------|
+| 1 | Resolved 2026-08-18, recorded for history: M1 previously restated CAP-CMS-0001/M3's system-wide audit-log-entry claim for the Activity entity specifically, duplicating that promise. Reconciled per pm-spec-review (PR #2 and #5 findings): M1 is now scoped to the UsrName-stamp fact alone; the audit-log-entry claim belongs solely to CAP-CMS-0001/M3, which now correctly cites intake O6. | @MithunAcx | resolved |
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
