@@ -27,10 +27,10 @@ updated: 2026-08-18
 
 | # | Decision | Rationale | Affects | Cited by |
 |---|----------|-----------|---------|----------|
-| XD-0001 | The domain model is the clean projection in raw-ask §6.5 (`Brokerage`, `Broker`, `Agency`, `Agent`, `Cga`), not a column-for-column mirror of the legacy SQL Server tables | Confirmed by intake Q1/A1 — the target datastore is PostgreSQL, and legacy physical quirks (DR-1..DR-8) are not reproduced, only their domain intent | U1, U2 | _pending units_ |
-| XD-0002 | Every brokerage/agency/CGA/broker/agent mutating endpoint accepts a `version` field on write and rejects a stale write with `409 conflict_version_mismatch` | Optimistic concurrency control on shared master records, per intake Q10 | U1, U2 | _pending units_ |
-| XD-0003 | `disabled` is a single clean boolean field on every entity, replacing the legacy `history`/`History` mixed-convention flags (int `-1/0` vs `char(10)`) | DR-3's domain intent, carried forward per XD-0001 | U1, U2 | _pending units_ |
-| XD-0004 | The `address` sub-resource shape (`{ line1, line2, city, state, zip }`) used on every brokerage/agency/CGA/accounting form must match the shape CAP-CMS-0005's address-suggest endpoint fills | Keeps the autocomplete-fill contract and the persisted address shape identical, so U2 never has to reshape data between the two | U1, U2, and (cross-capability) CAP-CMS-0005 | _pending units_ |
+| XD-0001 | The domain model is the clean projection in raw-ask §6.5 (`Brokerage`, `Broker`, `Agency`, `Agent`, `Cga`), not a column-for-column mirror of the legacy SQL Server tables | Confirmed by intake Q1/A1 — the target datastore is PostgreSQL, and legacy physical quirks (DR-1..DR-8) are not reproduced, only their domain intent | U1, U2 | UNIT-CMS-0005, UNIT-CMS-0006 |
+| XD-0002 | Every brokerage/agency/CGA/broker/agent mutating endpoint accepts a `version` field on write and rejects a stale write with `409 conflict_version_mismatch` | Optimistic concurrency control on shared master records, per intake Q10 | U1, U2 | UNIT-CMS-0005, UNIT-CMS-0006 |
+| XD-0003 | `disabled` is a single clean boolean field on every entity, replacing the legacy `history`/`History` mixed-convention flags (int `-1/0` vs `char(10)`) | DR-3's domain intent, carried forward per XD-0001 | U1, U2 | UNIT-CMS-0005, UNIT-CMS-0006 |
+| XD-0004 | The `address` sub-resource shape (`{ line1, line2, city, state, zip }`) used on every brokerage/agency/CGA/accounting form must match the shape CAP-CMS-0005's address-suggest endpoint fills | Keeps the autocomplete-fill contract and the persisted address shape identical, so U2 never has to reshape data between the two | U1, U2, and (cross-capability) CAP-CMS-0005 | UNIT-CMS-0005, UNIT-CMS-0006 |
 
 ## Shared database schema
 

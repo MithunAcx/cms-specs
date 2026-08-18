@@ -3,7 +3,7 @@ id: CAP-CMS-0003
 slug: partner-records-management
 project: CMS
 title: Partner Records Management
-status: draft
+status: decomposed
 owner: "@MithunAcx"
 created: 2026-08-18
 updated: 2026-08-18
@@ -148,5 +148,10 @@ criterion between them.
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
+
+| Unit | Title | Kind | Target repo | Status | Since |
+|------|-------|------|--------------|--------|-------|
+| UNIT-CMS-0005 | Partner Records API | backend | CMS-partner-records-management | draft | 2026-08-18 |
+| UNIT-CMS-0006 | Partner Records UI | frontend | CMS-web | draft | 2026-08-18 |
 
 <!-- /GENERATED:units -->
