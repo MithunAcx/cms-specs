@@ -95,8 +95,10 @@ updated: 2026-08-18
 Identity & Access Control is split out as its own capability because it is the one domain
 every other capability depends on but none of them owns: authentication, authorization,
 and the audit trail are cross-cutting concerns consumed by Partner Directory & Search,
-Partner Records Management, Contact Activity Tracking, External Integrations, and Legacy
-Data Migration alike. Folding it into whichever capability happened to need it first (most
+Partner Records Management, Contact Activity Tracking, and External Integrations alike —
+Legacy Data Migration is the one exception, since it exposes no HTTP endpoint and has
+nothing to authenticate against this capability's RBAC model. Folding it into whichever
+capability happened to need it first (most
 naturally Partner Records Management, since RBAC's Editor/Administrator distinctions are
 most visible there) was rejected: it would make every other capability depend on an
 internal detail of one particular domain, rather than on a shared platform capability all
