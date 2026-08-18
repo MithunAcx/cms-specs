@@ -214,7 +214,7 @@ spec side while `Eng` is still `🟡`, and neither reading is wrong.
 
 | Measure | Baseline | Target | Served by | Actual | Source | Read on |
 |---------|----------|--------|-----------|--------|--------|---------|
-| M1 | Legacy: `UsrName` stamped, no formal audit trail | 100% of activity mutations retain actor stamp and produce an audit-log entry | — | — | — | — |
+| M1 | Legacy: `UsrName` stamped on insert, never validated as server-derived | 100% of activity create/update operations carry a server-set `UsrName`, zero client-supplied | — | — | — | — |
 
 `Actual`, `Source` and `Read on` stay `—` until a dated `## Acceptance` section
 fills them. A measure whose `Served by` is empty has lost its last non-withdrawn
@@ -224,6 +224,7 @@ unit, and that is a broken promise rather than a tidy-up item.
 
 | # | Question | Owner | Blocks | Status |
 |---|----------|-------|--------|--------|
+| 1 | Resolved 2026-08-18: M1 previously duplicated CAP-CMS-0001/M3's audit-log-entry claim; re-scoped to the `UsrName`-stamp fact alone. | @MithunAcx | — | resolved |
 
 Mirrored from `capability.md` § Open questions.
 

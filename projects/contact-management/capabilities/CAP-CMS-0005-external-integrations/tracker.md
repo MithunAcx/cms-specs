@@ -214,7 +214,7 @@ spec side while `Eng` is still `🟡`, and neither reading is wrong.
 
 | Measure | Baseline | Target | Served by | Actual | Source | Read on |
 |---------|----------|--------|-----------|--------|--------|---------|
-| M1 | Legacy: SmartyStreets credentials and SQL host hard-coded in source | 0% of provider credentials/endpoints reach the browser | — | — | — | — |
+| M1 | Legacy: SmartyStreets/SQL-host hard-coding (G2) and the hard-coded policy producer id `2105941587` (G4/DR-4) | 0% of provider credentials/endpoints reach the browser | — | — | — | — |
 
 `Actual`, `Source` and `Read on` stay `—` until a dated `## Acceptance` section
 fills them. A measure whose `Served by` is empty has lost its last non-withdrawn
@@ -224,6 +224,7 @@ unit, and that is a broken promise rather than a tidy-up item.
 
 | # | Question | Owner | Blocks | Status |
 |---|----------|-------|--------|--------|
+| 1 | The mechanism for the live read-only call to the policy-administration system (direct DB read, an API it exposes, or something else) is not yet named — intake Q2 confirmed "live call", not the transport. | @MithunAcx | U2's `design.md` and `interfaces/` | open |
 
 Mirrored from `capability.md` § Open questions.
 
