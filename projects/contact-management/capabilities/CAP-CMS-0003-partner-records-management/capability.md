@@ -136,7 +136,7 @@ criterion between them.
 | Direction | What | Why |
 |---|---|---|
 | upstream | Identity & Access Control (CAP-CMS-0001) | Create/edit/delete requires Editor; lookup maintenance requires Administrator |
-| upstream | Partner Directory & Search (CAP-CMS-0002) | Entry point into this capability's detail/edit screens, and the launch point for "Add New Agency"/"Add New Brokerage" |
+| downstream | Partner Directory & Search (CAP-CMS-0002) | That capability's search reads this capability's brokerage/agency/CGA data read-only (its own capability-design XD-0002) — it depends on this schema, not the reverse. It is also the entry point into this capability's detail/edit screens, and the launch point for "Add New Agency"/"Add New Brokerage", but that UX-flow fact doesn't reverse the data dependency. |
 | upstream | External Integrations (CAP-CMS-0005) | Address entry on every brokerage/agency/CGA/accounting form is assisted by the address-autocomplete contract that capability owns |
 | downstream | Contact Activity & Follow-up Tracking (CAP-CMS-0004) | The activity grid embedded in Brokerage/Agency Detail screens is that capability's, attached to this capability's records |
 | downstream | Legacy Data Migration (CAP-CMS-0006) | The migration's target schema is this capability's domain model |
