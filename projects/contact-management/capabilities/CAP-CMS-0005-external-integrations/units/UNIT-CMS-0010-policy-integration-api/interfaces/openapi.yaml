@@ -11,6 +11,7 @@ servers:
     description: >
       Base URL owned by the engineering repo's environment configuration. Not named
       here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
 
 security:
   - bearerAuth: []
