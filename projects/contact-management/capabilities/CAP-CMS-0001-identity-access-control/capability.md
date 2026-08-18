@@ -3,7 +3,7 @@ id: CAP-CMS-0001
 slug: identity-access-control
 project: CMS
 title: Identity & Access Control
-status: draft
+status: decomposed
 owner: "@MithunAcx"
 created: 2026-08-18
 updated: 2026-08-18
@@ -122,5 +122,10 @@ them together is the natural business-capability seam.
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
+
+| Unit | Title | Kind | Target repo | Status | Since |
+|------|-------|------|--------------|--------|-------|
+| UNIT-CMS-0001 | Identity Access API | backend | CMS-identity-access-control | draft | 2026-08-18 |
+| UNIT-CMS-0002 | Identity Access UI | frontend | CMS-web | draft | 2026-08-18 |
 
 <!-- /GENERATED:units -->

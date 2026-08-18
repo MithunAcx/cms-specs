@@ -16,9 +16,9 @@ file owns *which steps have been done*. A project can have units at `verified` w
 for.
 
 **Project status:** active
-**Capabilities:** 6 · draft 6
-**Units:** 0
-**Next action:** Step 4 — Capabilities split — full sentence-level ask-placement pass still outstanding (spot-checked, not exhaustive); all 6 capabilities are merged on `main` with `capability-design.md` in place (Step 4a done) — `ba-unit-split`'s own gate still needs a `pm-spec-review` verdict at the actual merge commit for each, since fix commits landed after the original verdicts
+**Capabilities:** 6 · decomposed 6
+**Units:** 12 · draft 12
+**Next action:** Step 6 — Units specified — immediate next skill is `ba-unit-requirements` per unit (Overview's Owning-skill column names `architect-unit-tasks`, the last skill in that chain, per the template — flagged as a recommendation, not corrected here). Step 4's sentence-level ask-placement pass is still outstanding (spot-checked, not exhaustive) but is no longer blocking, since `ba-unit-split` has already run against the approved capabilities.
 **Last updated:** 2026-08-18
 
 ---
@@ -32,7 +32,7 @@ for.
 | 3 | Requirements intake | `intake/<date>-<slug>.md` | `ba-requirements-intake` | ✅ Done |
 | 4 | Capabilities split | `capabilities/CAP-*/capability.md` | `ba-capability-split` | 🟡 In Progress |
 | 4a | Capability designs | `capabilities/CAP-*/capability-design.md` | `architect-detailed-design` | ✅ Done |
-| 5 | Units scaffolded | `.../units/UNIT-*/` | `ba-unit-split` | ⬜ Not Started |
+| 5 | Units scaffolded | `.../units/UNIT-*/` | `ba-unit-split` | ✅ Done |
 | 6 | Units specified | unit ledgers | `architect-unit-tasks` | ⬜ Not Started |
 | 7 | Units handed off | unit ledgers | `ba-unit-handoff` | ⬜ Not Started |
 | 8 | Units verified | unit ledgers | reported back | ⬜ Not Started |
@@ -115,10 +115,10 @@ not after: the design is what the split cuts along.
 
 ## Step 5 — Units scaffolded (`.../units/UNIT-*/`)
 
-- [ ] ≥1 unit exists across the project
-- [ ] every non-withdrawn capability is at `decomposed` or beyond
-- [ ] every unit lands in exactly one `target_repo`
-- [ ] no dependency cycle between units
+- [x] ≥1 unit exists across the project
+- [x] every non-withdrawn capability is at `decomposed` or beyond
+- [x] every unit lands in exactly one `target_repo`
+- [x] no dependency cycle between units
 
 ## Step 6 — Units specified (unit ledgers)
 
@@ -153,12 +153,12 @@ capability's next action.
 
 | Capability | Title | Measures | Units | Specified | Handed off | Verified | Status |
 |------------|-------|----------|-------|-----------|------------|----------|--------|
-| CAP-CMS-0001 | Identity & Access Control | 3/3 | 0 | — / 0 | — / 0 | — / 0 | draft |
-| CAP-CMS-0002 | Partner Directory & Search | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
-| CAP-CMS-0003 | Partner Records Management | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
-| CAP-CMS-0004 | Contact Activity & Follow-up Tracking | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
-| CAP-CMS-0005 | External Integrations | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
-| CAP-CMS-0006 | Legacy Data Migration | 2/2 | 0 | — / 0 | — / 0 | — / 0 | draft |
+| CAP-CMS-0001 | Identity & Access Control | 3/3 | 2 | 0/2 | 0/2 | 0/2 | decomposed |
+| CAP-CMS-0002 | Partner Directory & Search | 1/1 | 2 | 0/2 | 0/2 | 0/2 | decomposed |
+| CAP-CMS-0003 | Partner Records Management | 1/1 | 2 | 0/2 | 0/2 | 0/2 | decomposed |
+| CAP-CMS-0004 | Contact Activity & Follow-up Tracking | 1/1 | 2 | 0/2 | 0/2 | 0/2 | decomposed |
+| CAP-CMS-0005 | External Integrations | 1/1 | 2 | 0/2 | 0/2 | 0/2 | decomposed |
+| CAP-CMS-0006 | Legacy Data Migration | 2/2 | 2 | 0/2 | 0/2 | 0/2 | decomposed |
 
 `Measures` is measures-with-a-baseline over total measures. The rest count
 non-withdrawn units.
@@ -170,6 +170,7 @@ owns it — the answer to "what is at `ready` right now" without adding up rows.
 
 | Status | Units |
 |--------|-------|
+| draft | UNIT-CMS-0001, UNIT-CMS-0002, UNIT-CMS-0003, UNIT-CMS-0004, UNIT-CMS-0005, UNIT-CMS-0006, UNIT-CMS-0007, UNIT-CMS-0008, UNIT-CMS-0009, UNIT-CMS-0010, UNIT-CMS-0011, UNIT-CMS-0012 |
 
 Ordered by the status enum. A status with no units is omitted rather than shown empty.
 
