@@ -3,7 +3,7 @@ id: CAP-CMS-0005
 slug: external-integrations
 project: CMS
 title: External Integrations
-status: draft
+status: decomposed
 owner: "@MithunAcx"
 created: 2026-08-18
 updated: 2026-08-18
@@ -112,5 +112,10 @@ real domain).
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
+
+| Unit | Title | Kind | Target repo | Status | Since |
+|------|-------|------|--------------|--------|-------|
+| UNIT-CMS-0009 | Address Integration API | backend | CMS-external-integrations | draft | 2026-08-18 |
+| UNIT-CMS-0010 | Policy Integration API | backend | CMS-external-integrations | draft | 2026-08-18 |
 
 <!-- /GENERATED:units -->
