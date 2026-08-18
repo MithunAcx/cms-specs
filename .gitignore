@@ -1,0 +1,38 @@
+# The spec tree and the source material it is written against are TRACKED.
+#
+# `projects` and `requirements` were both ignored here until 2026-08-14. That is why a
+# completed CMS spec tree — 5 capabilities, 17 units — was deleted with no way to recover
+# it: `git add` on a unit was a silent no-op, so nothing was ever committed.
+#
+# It also breaks the framework's own gates. `ba-capability-split` and `ba-unit-split`
+# verify their inputs with `git cat-file -e origin/main:projects/...`; if `projects/` can
+# never reach main, those gates can never open, for any project.
+#
+# And `pm-spec-review` in `intake` mode reviews the intake *against* `requirements/` —
+# it refuses outright when that folder is absent, so a reviewer working from a fresh
+# clone needs it present.
+#
+# Do not re-add either path. If a specific document must not be distributed, exclude that
+# file by name and record why.
+
+# Local git worktrees created by tooling — not part of the spec tree
+.claude/worktrees/
+
+# OS and editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Resources pulled in from acx_product_management for local reference/reuse —
+# not part of this repo's own tracked spec tree.
+.claude/
+.scratch/
+requirements/
+templates/
+CLAUDE.md
+OQ.md
+PROCESS.md
+README.md
+product-engineering-folder-structure.md
+product-management-folder-structure.md
