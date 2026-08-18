@@ -20,18 +20,18 @@ updated: 2026-08-18
 > **MIG-3** — A data-quality pass should identify CGA rows previously mis-inserted into `pp_agent` (DR-1) and reconcile them into `PP_Agency_CGA`.
 >
 > **MIG-4** — Reference lookups (`PP_States`, `PP_BrokerType`, `PP_AgentType`, `PP_Broker_Status`, `PP_TskStatus`) are used as-is.
->
-> **Note on MIG-1:** this requirement's premise — reusing the same SQL Server tables —
-> does not hold for this project, since the decided datastore is PostgreSQL, not the
-> legacy `PolicyPlus` SQL Server database (see `stack.md`). A one-time ETL migration of
-> existing brokerage/agency/CGA/activity/policy-reference data is therefore required at
-> go-live, into the clean-redesign schema described in CAP-CMS-0003 (intake Q1/A1). MIG-2
-> through MIG-4 are reframed accordingly: MIG-2's schema clean-ups are largely moot
-> because the new schema is a clean redesign rather than a patched copy of the legacy
-> one, but MIG-3's CGA-reconciliation is a live data-quality problem in the *data itself*
-> (not the schema) and must be resolved as part of the cutover, and MIG-4's lookups still
-> need to be carried over, just into the new schema's lookup tables rather than reused
-> in place.
+
+**BA note on MIG-1 (not part of the frozen ask above):** MIG-1's premise — reusing the
+same SQL Server tables — does not hold for this project, since the decided datastore is
+PostgreSQL, not the legacy `PolicyPlus` SQL Server database (see `stack.md`). A one-time
+ETL migration of existing brokerage/agency/CGA/activity/policy-reference data is
+therefore required at go-live, into the clean-redesign schema described in
+CAP-CMS-0003 (intake Q1/A1). MIG-2 through MIG-4 are reframed accordingly: MIG-2's schema
+clean-ups are largely moot because the new schema is a clean redesign rather than a
+patched copy of the legacy one, but MIG-3's CGA-reconciliation is a live data-quality
+problem in the *data itself* (not the schema) and must be resolved as part of the
+cutover, and MIG-4's lookups still need to be carried over, just into the new schema's
+lookup tables rather than reused in place.
 
 ## Outcome measures
 
