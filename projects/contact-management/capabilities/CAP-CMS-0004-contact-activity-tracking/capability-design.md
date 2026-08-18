@@ -27,9 +27,9 @@ updated: 2026-08-18
 
 | # | Decision | Rationale | Affects | Cited by |
 |---|----------|-----------|---------|----------|
-| XD-0001 | `Activity` is one entity with a polymorphic `parentType` (`agency` \| `brokerage`) and `parentId`, not two separate tables | Mirrors the raw ask's own domain model (§6.5's single `Activity` resource) while keeping the parent reference explicit rather than the legacy's two nullable FK columns | U1, U2 | _pending units_ |
-| XD-0002 | Delete is a **soft delete** — a `deletedAt` timestamp is set, the row is retained, and it is excluded from default list queries | Confirmed by intake Q6; distinguishes this capability's delete semantics from a physical `DELETE` | U1, U2 | _pending units_ |
-| XD-0003 | `userName` on every activity record is server-derived from the authenticated request (via CAP-CMS-0001's token), never accepted from the client | Enforces AUTHZ-2/API-4 at the contract level, not left to each caller's discipline | U1 | _pending units_ |
+| XD-0001 | `Activity` is one entity with a polymorphic `parentType` (`agency` \| `brokerage`) and `parentId`, not two separate tables | Mirrors the raw ask's own domain model (§6.5's single `Activity` resource) while keeping the parent reference explicit rather than the legacy's two nullable FK columns | U1, U2 | UNIT-CMS-0007, UNIT-CMS-0008 |
+| XD-0002 | Delete is a **soft delete** — a `deletedAt` timestamp is set, the row is retained, and it is excluded from default list queries | Confirmed by intake Q6; distinguishes this capability's delete semantics from a physical `DELETE` | U1, U2 | UNIT-CMS-0007, UNIT-CMS-0008 |
+| XD-0003 | `userName` on every activity record is server-derived from the authenticated request (via CAP-CMS-0001's token), never accepted from the client | Enforces AUTHZ-2/API-4 at the contract level, not left to each caller's discipline | U1 | UNIT-CMS-0007 |
 
 ## Shared database schema
 

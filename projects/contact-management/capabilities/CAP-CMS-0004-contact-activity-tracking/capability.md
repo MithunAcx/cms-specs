@@ -3,7 +3,7 @@ id: CAP-CMS-0004
 slug: contact-activity-tracking
 project: CMS
 title: Contact Activity & Follow-up Tracking
-status: draft
+status: decomposed
 owner: "@MithunAcx"
 created: 2026-08-18
 updated: 2026-08-18
@@ -99,5 +99,10 @@ column is set, which is an implementation detail, not a capability boundary.
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
+
+| Unit | Title | Kind | Target repo | Status | Since |
+|------|-------|------|--------------|--------|-------|
+| UNIT-CMS-0007 | Activity API | backend | CMS-contact-activity-tracking | draft | 2026-08-18 |
+| UNIT-CMS-0008 | Activity Grid UI | frontend | CMS-web | draft | 2026-08-18 |
 
 <!-- /GENERATED:units -->
