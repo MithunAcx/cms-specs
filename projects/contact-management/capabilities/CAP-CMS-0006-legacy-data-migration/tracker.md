@@ -14,10 +14,10 @@ status counts live in the header below, and the unit index is the grid at the fo
 file owns *which steps have been done*. A capability can have every unit at `ready`
 and still be missing a baseline on M2 — that is what this file is for.
 
-**Capability status:** draft
-**Derived status:** draft — no units exist yet
-**Units:** 0
-**Next action:** Step 2 — Outcome measures — M1/M2 need intake `O<n>` citations (or an intake addendum); run `ba-capability-split`
+**Capability status:** decomposed
+**Derived status:** decomposed — 2 units exist, none at `handed-off` or beyond
+**Units:** 2 · draft 2
+**Next action:** Step 8 — Every measure served — run `ba-unit-requirements` (Overview's Owning-skill column names `ba-unit-split` per the template; that looks like a template quirk since it is `ba-unit-requirements` that writes R-ID citations — flagged as a recommendation, not corrected here)
 **Last updated:** 2026-08-18
 
 ---
@@ -33,7 +33,7 @@ and still be missing a baseline on M2 — that is what this file is for.
 | 5 | Constraints | § Constraints | `ba-capability-split` | ✅ Done |
 | 6 | Decomposition rationale | § Decomposition rationale | `ba-capability-split` | ✅ Done |
 | 6a | Capability design | `capability-design.md` | `architect-detailed-design` | ✅ Done |
-| 7 | Units scaffolded | `units/UNIT-*/` | `ba-unit-split` | ⬜ Not Started |
+| 7 | Units scaffolded | `units/UNIT-*/` | `ba-unit-split` | ✅ Done |
 | 8 | Every measure served | unit requirement traces | `ba-unit-split` | ⬜ Not Started |
 | 9 | All units specified | unit ledgers | `architect-unit-tasks` | ⬜ Not Started |
 | 10 | All units handed off | unit ledgers | `ba-unit-handoff` | ⬜ Not Started |
@@ -132,12 +132,12 @@ column stays `_pending units_` until Step 7 runs — that is expected, not incom
 
 **Goal:** the work packages exist, each in exactly one deployable.
 
-- [ ] ≥1 unit directory
-- [ ] every unit has a `draft` ledger row and a filled scope
-- [ ] no unit spans two target repos
-- [ ] `capability.md` `status: decomposed`
-- [ ] every entity in § Shared Database Schema still has exactly one writing unit
-- [ ] the XD log's `Cited by` column names real unit IDs, not `_pending units_`
+- [x] ≥1 unit directory
+- [x] every unit has a `draft` ledger row and a filled scope
+- [x] no unit spans two target repos
+- [x] `capability.md` `status: decomposed`
+- [x] every entity in § Shared Database Schema still has exactly one writing unit
+- [x] the XD log's `Cited by` column names real unit IDs, not `_pending units_`
 
 A capability that yields exactly one unit is legal and is a signal it was drawn too
 small.
@@ -203,6 +203,8 @@ is the only unit index in the tree, so it carries `Title`, `Target repo`, `Since
 
 | Unit | Title | Kind | Target repo | Req | Design | Contracts | UX | Tasks | Handoff | Verified | Surfaces | Eng | Status | Since | Open change |
 |------|-------|------|-------------|-----|--------|-----------|----|-------|---------|----------|----------|-----|--------|-------|-------------|
+| UNIT-CMS-0011 | Legacy Data ETL | data | CMS-legacy-data-migration | ⬜ | ⬜ | ⬜ | — | ⬜ | ⬜ | ⬜ | FE — · API ⬜ | ⬜ | draft | 2026-08-18 | — |
+| UNIT-CMS-0012 | CGA Reconciliation | data | CMS-legacy-data-migration | ⬜ | ⬜ | ⬜ | — | ⬜ | ⬜ | ⬜ | FE — · API ⬜ | ⬜ | draft | 2026-08-18 | — |
 
 `Surfaces` renders every surface of the unit as `FE <glyph> · API <glyph>`, a
 non-applicable one as `FE —`. `Eng` is the **derived** engineering completion — `✅`
@@ -214,8 +216,8 @@ spec side while `Eng` is still `🟡`, and neither reading is wrong.
 
 | Measure | Baseline | Target | Served by | Actual | Source | Read on |
 |---------|----------|--------|-----------|--------|--------|---------|
-| M1 | 100% of active legacy records | 100% migrated with referential integrity, zero data loss | — | — | — | — |
-| M2 | Unknown count of CGA rows mis-inserted into `pp_agent` | 100% identified and reconciled before cutover | — | — | — | — |
+| M1 | 100% of active legacy records | 100% migrated with referential integrity, zero data loss | UNIT-CMS-0011 | — | — | — |
+| M2 | Unknown count of CGA rows mis-inserted into `pp_agent` | 100% identified and reconciled before cutover | UNIT-CMS-0012 | — | — | — |
 
 `Actual`, `Source` and `Read on` stay `—` until a dated `## Acceptance` section
 fills them. A measure whose `Served by` is empty has lost its last non-withdrawn

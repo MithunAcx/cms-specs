@@ -3,7 +3,7 @@ id: CAP-CMS-0006
 slug: legacy-data-migration
 project: CMS
 title: Legacy Data Migration
-status: draft
+status: decomposed
 owner: "@MithunAcx"
 created: 2026-08-18
 updated: 2026-08-18
@@ -95,5 +95,10 @@ a capability, not a task buried in another capability's unit, is what carries.
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
+
+| Unit | Title | Kind | Target repo | Status | Since |
+|------|-------|------|--------------|--------|-------|
+| UNIT-CMS-0011 | Legacy Data ETL | data | CMS-legacy-data-migration | draft | 2026-08-18 |
+| UNIT-CMS-0012 | CGA Reconciliation | data | CMS-legacy-data-migration | draft | 2026-08-18 |
 
 <!-- /GENERATED:units -->
