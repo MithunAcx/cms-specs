@@ -16,9 +16,9 @@ file owns *which steps have been done*. A project can have units at `verified` w
 for.
 
 **Project status:** active
-**Capabilities:** 0
+**Capabilities:** 6 · draft 6
 **Units:** 0
-**Next action:** Step 4 — Capabilities split — run `ba-capability-split`
+**Next action:** Step 4 — Capabilities split — full sentence-level ask-placement pass still outstanding; then PR each capability and get `pm-spec-review` (capability mode) + merge before `ba-unit-split`
 **Last updated:** 2026-08-18
 
 ---
@@ -30,7 +30,7 @@ for.
 | 1 | Project registered | `project.md` | `pm-project-init` | ✅ Done |
 | 2 | Stack declared | `stack.md` | `pm-project-init` | ✅ Done |
 | 3 | Requirements intake | `intake/<date>-<slug>.md` | `ba-requirements-intake` | ✅ Done |
-| 4 | Capabilities split | `capabilities/CAP-*/capability.md` | `ba-capability-split` | ⬜ Not Started |
+| 4 | Capabilities split | `capabilities/CAP-*/capability.md` | `ba-capability-split` | 🟡 In Progress |
 | 4a | Capability designs | `capabilities/CAP-*/capability-design.md` | `architect-detailed-design` | ⬜ Not Started |
 | 5 | Units scaffolded | `.../units/UNIT-*/` | `ba-unit-split` | ⬜ Not Started |
 | 6 | Units specified | unit ledgers | `architect-unit-tasks` | ⬜ Not Started |
@@ -96,10 +96,10 @@ gate doing its job, and `ba-capability-split` must not run past it.
 
 **Goal:** the ask divided into domains a stakeholder would name.
 
-- [ ] ≥1 capability directory
-- [ ] every intake outcome `O<n>` landed in exactly one capability as `M<n>`
-- [ ] every capability has ≥1 measure with a baseline and a target
-- [ ] every sentence of the ask is placed as scope, exclusion, or constraint
+- [x] ≥1 capability directory
+- [x] every intake outcome `O<n>` landed in exactly one capability as `M<n>`
+- [x] every capability has ≥1 measure with a baseline and a target
+- [ ] every sentence of the ask is placed as scope, exclusion, or constraint — a full sentence-level reconciliation pass has not been certified; spot-checked but not exhaustive
 
 ## Step 4a — Capability designs (`capabilities/CAP-*/capability-design.md`)
 
@@ -153,6 +153,12 @@ capability's next action.
 
 | Capability | Title | Measures | Units | Specified | Handed off | Verified | Status |
 |------------|-------|----------|-------|-----------|------------|----------|--------|
+| CAP-CMS-0001 | Identity & Access Control | 3/3 | 0 | — / 0 | — / 0 | — / 0 | draft |
+| CAP-CMS-0002 | Partner Directory & Search | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
+| CAP-CMS-0003 | Partner Records Management | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
+| CAP-CMS-0004 | Contact Activity & Follow-up Tracking | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
+| CAP-CMS-0005 | External Integrations | 1/1 | 0 | — / 0 | — / 0 | — / 0 | draft |
+| CAP-CMS-0006 | Legacy Data Migration | 2/2 | 0 | — / 0 | — / 0 | — / 0 | draft |
 
 `Measures` is measures-with-a-baseline over total measures. The rest count
 non-withdrawn units.
@@ -194,3 +200,5 @@ Derived signals worth a look — not failures.
 | Item | Why |
 |------|-----|
 | Volume figures (intake Q8) | Answered only as a rough order of magnitude ("small scale"). Sufficient to proceed, but `architect-unit-design` should get an exact count before finalizing NFR-PERF acceptance thresholds. |
+| CAP-CMS-0001 M3, CAP-CMS-0006 M1/M2 | These measures trace to raw-ask sections directly rather than a numbered intake `O<n>`, because intake's O1–O6 didn't anticipate an audit-trail-specific or migration-specific outcome. Non-blocking; recommend `ba-requirements-intake` add addendum outcomes on its next pass. |
+| Capability split — ask-placement pass | `ba-capability-split` placed every FR/NFR/G/DR/MIG item it identified into a capability's scope or constraints, but did not certify a sentence-by-sentence reconciliation against the full raw ask. Recommend `pm-spec-review` (capability mode) verify this before merge. |
