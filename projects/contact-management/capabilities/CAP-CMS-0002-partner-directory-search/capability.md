@@ -3,7 +3,7 @@ id: CAP-CMS-0002
 slug: partner-directory-search
 project: CMS
 title: Partner Directory & Search
-status: draft
+status: decomposed
 owner: "@MithunAcx"
 created: 2026-08-18
 updated: 2026-08-18
@@ -115,5 +115,10 @@ splitting them apart would produce six capabilities with no independent business
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
+
+| Unit | Title | Kind | Target repo | Status | Since |
+|------|-------|------|--------------|--------|-------|
+| UNIT-CMS-0003 | Partner Search API | backend | CMS-partner-directory-search | draft | 2026-08-18 |
+| UNIT-CMS-0004 | Partner Directory UI | frontend | CMS-web | draft | 2026-08-18 |
 
 <!-- /GENERATED:units -->

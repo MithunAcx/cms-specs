@@ -27,8 +27,8 @@ updated: 2026-08-18
 
 | # | Decision | Rationale | Affects | Cited by |
 |---|----------|-----------|---------|----------|
-| XD-0001 | Six search modes are six distinct query parameters on one `GET /search` family, not six separate endpoints — `mode` selects which fields are matched, `term`/`state`/`uw` are shared parameters interpreted per mode | Keeps one contract instead of six near-identical ones (mirrors the raw ask's own framing of "one Directory screen, six modes"), and gives U2 one client to write against | U1, U2 | _pending units_ |
-| XD-0002 | Search reads are **cross-capability, read-only** against CAP-CMS-0003's brokerage/agency/CGA data — U1 owns no data of its own and must never write to those entities | Prevents this capability from silently becoming a second writer of Partner Records' data, which would violate CAP-CMS-0003's own "exactly one owning unit per entity" rule at the project level | U1 | _pending units_ |
+| XD-0001 | Six search modes are six distinct query parameters on one `GET /search` family, not six separate endpoints — `mode` selects which fields are matched, `term`/`state`/`uw` are shared parameters interpreted per mode | Keeps one contract instead of six near-identical ones (mirrors the raw ask's own framing of "one Directory screen, six modes"), and gives U2 one client to write against | U1, U2 | UNIT-CMS-0003, UNIT-CMS-0004 |
+| XD-0002 | Search reads are **cross-capability, read-only** against CAP-CMS-0003's brokerage/agency/CGA data — U1 owns no data of its own and must never write to those entities | Prevents this capability from silently becoming a second writer of Partner Records' data, which would violate CAP-CMS-0003's own "exactly one owning unit per entity" rule at the project level | U1 | UNIT-CMS-0003 |
 
 ## Shared database schema
 
