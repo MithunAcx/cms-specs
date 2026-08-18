@@ -115,7 +115,7 @@ actually need.
 settled **before** the split, so unit boundaries fall out of the design rather than
 the design being retrofitted to whatever the split produced.
 
-- [x] the decomposition rationale projects exactly **1** unit — this step is `— n/a`,
+- [ ] the decomposition rationale projects exactly **1** unit — this step is `— n/a`,
       `architect-detailed-design` skips it by design
 - [x] `capability-design.md` exists and is not the template
 - [x] § Prospective units names each expected unit with a kind and a derived target repo

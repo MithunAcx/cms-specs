@@ -106,7 +106,7 @@ splitting them apart would produce six capabilities with no independent business
 | Direction | What | Why |
 |---|---|---|
 | upstream | Identity & Access Control (CAP-CMS-0001) | Every search endpoint requires an authenticated Viewer-or-above request |
-| downstream | Partner Records Management (CAP-CMS-0003) | Search results deep-link into brokerage/agency/CGA detail screens owned there; "Add New Agency"/"Add New Brokerage" launch that capability's create flow |
+| upstream | Partner Records Management (CAP-CMS-0003) | This capability's search reads CAP-CMS-0003's brokerage/agency/CGA data read-only (capability-design XD-0002) — it depends on that schema existing, and cannot search records that capability hasn't defined. Search results also deep-link into detail screens owned there, and "Add New Agency"/"Add New Brokerage" launch that capability's create flow. |
 
 ## Open questions
 
