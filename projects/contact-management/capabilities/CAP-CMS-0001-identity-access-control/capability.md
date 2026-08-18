@@ -110,7 +110,7 @@ them together is the natural business-capability seam.
 
 | Direction | What | Why |
 |---|---|---|
-| downstream | Partner Directory & Search, Partner Records Management, Contact Activity Tracking, External Integrations, Legacy Data Migration | Every other capability's endpoints declare a minimum role against this capability's RBAC model and rely on its authentication to resolve the acting user |
+| downstream | Partner Directory & Search, Partner Records Management, Contact Activity Tracking, External Integrations | Every one of these capabilities' endpoints declares a minimum role against this capability's RBAC model and relies on its authentication to resolve the acting user |
 
 ## Open questions
 
