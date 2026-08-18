@@ -14,10 +14,10 @@ status counts live in the header below, and the unit index is the grid at the fo
 file owns *which steps have been done*. A capability can have every unit at `ready`
 and still be missing a baseline on M2 — that is what this file is for.
 
-**Capability status:** draft
-**Derived status:** draft — no units exist yet
-**Units:** 0
-**Next action:** Step 7 — Units scaffolded — PR `capability.md` + `capability-design.md` for `pm-spec-review` (capability mode), get it merged, then run `ba-unit-split`
+**Capability status:** decomposed
+**Derived status:** decomposed — 2 units exist, none at `handed-off` or beyond
+**Units:** 2 · draft 2
+**Next action:** Step 8 — Every measure served — run `ba-unit-requirements` (Overview's Owning-skill column names `ba-unit-split` per the template; that looks like a template quirk since it is `ba-unit-requirements` that writes R-ID citations — flagged as a recommendation, not corrected here)
 **Last updated:** 2026-08-18
 
 ---
@@ -33,7 +33,7 @@ and still be missing a baseline on M2 — that is what this file is for.
 | 5 | Constraints | § Constraints | `ba-capability-split` | ✅ Done |
 | 6 | Decomposition rationale | § Decomposition rationale | `ba-capability-split` | ✅ Done |
 | 6a | Capability design | `capability-design.md` | `architect-detailed-design` | ✅ Done |
-| 7 | Units scaffolded | `units/UNIT-*/` | `ba-unit-split` | ⬜ Not Started |
+| 7 | Units scaffolded | `units/UNIT-*/` | `ba-unit-split` | ✅ Done |
 | 8 | Every measure served | unit requirement traces | `ba-unit-split` | ⬜ Not Started |
 | 9 | All units specified | unit ledgers | `architect-unit-tasks` | ⬜ Not Started |
 | 10 | All units handed off | unit ledgers | `ba-unit-handoff` | ⬜ Not Started |
@@ -132,12 +132,12 @@ column stays `_pending units_` until Step 7 runs — that is expected, not incom
 
 **Goal:** the work packages exist, each in exactly one deployable.
 
-- [ ] ≥1 unit directory
-- [ ] every unit has a `draft` ledger row and a filled scope
-- [ ] no unit spans two target repos
-- [ ] `capability.md` `status: decomposed`
-- [ ] every entity in § Shared Database Schema still has exactly one writing unit
-- [ ] the XD log's `Cited by` column names real unit IDs, not `_pending units_`
+- [x] ≥1 unit directory
+- [x] every unit has a `draft` ledger row and a filled scope
+- [x] no unit spans two target repos
+- [x] `capability.md` `status: decomposed`
+- [x] every entity in § Shared Database Schema still has exactly one writing unit
+- [x] the XD log's `Cited by` column names real unit IDs, not `_pending units_`
 
 A capability that yields exactly one unit is legal and is a signal it was drawn too
 small.
@@ -203,6 +203,8 @@ is the only unit index in the tree, so it carries `Title`, `Target repo`, `Since
 
 | Unit | Title | Kind | Target repo | Req | Design | Contracts | UX | Tasks | Handoff | Verified | Surfaces | Eng | Status | Since | Open change |
 |------|-------|------|-------------|-----|--------|-----------|----|-------|---------|----------|----------|-----|--------|-------|-------------|
+| UNIT-CMS-0001 | Identity Access API | backend | CMS-identity-access-control | ⬜ | ⬜ | ⬜ | — | ⬜ | ⬜ | ⬜ | FE — · API ⬜ | ⬜ | draft | 2026-08-18 | — |
+| UNIT-CMS-0002 | Identity Access UI | frontend | CMS-web | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | ⬜ | FE ⬜ · API — | ⬜ | draft | 2026-08-18 | — |
 
 `Surfaces` renders every surface of the unit as `FE <glyph> · API <glyph>`, a
 non-applicable one as `FE —`. `Eng` is the **derived** engineering completion — `✅`
@@ -214,9 +216,9 @@ spec side while `Eng` is still `🟡`, and neither reading is wrong.
 
 | Measure | Baseline | Target | Served by | Actual | Source | Read on |
 |---------|----------|--------|-----------|--------|--------|---------|
-| M1 | Legacy: authorization essentially unused | 100% of mutating endpoints enforce a declared minimum role | — | — | — | — |
-| M2 | Legacy: login built by string-concatenating user input | 0% string-concatenated SQL in the login/auth path | — | — | — | — |
-| M3 | Legacy: no audit log | 100% of mutating operations produce a matching audit-log entry | — | — | — | — |
+| M1 | Legacy: authorization essentially unused | 100% of mutating endpoints enforce a declared minimum role | UNIT-CMS-0001, UNIT-CMS-0002 | — | — | — |
+| M2 | Legacy: login built by string-concatenating user input | 0% string-concatenated SQL in the login/auth path | UNIT-CMS-0001 | — | — | — |
+| M3 | Legacy: no audit log | 100% of mutating operations produce a matching audit-log entry | UNIT-CMS-0001 | — | — | — |
 
 `Actual`, `Source` and `Read on` stay `—` until a dated `## Acceptance` section
 fills them. A measure whose `Served by` is empty has lost its last non-withdrawn

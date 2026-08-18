@@ -65,11 +65,11 @@ build — see `intake/2026-08-18-cms-modernization.md` Q3).
 
 | Capability | Title | Status | Units | Progress |
 |------------|-------|--------|-------|----------|
-| CAP-CMS-0001 | Identity & Access Control | draft | 0 | — / 0 |
-| CAP-CMS-0002 | Partner Directory & Search | draft | 0 | — / 0 |
-| CAP-CMS-0003 | Partner Records Management | draft | 0 | — / 0 |
-| CAP-CMS-0004 | Contact Activity & Follow-up Tracking | draft | 0 | — / 0 |
-| CAP-CMS-0005 | External Integrations | draft | 0 | — / 0 |
-| CAP-CMS-0006 | Legacy Data Migration | draft | 0 | — / 0 |
+| CAP-CMS-0001 | Identity & Access Control | decomposed | 2 | 0 / 2 |
+| CAP-CMS-0002 | Partner Directory & Search | decomposed | 2 | 0 / 2 |
+| CAP-CMS-0003 | Partner Records Management | decomposed | 2 | 0 / 2 |
+| CAP-CMS-0004 | Contact Activity & Follow-up Tracking | decomposed | 2 | 0 / 2 |
+| CAP-CMS-0005 | External Integrations | decomposed | 2 | 0 / 2 |
+| CAP-CMS-0006 | Legacy Data Migration | decomposed | 2 | 0 / 2 |
 
 <!-- /GENERATED:capabilities -->
