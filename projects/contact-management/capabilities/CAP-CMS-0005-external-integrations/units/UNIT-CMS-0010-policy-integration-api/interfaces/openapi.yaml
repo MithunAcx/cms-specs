@@ -1,0 +1,222 @@
+openapi: 3.1.0
+info:
+  title: Policy Integration API
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0010 — stateless, live read-only proxy to the policy-administration
+    system. No policy data is ever persisted by this project. See
+    projects/contact-management/capabilities/CAP-CMS-0005-external-integrations/units/UNIT-CMS-0010-policy-integration-api/requirements.md
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/policies:
+    get:
+      operationId: getPoliciesForParent
+      summary: Related policies for a brokerage or agency
+      description: >
+        Live, read-only call to the policy-administration system. Satisfies R1, R2,
+        R3, R4, R6, R7, R8, R11, R12, R13.
+      security:
+        - bearerAuth: [ "cms:policies.read" ]
+      parameters:
+        - name: parentType
+          in: query
+          required: true
+          description: Satisfies R6.
+          schema:
+            $ref: '#/components/schemas/ParentType'
+        - name: parentId
+          in: query
+          required: true
+          description: Satisfies R6, R7.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Policies read successfully (satisfies R1, R2, R3). An empty list is a valid, successful answer (R11).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyListResponse'
+              examples:
+                withPolicies:
+                  value:
+                    items:
+                      - policyId: "PLY-0001"
+                        status: active
+                        term: "2026-01-01/2027-01-01"
+                        insured: "Example Insured LLC"
+                        classId: 4
+                        subclass: "General Liability"
+                        deepLinkUrl: "UNRESOLVED — server-computed underwriter-page URL"
+                emptyResult:
+                  summary: Upstream answered with zero policies — not an error (R11).
+                  value:
+                    items: []
+        '400':
+          description: Malformed parentType/parentId (satisfies R6).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "parentType must be 'brokerage' or 'agency'"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: Missing or invalid bearer token (satisfies R8).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    error:
+                      code: unauthenticated
+                      message: "Authentication required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '404':
+          description: parentId not found in the caller's own tenant (satisfies R7).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    error:
+                      code: not_found
+                      message: "No brokerage or agency found for the given id"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    error:
+                      code: rate_limited
+                      message: "Too many requests"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '502':
+          description: Policy-administration system unreachable, errored, or exceeded the timeout budget (satisfies R11, R12).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                upstreamDown:
+                  value:
+                    error:
+                      code: upstream_unavailable
+                      message: "The policy-administration system did not respond in time"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Issuer, flow and token endpoint owned by UNIT-CMS-0001; scope
+        cms:policies.read required for this operation.
+
+  schemas:
+    ParentType:
+      type: string
+      enum: [brokerage, agency]
+      description: Satisfies R6 — closed enum, no other value accepted.
+
+    Policy:
+      type: object
+      additionalProperties: false
+      required: [policyId, status, term, insured, classId, subclass, deepLinkUrl]
+      properties:
+        policyId:
+          type: string
+          description: Not personal data (R25).
+        status:
+          type: string
+          enum: [active, cancelled, expired, pending]
+          description: Closed enum per 10-platform.md. Values mirror the upstream system's own status set as currently observed; revisit if the upstream system adds a value.
+        term:
+          type: string
+          description: "ISO 8601 interval, e.g. 2026-01-01/2027-01-01. Date-only per 10-platform.md — no implied time component."
+        insured:
+          type: string
+          description: Personal data, not special category (R25). Never appears in a log line (R24).
+        classId:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Drives deepLinkUrl routing (R2) — 15/16/17 route to the healthcare page, every other value to the underwriter page.
+        subclass:
+          type: string
+        deepLinkUrl:
+          type: string
+          format: uri
+          description: >
+            Server-computed (R2, R3) — the base URL and producer id used to build this
+            are never exposed to the caller.
+
+    PolicyListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+          description: No pagination — capability design states both endpoints in CAP-CMS-0005 return small, bounded result sets.
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, trace_id]
+          properties:
+            code:
+              type: string
+              enum: [invalid_request, unauthenticated, not_found, rate_limited, upstream_unavailable]
+              description: Stable snake_case, part of the contract (10-platform.md Errors).
+            message:
+              type: string
+              description: Human-readable; never personal data.
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              description: ULID.
