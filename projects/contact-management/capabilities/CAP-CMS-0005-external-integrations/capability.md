@@ -52,7 +52,7 @@ updated: 2026-08-18
 
 | # | Measure | Baseline | Target | How measured | From |
 |---|---------|----------|--------|--------------|------|
-| M1 | External-provider credentials and endpoints reaching the browser | Legacy: SmartyStreets credentials and the SQL host hard-coded in source | 0% — every provider credential and endpoint (address-autocomplete key, policy-system base URL, producer id) lives in secure configuration, and none is ever sent to the browser | Code review of the address-suggest and policy-read integration paths, plus a browser-network-trace check for leaked credentials | intake O3 |
+| M1 | External-provider credentials and endpoints reaching the browser | Legacy: SmartyStreets credentials and the SQL host hard-coded in source (G2); the policy-lookup producer id hard-coded as the literal `2105941587` (G4/DR-4) | 0% — every provider credential and endpoint (address-autocomplete key, policy-system base URL, producer id) lives in secure configuration, and none is ever sent to the browser | Code review of the address-suggest and policy-read integration paths, plus a browser-network-trace check for leaked credentials | intake O3 |
 
 ## Outcome-level acceptance
 
@@ -108,6 +108,7 @@ real domain).
 
 | # | Question | Owner | Status |
 |---|----------|-------|--------|
+| 1 | The mechanism for the live read-only call to the policy-administration system (direct DB read, an API it exposes, or something else) is not yet named — intake Q2 confirmed "live call", not the transport. Mirrored from `capability-design.md`'s own open question. | @MithunAcx | open |
 
 <!-- GENERATED:units — do not hand-edit below. Written by pm-state-rollup. -->
 ## Units
