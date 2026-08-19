@@ -221,6 +221,17 @@
   }
 
   footer.frame-label { margin-top: 24px; color: var(--text-secondary); }
+
+  /* --- live-prototype utilities (frame 1 only — see JS at the bottom) --- */
+  .hide-field { display: none !important; }
+  #demoToast {
+    position: fixed; bottom: 20px; left: 50%; z-index: 9999;
+    transform: translateX(-50%) translateY(16px); opacity: 0;
+    transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+    background: var(--text-primary); color: var(--bg);
+    padding: 10px 16px; border-radius: 6px; font: 14px system-ui, sans-serif;
+    max-width: 90vw;
+  }
 </style>
 </head>
 <body>
@@ -242,6 +253,10 @@
       <option value="1440" selected>1440 · desktop</option>
     </select>
   </label>
+  <label style="flex-direction:row;align-items:center;gap:6px">
+    <input type="checkbox" id="simulateErrorChk">
+    Demo: simulate search failure (frame 1 only)
+  </label>
 </div>
 
 <div class="canvas-outer">
@@ -251,49 +266,60 @@
   </div>
   <div class="frame-content">
 
-    <!-- 1: directory-idle -->
+    <!-- 1: directory-idle — LIVE PROTOTYPE. This frame is wired to the in-memory
+         demo dataset and JS at the bottom of the file: typing, picking a search
+         mode, the Assigned Underwriter filter, Load more and the demo error/
+         loading triggers all really run against that data. Frames 2-17 below are
+         left exactly as originally authored, as fixed reference snapshots of the
+         same states.md rows for pixel-level review via the Frame selector above —
+         see frame-inventory.md's note on this frame. -->
     <section class="frame active" id="frame-directory-idle">
       <div class="pagehead">
         <div>
           <div class="text-h1">Partner Directory</div>
           <p class="text-body section-title" style="margin-top:4px">Search brokerages, brokers, agencies and CGAs.</p>
         </div>
-        <div class="row wrap" style="gap:8px">
-          <button class="btn-secondary text-body-strong">Add New Agency</button>
-          <button class="btn-primary text-body-strong">Add New Brokerage</button>
+        <div class="row wrap" style="gap:8px" id="createLaunchGroup">
+          <button class="btn-secondary text-body-strong" onclick="launchAddAgency()">Add New Agency</button>
+          <button class="btn-primary text-body-strong" onclick="launchAddBrokerage()">Add New Brokerage</button>
         </div>
       </div>
       <div class="panel panel-pad">
         <p class="text-caption section-title" style="margin-bottom:8px">Search by</p>
-        <div class="seg" role="radiogroup" aria-label="Search mode">
-          <button aria-checked="true" class="text-body-strong">By Brokerage</button>
-          <button aria-checked="false" class="text-body-strong">By Broker</button>
-          <button aria-checked="false" class="text-body-strong">By State (Broker)</button>
-          <button aria-checked="false" class="text-body-strong">By Agency</button>
-          <button aria-checked="false" class="text-body-strong">By CGA</button>
-          <button aria-checked="false" class="text-body-strong">By State (Agent)</button>
+        <div class="seg" role="radiogroup" aria-label="Search mode" id="segModes">
+          <button aria-checked="true" class="text-body-strong" data-mode="brokerage" onclick="setMode('brokerage')">By Brokerage</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="broker" onclick="setMode('broker')">By Broker</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="state-broker" onclick="setMode('state-broker')">By State (Broker)</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="agency" onclick="setMode('agency')">By Agency</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="cga" onclick="setMode('cga')">By CGA</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="state-agent" onclick="setMode('state-agent')">By State (Agent)</button>
         </div>
-        <div style="margin-top:16px;max-width:480px">
-          <div class="field">
-            <label class="text-caption">Search term</label>
-            <input class="inp text-body" value="" />
-          </div>
+        <div style="margin-top:16px;max-width:480px" class="field" id="searchTermField">
+          <label class="text-caption" for="searchTermInput">Search term</label>
+          <input class="inp text-body" id="searchTermInput" value="" autocomplete="off" />
         </div>
+        <div style="margin-top:16px;max-width:320px" class="field hide-field" id="searchStateField">
+          <label class="text-caption" for="searchStateInput">State</label>
+          <select class="inp text-body" id="searchStateInput">
+            <option value="">Select a state…</option>
+          </select>
+        </div>
+        <p id="searchValidationMsg" class="text-caption field-err hide-field" role="alert"></p>
         <div style="margin-top:16px">
-          <button class="btn-primary text-body-strong">Search</button>
+          <button class="btn-primary text-body-strong" onclick="startSearch()">Search</button>
+          <button class="btn-secondary text-body-strong" style="margin-left:8px" onclick="clearSearch()">Clear</button>
         </div>
         <div style="margin-top:16px;max-width:320px">
           <div class="field">
-            <label class="text-caption">Assigned Underwriter</label>
-            <select class="inp text-body">
-              <option>All underwriters</option>
-              <option>Dana Smith</option>
-              <option>Marcus Reed</option>
-              <option>A. Whitfield</option>
+            <label class="text-caption" for="uwFilterSelect">Assigned Underwriter</label>
+            <select class="inp text-body" id="uwFilterSelect" onchange="onUwFilter()">
+              <option value="">All underwriters</option>
             </select>
+            <p id="uwUnavailableNotice" class="text-caption notice hide-field" role="status" style="margin-top:8px">Underwriters unavailable right now — mode search still works.</p>
           </div>
         </div>
       </div>
+      <section style="margin-top:24px" id="resultsRegion"></section>
     </section>
 
     <!-- 2: directory-validation-error -->
@@ -867,6 +893,8 @@
 </div>
 </div>
 
+<div id="demoToast" role="status" aria-live="polite"></div>
+
 <script>
   var FRAMES = [
     "directory-idle",
@@ -924,6 +952,375 @@
   widthSelect.addEventListener("change", render);
 
   render();
+
+  /* ============================================================
+     LIVE PROTOTYPE — frame 1 (directory-idle) only.
+     In the real app every one of these reads comes from UNIT-CMS-0003's
+     /search and /lookups/assigned-uws contracts (requirements.md Data,
+     Dependencies). Here it runs against a small in-memory demo dataset so
+     the interaction model (mode switch, live filtering, cursor-style
+     "Load more", the UW filter, and the loading/empty/error states from
+     states.md) can actually be exercised instead of only viewed as static
+     frames 2-17.
+     ============================================================ */
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  };
+
+  var STATES = ["AZ", "CA", "CO", "FL", "GA", "IL", "MA", "NY", "OH", "TX", "WA"];
+
+  var BROKERAGES = [
+    { producerNumber: "1001", brokerage: "Northgate Insurance Partners", address: "400 W Broad St", city: "Columbus", state: "OH", zip: "43215", uw: "Dana Smith" },
+    { producerNumber: "1002", brokerage: "Riverbend Brokerage LLC", address: "400 W Broad St", city: "Columbus", state: "OH", zip: "43215", uw: "Marcus Reed" },
+    { producerNumber: "1003", brokerage: "Acme Insurance Brokers", address: "123 Main St", city: "Austin", state: "TX", zip: "78701", uw: "Dana Smith" },
+    { producerNumber: "1004", brokerage: "Coastal Brokerage Group", address: "500 Bay St", city: "Houston", state: "TX", zip: "77002", uw: "A. Whitfield" },
+    { producerNumber: "1005", brokerage: "Lone Star Underwriting Partners", address: "250 Riverwalk", city: "San Antonio", state: "TX", zip: "78205", uw: "Marcus Reed" },
+    { producerNumber: "1006", brokerage: "Sunrise Risk Advisors", address: "88 Peachtree St", city: "Atlanta", state: "GA", zip: "30303", uw: "Dana Smith" },
+    { producerNumber: "1007", brokerage: "Pacific Crest Brokers", address: "1 Market Plaza", city: "San Francisco", state: "CA", zip: "94105", uw: "A. Whitfield" },
+    { producerNumber: "1008", brokerage: "Empire State Underwriters", address: "350 Fifth Ave", city: "New York", state: "NY", zip: "10118", uw: "Marcus Reed" },
+    { producerNumber: "1009", brokerage: "Sunshine Coast Insurance", address: "200 Biscayne Blvd", city: "Miami", state: "FL", zip: "33131", uw: "Dana Smith" },
+    { producerNumber: "1010", brokerage: "Prairie Mutual Brokerage", address: "10 LaSalle St", city: "Chicago", state: "IL", zip: "60603", uw: "A. Whitfield" },
+    { producerNumber: "1011", brokerage: "Desert Sky Insurance Partners", address: "2 N Central Ave", city: "Phoenix", state: "AZ", zip: "85004", uw: "Marcus Reed" },
+    { producerNumber: "1012", brokerage: "Rocky Mountain Brokers", address: "1700 Lincoln St", city: "Denver", state: "CO", zip: "80203", uw: "Dana Smith" },
+    { producerNumber: "1013", brokerage: "Evergreen Insurance Group", address: "1201 3rd Ave", city: "Seattle", state: "WA", zip: "98101", uw: "A. Whitfield" },
+    { producerNumber: "1014", brokerage: "Bay State Brokerage Partners", address: "1 Beacon St", city: "Boston", state: "MA", zip: "02108", uw: "Marcus Reed" }
+  ];
+
+  var BROKERS = [
+    { producerNumber: "1001", first: "Marcus", last: "Reed", type: "Producer", email: "m.reed@example.invalid", disabled: false },
+    { producerNumber: "1002", first: "A.", last: "Whitfield", type: "Account Manager", email: "a.whitfield@example.invalid", disabled: true },
+    { producerNumber: "1003", first: "John", last: "Smith", type: "Producer", email: "jsmith@acmeins.example.invalid", disabled: false },
+    { producerNumber: "1004", first: "Maria", last: "Garcia", type: "CSR", email: "mgarcia@coastalbrokerage.example.invalid", disabled: false },
+    { producerNumber: "1005", first: "David", last: "Lee", type: "Producer", email: "dlee@lonestaruw.example.invalid", disabled: true },
+    { producerNumber: "1003", first: "Emily", last: "Nguyen", type: "Account Manager", email: "enguyen@acmeins.example.invalid", disabled: false },
+    { producerNumber: "1006", first: "Grace", last: "Kim", type: "Producer", email: "gkim@sunriserisk.example.invalid", disabled: false },
+    { producerNumber: "1007", first: "Oliver", last: "Bennett", type: "CSR", email: "obennett@pacificcrest.example.invalid", disabled: false },
+    { producerNumber: "1008", first: "Sofia", last: "Ramirez", type: "Producer", email: "sramirez@empirestate.example.invalid", disabled: false },
+    { producerNumber: "1009", first: "Liam", last: "Walker", type: "Principal", email: "lwalker@sunshinecoast.example.invalid", disabled: false },
+    { producerNumber: "1010", first: "Ava", last: "Chen", type: "Producer", email: "achen@prairiemutual.example.invalid", disabled: true },
+    { producerNumber: "1011", first: "Noah", last: "Carter", type: "CSR", email: "ncarter@desertsky.example.invalid", disabled: false },
+    { producerNumber: "1012", first: "Isabella", last: "Brooks", type: "Account Manager", email: "ibrooks@rockymtn.example.invalid", disabled: false },
+    { producerNumber: "1013", first: "Ethan", last: "Foster", type: "Producer", email: "efoster@evergreenins.example.invalid", disabled: false }
+  ];
+
+  var AGENCIES = [
+    { agencyId: "3001", agency: "Lonestar Insurance Agency", address: "100 Congress Ave", city: "Austin", state: "TX", zip: "78701", agent: "Sarah Connor" },
+    { agencyId: "3002", agency: "Gulf Coast Underwriters", address: "500 Bay St", city: "Houston", state: "TX", zip: "77002", agent: "Miguel Torres" },
+    { agencyId: "3003", agency: "Alamo Risk Partners", address: "250 Riverwalk", city: "San Antonio", state: "TX", zip: "78205", agent: "Priya Nair" },
+    { agencyId: "3004", agency: "Peachtree Agency Partners", address: "77 Peachtree St", city: "Atlanta", state: "GA", zip: "30303", agent: "Alex Chen" },
+    { agencyId: "3005", agency: "Golden Gate Agency Group", address: "1 Market Plaza", city: "San Francisco", state: "CA", zip: "94105", agent: "Wei Zhang" },
+    { agencyId: "3006", agency: "Empire Agency Partners", address: "350 Fifth Ave", city: "New York", state: "NY", zip: "10118", agent: "Olivia Brown" },
+    { agencyId: "3007", agency: "Sunbelt Agency Alliance", address: "200 Biscayne Blvd", city: "Miami", state: "FL", zip: "33131", agent: "Carlos Mendez" },
+    { agencyId: "3008", agency: "Midwest Agency Collective", address: "10 LaSalle St", city: "Chicago", state: "IL", zip: "60603", agent: "Karen White" },
+    { agencyId: "3009", agency: "Cactus Agency Partners", address: "2 N Central Ave", city: "Phoenix", state: "AZ", zip: "85004", agent: "Daniel Ortiz" },
+    { agencyId: "3010", agency: "Summit Agency Group", address: "1700 Lincoln St", city: "Denver", state: "CO", zip: "80203", agent: "Rachel Kim" }
+  ];
+
+  var CGAS = [
+    { cgaId: "4001", agent: "Texas General Agency Corp", address: "300 Main St", city: "Austin", state: "TX", zip: "78701" },
+    { cgaId: "4002", agent: "Bayou CGA Solutions", address: "600 Bay St", city: "Houston", state: "TX", zip: "77002" },
+    { cgaId: "4003", agent: "Alamo CGA Services", address: "260 Riverwalk", city: "San Antonio", state: "TX", zip: "78205" },
+    { cgaId: "4004", agent: "Peach State CGA Group", address: "90 Peachtree St", city: "Atlanta", state: "GA", zip: "30303" },
+    { cgaId: "4005", agent: "Golden CGA Partners", address: "5 Market Plaza", city: "San Francisco", state: "CA", zip: "94105" },
+    { cgaId: "4006", agent: "Empire CGA Solutions", address: "360 Fifth Ave", city: "New York", state: "NY", zip: "10118" },
+    { cgaId: "4007", agent: "Sunshine CGA Alliance", address: "210 Biscayne Blvd", city: "Miami", state: "FL", zip: "33131" },
+    { cgaId: "4008", agent: "Lakeside CGA Group", address: "20 LaSalle St", city: "Chicago", state: "IL", zip: "60603" }
+  ];
+
+  var PAGE_SIZE = 5;
+  var currentMode = "brokerage";
+  var lastMode = "brokerage";
+  var lastMatches = [];
+  var pageOffset = 0;
+
+  function brokerageName(pn) {
+    var b = BROKERAGES.filter(function (x) { return x.producerNumber === pn; })[0];
+    return b ? b.brokerage : "";
+  }
+  function requiresState(mode) { return mode === "state-broker" || mode === "state-agent"; }
+  function requiresTerm(mode) { return mode === "brokerage" || mode === "broker" || mode === "agency" || mode === "cga"; }
+  function needsValue(mode) { return requiresTerm(mode) || requiresState(mode); }
+  function modeLabel(mode) {
+    return {
+      brokerage: "By Brokerage", broker: "By Broker", "state-broker": "By State (Broker)",
+      agency: "By Agency", cga: "By CGA", "state-agent": "By State (Agent)"
+    }[mode];
+  }
+
+  function theadForMode(mode) {
+    if (mode === "brokerage" || mode === "state-broker") return ["Brokerage", "Address", "Assigned UW", "State"];
+    if (mode === "broker") return ["First", "Last", "Brokerage", "Title/Type", "Email", "Status"];
+    if (mode === "agency" || mode === "state-agent") return ["Agency", "Address", "Agent"];
+    return ["CGA Agent", "Address"];
+  }
+
+  function computeMatches(mode, value) {
+    var v = (value || "").toLowerCase();
+    var m = function (s) { return String(s || "").toLowerCase().indexOf(v) !== -1; };
+    if (mode === "brokerage") return BROKERAGES.filter(function (r) { return m(r.brokerage) || m(r.city); });
+    if (mode === "state-broker") return BROKERAGES.filter(function (r) { return r.state.toLowerCase() === v; });
+    if (mode === "broker") return BROKERS.filter(function (r) { return m(r.first + " " + r.last) || m(brokerageName(r.producerNumber)); });
+    if (mode === "agency") return AGENCIES.filter(function (r) { return m(r.agency) || m(r.city) || m(r.agent); });
+    if (mode === "state-agent") return AGENCIES.filter(function (r) { return r.state.toLowerCase() === v; });
+    if (mode === "cga") return CGAS.filter(function (r) { return m(r.agent) || m(r.address) || m(r.city); });
+    return [];
+  }
+
+  function rowHtmlForMode(mode, item) {
+    if (mode === "brokerage" || mode === "state-broker") {
+      return '<tr data-row tabindex="0" onclick="openRow(\'' + mode + '\',\'' + item.producerNumber + '\')" onkeydown="rowKeydown(event,\'' + mode + '\',\'' + item.producerNumber + '\')">' +
+        '<td class="text-body-strong">' + esc(item.brokerage) + '</td>' +
+        '<td class="text-body">' + esc(item.address + ", " + item.city + ", " + item.state + " " + item.zip) + '</td>' +
+        '<td class="text-body">' + esc(item.uw) + '</td>' +
+        '<td class="text-body"><span class="chip">' + esc(item.state) + '</span></td></tr>';
+    }
+    if (mode === "broker") {
+      var status = item.disabled
+        ? '<span class="badge badge-lapsed"><span class="mark">⊘</span>Disabled</span>'
+        : '<span class="badge badge-active"><span class="mark">●</span>Active</span>';
+      return '<tr data-row tabindex="0" onclick="openRow(\'brokerage\',\'' + item.producerNumber + '\')" onkeydown="rowKeydown(event,\'brokerage\',\'' + item.producerNumber + '\')">' +
+        '<td class="text-body-strong">' + esc(item.first) + '</td>' +
+        '<td class="text-body">' + esc(item.last) + '</td>' +
+        '<td class="text-body">' + esc(brokerageName(item.producerNumber)) + '</td>' +
+        '<td class="text-body">' + esc(item.type) + '</td>' +
+        '<td class="text-body"><a class="link" href="mailto:' + esc(item.email) + '" onclick="event.stopPropagation()">' + esc(item.email) + '</a></td>' +
+        '<td>' + status + '</td></tr>';
+    }
+    if (mode === "agency" || mode === "state-agent") {
+      return '<tr data-row tabindex="0" onclick="openRow(\'agency\',\'' + item.agencyId + '\')" onkeydown="rowKeydown(event,\'agency\',\'' + item.agencyId + '\')">' +
+        '<td class="text-body-strong">' + esc(item.agency) + '</td>' +
+        '<td class="text-body">' + esc(item.address + ", " + item.city + ", " + item.state + " " + item.zip) + '</td>' +
+        '<td class="text-body">' + esc(item.agent) + '</td></tr>';
+    }
+    return '<tr data-row tabindex="0" onclick="openRow(\'cga\',\'' + item.cgaId + '\')" onkeydown="rowKeydown(event,\'cga\',\'' + item.cgaId + '\')">' +
+      '<td class="text-body-strong">' + esc(item.agent) + '</td>' +
+      '<td class="text-body">' + esc(item.address + ", " + item.city + ", " + item.state + " " + item.zip) + '</td></tr>';
+  }
+
+  function cardHtmlForMode(mode, item) {
+    var rows = [];
+    if (mode === "brokerage" || mode === "state-broker") {
+      rows = [["Address", item.address + ", " + item.city + ", " + item.state + " " + item.zip], ["Assigned UW", item.uw], ["State", item.state]];
+      var id1 = item.producerNumber, title1 = item.brokerage, m1 = mode;
+      return cardHtml(title1, rows, m1, id1);
+    }
+    if (mode === "broker") {
+      rows = [["Brokerage", brokerageName(item.producerNumber)], ["Title/Type", item.type], ["Email", item.email], ["Status", item.disabled ? "Disabled" : "Active"]];
+      return cardHtml(item.first + " " + item.last, rows, "brokerage", item.producerNumber);
+    }
+    if (mode === "agency" || mode === "state-agent") {
+      rows = [["Address", item.address + ", " + item.city + ", " + item.state + " " + item.zip], ["Agent", item.agent]];
+      return cardHtml(item.agency, rows, "agency", item.agencyId);
+    }
+    rows = [["Address", item.address + ", " + item.city + ", " + item.state + " " + item.zip]];
+    return cardHtml(item.agent, rows, "cga", item.cgaId);
+  }
+  function cardHtml(title, rows, mode, id) {
+    var body = rows.map(function (r) {
+      return '<div class="card-row"><span class="text-caption k">' + esc(r[0]) + '</span><span class="text-body">' + esc(r[1]) + '</span></div>';
+    }).join("");
+    return '<div class="card" tabindex="0" role="button" onclick="openRow(\'' + mode + '\',\'' + id + '\')" onkeydown="rowKeydown(event,\'' + mode + '\',\'' + id + '\')">' +
+      '<div class="card-row"><span class="text-body-strong">' + esc(title) + '</span></div>' + body + '</div>';
+  }
+
+  function toggleInputVisibility(mode) {
+    var stateMode = requiresState(mode);
+    $("searchTermField").classList.toggle("hide-field", stateMode);
+    $("searchStateField").classList.toggle("hide-field", !stateMode);
+  }
+
+  function clearValidation() {
+    $("searchValidationMsg").classList.add("hide-field");
+    $("searchTermInput").classList.remove("err");
+    $("searchStateInput").classList.remove("err");
+  }
+  function showValidation(mode) {
+    var msg = requiresState(mode) ? "Select a state to search." : ("Enter a search term to search by " + modeLabel(mode) + ".");
+    $("searchValidationMsg").textContent = msg;
+    $("searchValidationMsg").classList.remove("hide-field");
+    var input = requiresState(mode) ? $("searchStateInput") : $("searchTermInput");
+    input.classList.add("err");
+    input.setAttribute("aria-describedby", "searchValidationMsg");
+    $("resultsRegion").innerHTML = "";
+  }
+
+  function renderLoading(mode) {
+    var cols = theadForMode(mode);
+    var html = '<h2 class="text-h2">Search results</h2>' +
+      '<div class="panel tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr>' +
+      cols.map(function (c) { return '<th class="text-caption">' + c + '</th>'; }).join("") +
+      '</tr></thead><tbody>' +
+      '<tr><td colspan="' + cols.length + '"><div class="skeleton-bar" style="width:60%"></div></td></tr>' +
+      '<tr><td colspan="' + cols.length + '"><div class="skeleton-bar" style="width:80%"></div></td></tr>' +
+      '<tr><td colspan="' + cols.length + '"><div class="skeleton-bar" style="width:45%"></div></td></tr>' +
+      '</tbody></table></div>';
+    $("resultsRegion").innerHTML = html;
+  }
+  function renderEmpty() {
+    $("resultsRegion").innerHTML = '<h2 class="text-h2" tabindex="-1">0 results</h2>' +
+      '<div class="panel" style="margin-top:12px"><div class="empty-state">' +
+      '<p class="text-h3">No records to display</p>' +
+      '<p class="text-body section-title">Try a different search term, state, or underwriter.</p>' +
+      '</div></div>';
+  }
+  function renderError() {
+    $("resultsRegion").innerHTML = '<div class="error-block">' +
+      '<p class="text-body-strong title" tabindex="-1">We couldn\'t load results</p>' +
+      '<p class="text-body">Something went wrong reaching the search service.</p>' +
+      '<button class="btn-secondary text-body-strong" style="align-self:flex-start" onclick="startSearch()">Retry</button>' +
+      '</div>';
+  }
+  function renderPopulated() {
+    var mode = lastMode;
+    var total = lastMatches.length;
+    var shown = lastMatches.slice(0, pageOffset);
+    var desktop = canvas.getAttribute("data-width") === "1440";
+    var html = '<h2 class="text-h2" tabindex="-1">' + total + (total === 1 ? " result" : " results") + '</h2>';
+    if (desktop) {
+      var cols = theadForMode(mode);
+      html += '<div class="panel tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr>' +
+        cols.map(function (c) { return '<th class="text-caption">' + c + '</th>'; }).join("") +
+        '</tr></thead><tbody>' +
+        shown.map(function (it) { return rowHtmlForMode(mode, it); }).join("") +
+        '</tbody></table></div>';
+    } else {
+      html += '<div style="margin-top:12px">' + shown.map(function (it) { return cardHtmlForMode(mode, it); }).join("") + '</div>';
+    }
+    if (pageOffset < total) {
+      html += '<div style="margin-top:16px"><button class="btn-secondary text-body-strong" onclick="loadMore()">Load more</button></div>';
+    }
+    $("resultsRegion").innerHTML = html;
+  }
+
+  function runQuery(mode, value) {
+    renderLoading(mode);
+    window.setTimeout(function () {
+      if ($("simulateErrorChk").checked) { renderError(); return; }
+      var matches = computeMatches(mode, value);
+      lastMode = mode; lastMatches = matches; pageOffset = Math.min(PAGE_SIZE, matches.length);
+      if (matches.length === 0) renderEmpty(); else renderPopulated();
+    }, 450); /* artificial delay so the loading state above is genuinely reachable */
+  }
+
+  function startSearch() {
+    clearValidation();
+    var mode = currentMode;
+    var value = requiresState(mode) ? $("searchStateInput").value : $("searchTermInput").value.trim();
+    if (needsValue(mode) && !value) { showValidation(mode); return; }
+    $("uwFilterSelect").value = "";
+    runQuery(mode, value);
+  }
+
+  function liveFilter() {
+    var mode = currentMode;
+    var value = requiresState(mode) ? $("searchStateInput").value : $("searchTermInput").value.trim();
+    clearValidation();
+    $("uwFilterSelect").value = "";
+    if (needsValue(mode) && !value) { $("resultsRegion").innerHTML = ""; lastMatches = []; return; }
+    var matches = computeMatches(mode, value);
+    lastMode = mode; lastMatches = matches; pageOffset = Math.min(PAGE_SIZE, matches.length);
+    if (matches.length === 0) renderEmpty(); else renderPopulated();
+  }
+
+  function setMode(mode) {
+    currentMode = mode;
+    Array.prototype.forEach.call(document.querySelectorAll("#segModes button"), function (b) {
+      b.setAttribute("aria-checked", b.getAttribute("data-mode") === mode ? "true" : "false");
+    });
+    $("searchTermInput").value = "";
+    $("searchStateInput").value = "";
+    $("uwFilterSelect").value = "";
+    clearValidation();
+    toggleInputVisibility(mode);
+    $("resultsRegion").innerHTML = "";
+    lastMatches = [];
+  }
+
+  function clearSearch() {
+    $("searchTermInput").value = "";
+    $("searchStateInput").value = "";
+    $("uwFilterSelect").value = "";
+    clearValidation();
+    $("resultsRegion").innerHTML = "";
+    lastMatches = [];
+  }
+
+  function onUwFilter() {
+    var uw = $("uwFilterSelect").value;
+    if (!uw) { liveFilter(); return; }
+    clearValidation();
+    var matches = BROKERAGES.filter(function (b) { return b.uw === uw; });
+    lastMode = "brokerage"; lastMatches = matches; pageOffset = Math.min(PAGE_SIZE, matches.length);
+    if (matches.length === 0) renderEmpty(); else renderPopulated();
+  }
+
+  function loadMore() {
+    /* simulates paging over UNIT-CMS-0003's cursor-based next_cursor (R12) —
+       each click reveals the next in-memory batch of PAGE_SIZE rows */
+    pageOffset = Math.min(pageOffset + PAGE_SIZE, lastMatches.length);
+    renderPopulated();
+  }
+
+  function openRow(mode, id) {
+    var family = mode === "cga" ? "CGA Detail" : (mode === "agency" || mode === "state-agent") ? "Agency Detail" : "Brokerage Detail";
+    toast("Would open " + family + " for " + id + " (owned by UNIT-CMS-0006 — no-op here)");
+  }
+  function rowKeydown(e, mode, id) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openRow(mode, id); }
+  }
+  function launchAddAgency() { toast("Would launch Add New Agency (owned by UNIT-CMS-0006 — no-op here)"); }
+  function launchAddBrokerage() { toast("Would launch Add New Brokerage (owned by UNIT-CMS-0006 — no-op here)"); }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $("demoToast");
+    t.textContent = msg;
+    t.style.opacity = "1";
+    t.style.transform = "translateX(-50%) translateY(0)";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () {
+      t.style.opacity = "0";
+      t.style.transform = "translateX(-50%) translateY(16px)";
+    }, 2200);
+  }
+
+  function buildUwFilter() {
+    var uws = [];
+    BROKERAGES.forEach(function (b) { if (uws.indexOf(b.uw) === -1) uws.push(b.uw); });
+    uws.sort();
+    $("uwFilterSelect").innerHTML = '<option value="">All underwriters</option>' +
+      uws.map(function (u) { return "<option>" + esc(u) + "</option>"; }).join("");
+  }
+  function buildStateOptions() {
+    $("searchStateInput").innerHTML = '<option value="">Select a state…</option>' +
+      STATES.map(function (s) { return "<option>" + s + "</option>"; }).join("");
+  }
+
+  $("searchTermInput").addEventListener("input", liveFilter);
+  $("searchTermInput").addEventListener("keydown", function (e) { if (e.key === "Enter") startSearch(); });
+  $("searchStateInput").addEventListener("change", startSearch);
+
+  buildUwFilter();
+  buildStateOptions();
+  toggleInputVisibility(currentMode);
+
+  /* keep the live results in sync with the frame/theme/width switcher above —
+     e.g. re-render table vs. card layout when the reviewer changes width
+     while frame 1 already has results showing */
+  var _originalRender = render;
+  render = function () {
+    _originalRender();
+    if (frameSelect.value === "directory-idle" && lastMatches.length) renderPopulated();
+  };
+  widthSelect.removeEventListener("change", _originalRender);
+  widthSelect.addEventListener("change", render);
+  frameSelect.removeEventListener("change", _originalRender);
+  frameSelect.addEventListener("change", render);
+  themeSelect.removeEventListener("change", _originalRender);
+  themeSelect.addEventListener("change", render);
 </script>
 </body>
 </html>

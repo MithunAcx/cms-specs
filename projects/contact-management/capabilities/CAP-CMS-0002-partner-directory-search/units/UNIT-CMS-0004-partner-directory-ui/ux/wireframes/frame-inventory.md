@@ -33,7 +33,7 @@ shape-mark and a label alongside colour).
 
 | # | Frame name | What it shows | State row (states.md) | Width |
 |---|---|---|---|---|
-| 1 | directory-idle | Landing view: mode switcher (By Brokerage selected by default), empty term input, no results region rendered yet | (pre-search — implicit initial condition of "loading"/"populated" rows) | desktop |
+| 1 | directory-idle | Landing view: mode switcher (By Brokerage selected by default), empty term input, no results region rendered yet. **Live** — see note below the table. | (pre-search — implicit initial condition of "loading"/"populated" rows) | desktop |
 | 2 | directory-validation-error | Term-required mode submitted with an empty term; inline validation message under the input | Validation messages table | desktop |
 | 3 | directory-loading | Search in flight; skeleton rows in the results region | loading | desktop |
 | 4 | directory-populated-desktop | By Brokerage results, table layout, result count, Add New Agency/Brokerage visible (create-capable role) | populated | desktop |
@@ -55,6 +55,25 @@ shape-mark and a label alongside colour).
 All frames also render at `tablet`/`mobile` (or `tablet`/`desktop` for #5) via the
 mockup's width control — the column above records only the width each frame was
 *specified* against, per `design-system.md` §1.
+
+**Frame 1 is a live prototype, not a static snapshot.** Its markup is wired to a
+small in-memory demo dataset (brokerages/brokers/agencies/CGAs) and to the JS at
+the bottom of the mockup file: typing a term, switching search mode, choosing an
+Assigned Underwriter, and activating "Load more" actually filter/paginate that
+data and re-render the results region, and the Search button routes through a
+short artificial delay so the loading state is reached the same way a real network
+call would reach it. This makes states.md's loading/empty/populated/partial/
+validation-error rows reachable through interaction rather than only through the
+Frame selector above. A demo-only "Simulate search failure" checkbox in the
+reviewer chrome bar (clearly labelled, not part of the specified screen) is the one
+addition with no requirements.md counterpart — it exists solely because a genuine
+dependency failure cannot occur against fake in-memory data, and it drives the
+same error-recoverable rendering frame 10 shows statically. Frames 2-17 are
+untouched: they remain fixed reference snapshots of the same states.md rows,
+useful for pixel-level review of copy and layout independent of the live data.
+No new state was added and no frame was removed or renamed — this is a change to
+*how* the already-documented states are reached in this mockup, not to the state
+inventory itself.
 
 ## What must NOT be drawn
 
