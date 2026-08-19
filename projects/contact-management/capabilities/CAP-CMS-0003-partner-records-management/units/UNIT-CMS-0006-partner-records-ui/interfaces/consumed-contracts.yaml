@@ -1,0 +1,108 @@
+# UNIT-CMS-0006 (Partner Records UI) exposes no API of its own — per
+# capability-design.md's Unified API Contract: "partner-records-ui (U2) — endpoints:
+# None. U2 consumes every endpoint above." This file records what this unit
+# consumes, why, and how each error code maps to a user-visible outcome. It is
+# authored prose, not a generated shape.
+
+consumes:
+  - unit: UNIT-CMS-0005
+    title: Partner Records API
+    why: >
+      Every field this unit displays or edits (brokerage, agency, CGA, broker,
+      agent, and the five reference lookups) is read and written exclusively
+      through this contract. Satisfies R1-R30, R31-R41, R43-R57.
+    generated_from:
+      source: UNIT-CMS-0005.openapi.yaml
+      status: PENDING — UNIT-CMS-0005 has not yet authored its own interfaces/openapi.yaml
+        (that unit is still at status draft/framed in this parallel work stream).
+        This unit's design.md instead names the endpoint set from
+        capability-design.md's Unified API Contract table (XD-0001..XD-0004),
+        which is the agreed shape both units were designed against.
+      owner: "@MithunAcx"
+      action_required: >
+        Re-run architect-unit-interfaces for UNIT-CMS-0006 once UNIT-CMS-0005's own
+        interfaces/openapi.yaml exists, to replace this pending note with a
+        byte-identical copy per shared-spec-conventions' consumer-unit rule.
+    error_mapping:
+      - code: conflict_version_mismatch
+        http_status: 409
+        user_visible_outcome: >
+          Distinguishable conflict message; unsaved edits preserved; explicit
+          reload-and-retry offered. Never auto-merged, never silently discarded.
+          (R31)
+      - code: validation_failed
+        http_status: 400
+        user_visible_outcome: >
+          Per-field errors mapped from error.details[] onto matching form
+          fields; unmatched fields shown in a general error area. (R33)
+      - code: forbidden
+        http_status: 403
+        user_visible_outcome: >
+          Distinguishable "not permitted" message, never presented as a
+          validation or conflict error. (R40)
+      - code: rate_limited
+        http_status: 429
+        user_visible_outcome: >
+          "Too many requests, try again shortly" honoring Retry-After; never
+          shown as a validation or generic error. (R47)
+      - code: not_found
+        http_status: 404
+        user_visible_outcome: >
+          "Unable to load" state with retry, distinguished from a timeout.
+          (R36)
+      - code: (any) / no response
+        http_status: timeout / 5xx / network error
+        user_visible_outcome: >
+          Reported as unresolved — never presented as failed and never as
+          succeeded; exactly one manual retry offered, no automatic silent
+          retry loop. (R37)
+
+  - unit: UNIT-CMS-0008
+    title: Activity Grid UI (embedded component)
+    why: >
+      Embedded on Brokerage/Agency Detail as the Contact-activity panel,
+      linked by brokerage/agency id only. Satisfies R10, R19, R35.
+    generated_from:
+      source: n/a — UNIT-CMS-0008 is itself a frontend embed component, not a
+        network API; this unit's design.md treats it as an opaque embedded
+        component reached via that unit's own linking-context contract, not a
+        copied openapi.yaml. No file exists in UNIT-CMS-0008's own
+        interfaces/ to copy (that unit's interfaces/ is empty as of this
+        writing).
+      owner: "@MithunAcx"
+      action_required: >
+        If UNIT-CMS-0008 later publishes a network-facing contract (rather
+        than a purely embedded UI component), copy it here at that point.
+
+  - unit: UNIT-CMS-0009
+    title: Address Integration API
+    why: >
+      Address-suggest widget embedded on every brokerage/agency/CGA/accounting
+      address form (R2, R14, R22), filling the XD-0004 address shape.
+    generated_from:
+      source: UNIT-CMS-0009.openapi.yaml
+      status: PENDING — UNIT-CMS-0009 has not yet authored its own
+        interfaces/openapi.yaml (empty as of this writing).
+      owner: "@MithunAcx"
+      action_required: >
+        Re-run architect-unit-interfaces for UNIT-CMS-0006 once UNIT-CMS-0009's
+        own interfaces/openapi.yaml exists, to add the byte-identical copy.
+
+  - unit: UNIT-CMS-0010
+    title: Policy Integration API
+    why: >
+      Policy-read panel embedded on Brokerage/Agency Detail as the
+      Policy-activity grid (R10, R19, R35).
+    generated_from:
+      source: UNIT-CMS-0010.openapi.yaml
+      status: COPIED — see interfaces/UNIT-CMS-0010.openapi.yaml (byte-identical
+        copy taken 2026-08-18).
+    error_mapping:
+      - code: upstream_unavailable
+        http_status: 502
+        user_visible_outcome: >
+          The Policy-activity panel shows its own inline error and retry
+          control; the rest of the Detail screen remains usable. (R35)
+      - code: rate_limited
+        http_status: 429
+        user_visible_outcome: Same as UNIT-CMS-0005's 429 handling above. (R47)

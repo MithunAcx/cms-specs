@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>UNIT-CMS-0006 partner-records-ui — mockup</title>
+<style>
+  :root[data-theme="light"] {
+    --bg: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-raised: #FFFFFF;
+    --border: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-disabled: #94A3B8;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #E2E8F0;
+    --status-active: #047857;
+    --status-pending: #B45309;
+    --status-lapsed: #64748B;
+    --status-neutral: #64748B;
+    --danger: #A81A35;
+    --danger-surface: #FEF2F3;
+    --notice-surface: #F1F5F9;
+  }
+  :root[data-theme="dark"] {
+    --bg: #020617;
+    --surface: #1E293B;
+    --surface-raised: #0F172A;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-disabled: #64748B;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #334155;
+    --status-active: #34D399;
+    --status-pending: #FBBF24;
+    --status-lapsed: #94A3B8;
+    --status-neutral: #94A3B8;
+    --danger: #F7A3AB;
+    --danger-surface: #3A1620;
+    --notice-surface: #1E293B;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
+  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
+  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
+  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
+  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
+  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+
+  /* ---- switcher chrome (scaffolding, deliberately plain) ---- */
+  .switcher {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+    background: #333;
+    color: #fff;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .switcher select, .switcher button {
+    font-family: inherit;
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  /* ---- canvas ---- */
+  .canvas-outer { display: flex; justify-content: center; background: var(--bg); }
+  .canvas {
+    background: var(--bg);
+    min-height: 100vh;
+  }
+  .canvas[data-width="360"]  { width: 360px; }
+  .canvas[data-width="768"]  { width: 768px; }
+  .canvas[data-width="1440"] { width: 1440px; }
+  .canvas[data-width="360"]  .content { padding: 0 16px; }
+  .canvas[data-width="768"]  .content { padding: 0 24px; }
+  .canvas[data-width="1440"] .content { padding: 0 32px; }
+
+  .app-header {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding-left: 32px;
+  }
+  .canvas[data-width="360"] .app-header,
+  .canvas[data-width="768"] .app-header { padding-left: 16px; }
+
+  .tab-bar {
+    height: 44px;
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    min-width: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    color: var(--text-secondary);
+  }
+  .tab.active {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--primary);
+  }
+
+  .content { margin-top: 24px; padding-bottom: 48px; }
+  .stack-16 > * + * { margin-top: 16px; }
+  .stack-24 > * + * { margin-top: 24px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .row > * { flex: 1; min-width: 160px; }
+
+  .btn {
+    height: 36px;
+    border-radius: 6px;
+    padding: 0 16px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 20px;
+    cursor: pointer;
+  }
+  .btn-primary { background: var(--primary); color: var(--primary-text); }
+  .btn-secondary { background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-primary); font-weight: 400; }
+  .btn-disabled { background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-disabled); }
+
+  .field { display: flex; flex-direction: column; margin-bottom: 4px; }
+  .field label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+  .field input, .field select {
+    height: 36px;
+    border-radius: 6px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    padding: 0 10px;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+  .field .invalid-msg { color: var(--danger); font-size: 12px; margin-top: 4px; }
+  .field.invalid input { border-color: var(--danger); }
+
+  table.grid { width: 100%; border-collapse: collapse; }
+  table.grid thead tr { height: 40px; background: var(--surface); }
+  table.grid th { font-size: 12px; color: var(--text-secondary); text-align: left; padding: 0 12px; font-weight: 400; }
+  table.grid tbody tr { height: 48px; border-bottom: 1px solid var(--border); }
+  table.grid td { padding: 0 12px; font-size: 14px; }
+  table.grid td:first-child { font-weight: 600; }
+  table.grid tr.editing { background: var(--surface); }
+
+  .card {
+    border-radius: 8px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    padding: 16px;
+  }
+  .card + .card { margin-top: 12px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 22px;
+    border-radius: 11px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+  .badge.active { color: var(--status-active); background: var(--notice-surface); }
+  .badge.pending { color: var(--status-pending); background: var(--notice-surface); }
+  .badge.lapsed { color: var(--status-lapsed); background: var(--notice-surface); }
+  .badge.neutral { color: var(--status-neutral); background: var(--notice-surface); }
+
+  .empty-state {
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-secondary);
+  }
+
+  .error-block {
+    background: var(--danger-surface);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .error-block .title { color: var(--danger); font-size: 14px; font-weight: 600; }
+  .error-block .body { font-size: 14px; color: var(--text-primary); margin-top: 8px; }
+  .error-block .btn { margin-top: 12px; }
+
+  .notice {
+    background: var(--notice-surface);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .skeleton {
+    height: 12px;
+    border-radius: 6px;
+    background: var(--skeleton);
+    margin-bottom: 8px;
+  }
+
+  .dialog-backdrop {
+    position: relative;
+    background: var(--bg);
+    outline: 1px solid var(--border-strong);
+    padding: 24px;
+    min-height: 240px;
+  }
+  .dialog {
+    width: 480px;
+    max-width: 100%;
+    border-radius: 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-strong);
+    padding: 24px;
+    margin: 24px auto;
+  }
+  .canvas[data-width="360"] .dialog { width: 100%; }
+
+  .frame-label {
+    color: var(--text-secondary);
+    padding: 24px 0 8px;
+  }
+
+  section[data-frame] { display: none; }
+  section[data-frame].current { display: block; }
+</style>
+</head>
+<body>
+
+<div class="switcher">
+  <label>Frame:
+    <select id="frameSelect">
+      <option value="brokerage-detail-populated">brokerage-detail-populated</option>
+      <option value="brokerage-detail-loading">brokerage-detail-loading</option>
+      <option value="brokerage-detail-empty-brokers">brokerage-detail-empty-brokers</option>
+      <option value="brokerage-detail-conflict">brokerage-detail-conflict</option>
+      <option value="brokerage-detail-not-found">brokerage-detail-not-found</option>
+      <option value="brokerage-detail-readonly">brokerage-detail-readonly</option>
+      <option value="accounting-address-dialog">accounting-address-dialog</option>
+      <option value="add-brokerage-populated">add-brokerage-populated</option>
+      <option value="add-brokerage-validation-error">add-brokerage-validation-error</option>
+      <option value="agency-detail-populated">agency-detail-populated</option>
+      <option value="agency-detail-empty-agents">agency-detail-empty-agents</option>
+      <option value="add-agency-populated">add-agency-populated</option>
+      <option value="add-agency-confirm-dialog">add-agency-confirm-dialog</option>
+      <option value="cga-grid-populated">cga-grid-populated</option>
+      <option value="cga-grid-empty">cga-grid-empty</option>
+      <option value="cga-grid-row-editing">cga-grid-row-editing</option>
+      <option value="reference-lookup-admin">reference-lookup-admin</option>
+      <option value="reference-lookup-readonly">reference-lookup-readonly</option>
+      <option value="status-matrix">status-matrix</option>
+    </select>
+  </label>
+  <label>Theme:
+    <select id="themeSelect">
+      <option value="light">light</option>
+      <option value="dark">dark</option>
+    </select>
+  </label>
+  <label>Width:
+    <select id="widthSelect">
+      <option value="360">360 (mobile)</option>
+      <option value="768">768 (tablet)</option>
+      <option value="1440" selected>1440 (desktop)</option>
+    </select>
+  </label>
+</div>
+
+<div class="canvas-outer">
+<div class="canvas" id="canvas" data-width="1440">
+
+  <div class="app-header"><span class="text-h2">Partner Records</span></div>
+
+  <!-- ============ 1. brokerage-detail-populated ============ -->
+  <section data-frame="brokerage-detail-populated" class="current">
+    <div class="tab-bar content">
+      <div class="tab active">Details</div>
+      <div class="tab">Brokers</div>
+      <div class="tab">Contact activity</div>
+      <div class="tab">Policies</div>
+    </div>
+    <div class="content stack-24">
+      <h1 class="text-h1">Northgate Insurance Partners</h1>
+      <div class="row">
+        <div class="field"><label>Brokerage name</label><input value="Northgate Insurance Partners"></div>
+        <div class="field"><label>Status</label><select><option>Active</option></select></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Address</label><input value="400 W Broad St"></div>
+        <div class="field"><label>City</label><input value="Columbus"></div>
+        <div class="field"><label>State</label><input value="OH"></div>
+        <div class="field"><label>Zip</label><input value="43215"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Phone</label><input value="(614) 555-0142"></div>
+        <div class="field"><label>Fax</label><input value="(614) 555-0199"></div>
+        <div class="field"><label>Tax ID (FEIN)</label><input value="31-1234567"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Assigned underwriter</label><input value="Marcus Reed"></div>
+        <div class="field"><label>Contract received</label><input value="2026-03-01"></div>
+        <div class="field"><label>ePay / AccountCode (read-only)</label><input value="AC-88214" disabled></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary">Save</button>
+        <button class="btn btn-secondary">Accounting address</button>
+        <button class="btn btn-secondary">Back to Directory</button>
+      </div>
+      <h2 class="text-h3">Brokers</h2>
+      <table class="grid">
+        <thead><tr><th>Name</th><th>Type</th><th>Email</th><th>NPN</th><th>Disabled</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Dana Smith</td><td>Producer</td><td>d.smith@example.invalid</td><td>1234567</td><td>—</td><td><button class="btn btn-secondary">Edit broker Dana Smith</button></td></tr>
+          <tr><td>A. Whitfield</td><td>Sub-producer</td><td>a.whitfield@example.invalid</td><td>7654321</td><td>—</td><td><button class="btn btn-secondary">Edit broker A. Whitfield</button></td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-secondary">Add broker</button>
+    </div>
+  </section>
+
+  <!-- ============ 2. brokerage-detail-loading ============ -->
+  <section data-frame="brokerage-detail-loading">
+    <div class="content stack-16">
+      <div class="skeleton" style="width:40%"></div>
+      <div class="skeleton" style="width:90%"></div>
+      <div class="skeleton" style="width:80%"></div>
+      <div class="skeleton" style="width:70%"></div>
+      <div class="skeleton" style="width:60%"></div>
+      <div class="skeleton" style="width:50%"></div>
+    </div>
+  </section>
+
+  <!-- ============ 3. brokerage-detail-empty-brokers ============ -->
+  <section data-frame="brokerage-detail-empty-brokers">
+    <div class="content stack-24">
+      <h1 class="text-h1">Riverbend Brokerage LLC</h1>
+      <div class="row">
+        <div class="field"><label>Brokerage name</label><input value="Riverbend Brokerage LLC"></div>
+        <div class="field"><label>Status</label><select><option>Active</option></select></div>
+      </div>
+      <h2 class="text-h3">Brokers</h2>
+      <div class="card">
+        <div class="empty-state">
+          <div class="text-h3">No brokers yet</div>
+          <div class="text-body">Add the first broker for this brokerage.</div>
+          <button class="btn btn-primary" style="margin-top:8px">Add broker</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. brokerage-detail-conflict ============ -->
+  <section data-frame="brokerage-detail-conflict">
+    <div class="content stack-24">
+      <h1 class="text-h1">Northgate Insurance Partners</h1>
+      <div class="error-block" role="alert">
+        <div class="title">This record changed</div>
+        <div class="body">Someone else saved changes to this record after you loaded it. Your edits are still here — reload to see the latest version, or keep editing and try saving again.</div>
+        <button class="btn btn-secondary">Reload record</button>
+      </div>
+      <div class="row">
+        <div class="field"><label>Brokerage name</label><input value="Northgate Insurance Partners (edited)"></div>
+        <div class="field"><label>Status</label><select><option>Active</option></select></div>
+      </div>
+      <button class="btn btn-primary">Save</button>
+    </div>
+  </section>
+
+  <!-- ============ 5. brokerage-detail-not-found ============ -->
+  <section data-frame="brokerage-detail-not-found">
+    <div class="content">
+      <div class="empty-state">
+        <div class="text-h3">This brokerage could not be found</div>
+        <div class="text-body">It may have been removed, or you may not have access to it.</div>
+        <button class="btn btn-primary" style="margin-top:8px">Return to Directory</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. brokerage-detail-readonly ============ -->
+  <section data-frame="brokerage-detail-readonly">
+    <div class="content stack-24">
+      <h1 class="text-h1">Northgate Insurance Partners</h1>
+      <div class="notice">Viewing only — your role does not permit edits to this brokerage.</div>
+      <div class="row">
+        <div class="field"><label>Brokerage name</label><input value="Northgate Insurance Partners" disabled></div>
+        <div class="field"><label>Status</label><input value="Active" disabled></div>
+      </div>
+      <h2 class="text-h3">Brokers</h2>
+      <table class="grid">
+        <thead><tr><th>Name</th><th>Type</th><th>Email</th><th>NPN</th></tr></thead>
+        <tbody>
+          <tr><td>Dana Smith</td><td>Producer</td><td>d.smith@example.invalid</td><td>1234567</td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-secondary">Back to Directory</button>
+    </div>
+  </section>
+
+  <!-- ============ 7. accounting-address-dialog ============ -->
+  <section data-frame="accounting-address-dialog">
+    <div class="content stack-16" aria-hidden="true" style="opacity:.5">
+      <h1 class="text-h1">Northgate Insurance Partners</h1>
+      <div class="row"><div class="field"><label>Brokerage name</label><input value="Northgate Insurance Partners" disabled></div></div>
+    </div>
+    <div class="dialog-backdrop">
+      <div class="dialog" role="dialog" aria-modal="true">
+        <h2 class="text-h2">Accounting address</h2>
+        <div class="stack-16" style="margin-top:16px">
+          <div class="field"><label>Contact name</label><input value="Dana Smith"></div>
+          <div class="field"><label>Address</label><input value="400 W Broad St"></div>
+          <div class="row">
+            <div class="field"><label>City</label><input value="Columbus"></div>
+            <div class="field"><label>State</label><input value="OH"></div>
+            <div class="field"><label>Zip</label><input value="43215"></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-primary">Save</button>
+            <button class="btn btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8. add-brokerage-populated ============ -->
+  <section data-frame="add-brokerage-populated">
+    <div class="content stack-24">
+      <h1 class="text-h1">Add new brokerage</h1>
+      <div class="row">
+        <div class="field"><label>Brokerage name</label><input placeholder=""></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Address</label><input placeholder="Start typing to see suggestions"></div>
+        <div class="field"><label>City</label><input></div>
+        <div class="field"><label>State</label><input></div>
+        <div class="field"><label>Zip</label><input></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Phone</label><input></div>
+        <div class="field"><label>Fax</label><input></div>
+        <div class="field"><label>Tax ID (FEIN)</label><input></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Assigned underwriter</label><input></div>
+        <div class="field"><label>Status</label><select><option>— select —</option></select></div>
+        <div class="field"><label>Contract received</label><input></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary">Save</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 9. add-brokerage-validation-error ============ -->
+  <section data-frame="add-brokerage-validation-error">
+    <div class="content stack-24">
+      <h1 class="text-h1">Add new brokerage</h1>
+      <div class="error-block" role="alert">
+        <div class="title">2 fields need attention</div>
+      </div>
+      <div class="row">
+        <div class="field invalid">
+          <label>Brokerage name</label><input>
+          <div class="invalid-msg">Enter a name.</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field invalid">
+          <label>Address</label><input>
+          <div class="invalid-msg">Enter a street address, or use suggest to fill it.</div>
+        </div>
+        <div class="field"><label>City</label><input></div>
+        <div class="field"><label>State</label><input></div>
+        <div class="field"><label>Zip</label><input></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary">Save</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10. agency-detail-populated ============ -->
+  <section data-frame="agency-detail-populated">
+    <div class="tab-bar content">
+      <div class="tab active">Details</div>
+      <div class="tab">Agents</div>
+      <div class="tab">Contact activity</div>
+      <div class="tab">Policies</div>
+    </div>
+    <div class="content stack-24">
+      <h1 class="text-h1">Buckeye Agency Group</h1>
+      <div class="row">
+        <div class="field"><label>Agency name</label><input value="Buckeye Agency Group"></div>
+        <div class="field"><label>Agency number (G1 Agency ID)</label><input value="G1-40021"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Address</label><input value="400 W Broad St"></div>
+        <div class="field"><label>City</label><input value="Columbus"></div>
+        <div class="field"><label>State</label><input value="OH"></div>
+        <div class="field"><label>Zip</label><input value="43215"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Phone</label><input value="(614) 555-0142"></div>
+        <div class="field"><label>Billing contact</label><input value="Dana Smith"></div>
+        <div class="field"><label>Billing contact phone</label><input value="(614) 555-0143"></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary">Save</button>
+        <button class="btn btn-secondary">Specialty</button>
+        <button class="btn btn-secondary">Back to Directory</button>
+      </div>
+      <h2 class="text-h3">Agents</h2>
+      <table class="grid">
+        <thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Email</th><th>NPN</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Marcus Reed</td><td>Agent</td><td>(614) 555-0150</td><td>m.reed@example.invalid</td><td>2345678</td><td><button class="btn btn-secondary">Edit agent Marcus Reed</button></td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-secondary">Add agent</button>
+    </div>
+  </section>
+
+  <!-- ============ 11. agency-detail-empty-agents ============ -->
+  <section data-frame="agency-detail-empty-agents">
+    <div class="content stack-24">
+      <h1 class="text-h1">Delaney General Agency</h1>
+      <div class="row">
+        <div class="field"><label>Agency name</label><input value="Delaney General Agency"></div>
+      </div>
+      <h2 class="text-h3">Agents</h2>
+      <div class="card">
+        <div class="empty-state">
+          <div class="text-h3">No agents yet</div>
+          <button class="btn btn-primary" style="margin-top:8px">Add agent</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 12. add-agency-populated ============ -->
+  <section data-frame="add-agency-populated">
+    <div class="content stack-24">
+      <h1 class="text-h1">Add new agency</h1>
+      <div class="row">
+        <div class="field"><label>Agency name</label><input></div>
+        <div class="field"><label>Agency number</label><input></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Address</label><input placeholder="Start typing to see suggestions"></div>
+        <div class="field"><label>City</label><input></div>
+        <div class="field"><label>State</label><input></div>
+        <div class="field"><label>Zip</label><input></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Phone</label><input></div>
+        <div class="field"><label>Premium Financing</label><select><option>No</option><option>Yes</option></select></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary">Save</button>
+        <button class="btn btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 13. add-agency-confirm-dialog ============ -->
+  <section data-frame="add-agency-confirm-dialog">
+    <div class="content stack-16" aria-hidden="true" style="opacity:.5">
+      <h1 class="text-h1">Add new agency</h1>
+    </div>
+    <div class="dialog-backdrop">
+      <div class="dialog" role="dialog" aria-modal="true">
+        <h2 class="text-h2">Agency created</h2>
+        <p class="text-body" style="margin-top:12px">Delaney General Agency was created successfully.</p>
+        <div class="row" style="margin-top:16px">
+          <button class="btn btn-primary">Go to Agency Detail</button>
+          <button class="btn btn-secondary">Add another agency</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 14. cga-grid-populated ============ -->
+  <section data-frame="cga-grid-populated">
+    <div class="content stack-24">
+      <h1 class="text-h1">CGA records</h1>
+      <table class="grid">
+        <thead><tr><th>CGA ID</th><th>Agent name</th><th>Address</th><th>Email</th><th>Phone</th><th>Agency ID</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>CGA-1001</td><td>A. Whitfield</td><td>400 W Broad St, Columbus, OH 43215</td><td>a.whitfield@example.invalid</td><td>(614) 555-0142</td><td>G1-40021</td><td><button class="btn btn-secondary">Edit CGA CGA-1001</button></td></tr>
+          <tr><td>CGA-1002</td><td>Dana Smith</td><td>400 W Broad St, Columbus, OH 43215</td><td>d.smith@example.invalid</td><td>(614) 555-0143</td><td>G1-40022</td><td><button class="btn btn-secondary">Edit CGA CGA-1002</button></td></tr>
+        </tbody>
+      </table>
+      <div class="row">
+        <button class="btn btn-secondary">Add CGA</button>
+        <button class="btn btn-secondary">Back to Directory</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 15. cga-grid-empty ============ -->
+  <section data-frame="cga-grid-empty">
+    <div class="content stack-24">
+      <h1 class="text-h1">CGA records</h1>
+      <div class="card">
+        <div class="empty-state">
+          <div class="text-h3">No CGA records yet</div>
+          <button class="btn btn-primary" style="margin-top:8px">Add CGA</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 16. cga-grid-row-editing ============ -->
+  <section data-frame="cga-grid-row-editing">
+    <div class="content stack-24">
+      <h1 class="text-h1">CGA records</h1>
+      <table class="grid">
+        <thead><tr><th>CGA ID</th><th>Agent name</th><th>Address</th><th>Email</th><th>Phone</th><th>Agency ID</th><th></th></tr></thead>
+        <tbody>
+          <tr class="editing">
+            <td>CGA-1001</td>
+            <td><input value="A. Whitfield"></td>
+            <td><input value="400 W Broad St, Columbus, OH 43215" placeholder="Start typing to see suggestions"></td>
+            <td><input value="a.whitfield@example.invalid"></td>
+            <td><input value="(614) 555-0142"></td>
+            <td><input value="G1-40021"></td>
+            <td><button class="btn btn-primary">Save</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 17. reference-lookup-admin ============ -->
+  <section data-frame="reference-lookup-admin">
+    <div class="content stack-24">
+      <h1 class="text-h1">Broker statuses</h1>
+      <table class="grid">
+        <thead><tr><th>Order</th><th>Label</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Active</td><td><button class="btn btn-secondary">Edit</button> <button class="btn btn-secondary">Delete</button></td></tr>
+          <tr><td>2</td><td>Prospect</td><td><button class="btn btn-secondary">Edit</button> <button class="btn btn-secondary">Delete</button></td></tr>
+          <tr><td>3</td><td>Inactive</td><td><button class="btn btn-secondary">Edit</button> <button class="btn btn-secondary">Delete</button></td></tr>
+        </tbody>
+      </table>
+      <button class="btn btn-secondary">Add value</button>
+    </div>
+  </section>
+
+  <!-- ============ 18. reference-lookup-readonly ============ -->
+  <section data-frame="reference-lookup-readonly">
+    <div class="content stack-24">
+      <h1 class="text-h1">Broker statuses</h1>
+      <div class="notice">Viewing only — maintaining lookup values requires the Administrator role.</div>
+      <table class="grid">
+        <thead><tr><th>Order</th><th>Label</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Active</td></tr>
+          <tr><td>2</td><td>Prospect</td></tr>
+          <tr><td>3</td><td>Inactive</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 19. status-matrix ============ -->
+  <section data-frame="status-matrix">
+    <div class="content stack-16">
+      <h1 class="text-h1">Status matrix</h1>
+      <div class="badge active"><span aria-hidden="true">&#9679;</span> In force</div>
+      <div class="badge pending"><span aria-hidden="true">&#9680;</span> Pending</div>
+      <div class="badge lapsed"><span aria-hidden="true">&#8856;</span> Lapsed</div>
+      <div class="badge neutral"><span aria-hidden="true">&#9675;</span> Unknown</div>
+    </div>
+  </section>
+
+  <footer class="text-caption frame-label" id="frameLabel">UNIT-CMS-0006 · brokerage-detail-populated · 1440px · light</footer>
+</div>
+</div>
+
+<script>
+  // Switcher only: shows/hides already-specified frame sections, toggles theme,
+  // and sets canvas width. No validation, no network, no timers, no storage,
+  // no computed values, no state machine — see SKILL.md § 2's boundary table.
+  var frameSelect = document.getElementById('frameSelect');
+  var themeSelect = document.getElementById('themeSelect');
+  var widthSelect = document.getElementById('widthSelect');
+  var canvas = document.getElementById('canvas');
+  var html = document.documentElement;
+  var label = document.getElementById('frameLabel');
+  var sections = document.querySelectorAll('section[data-frame]');
+
+  function update() {
+    var frame = frameSelect.value;
+    var theme = themeSelect.value;
+    var width = widthSelect.value;
+    sections.forEach(function (s) {
+      s.classList.toggle('current', s.getAttribute('data-frame') === frame);
+    });
+    html.setAttribute('data-theme', theme);
+    canvas.setAttribute('data-width', width);
+    label.textContent = 'UNIT-CMS-0006 · ' + frame + ' · ' + width + 'px · ' + theme;
+  }
+
+  frameSelect.addEventListener('change', update);
+  themeSelect.addEventListener('change', update);
+  widthSelect.addEventListener('change', update);
+  update();
+</script>
+
+</body>
+</html>
