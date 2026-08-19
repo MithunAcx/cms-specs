@@ -1,0 +1,635 @@
+openapi: 3.1.0
+info:
+  title: Activity API
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0007 — owns the polymorphic Activity entity (parentType/parentId),
+    soft delete, and server-derived userName. See
+    projects/contact-management/capabilities/CAP-CMS-0004-contact-activity-tracking/units/UNIT-CMS-0007-activity-api/requirements.md
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/activity:
+    get:
+      operationId: listActivity
+      summary: List activity entries for a brokerage or agency
+      description: >
+        Satisfies R4, R5, R10, R21. Excludes soft-deleted entries by default.
+      security:
+        - bearerAuth: [ "cms:activity.read" ]
+      parameters:
+        - name: parentType
+          in: query
+          required: true
+          description: Satisfies R1, R4.
+          schema:
+            $ref: '#/components/schemas/ParentType'
+        - name: parentId
+          in: query
+          required: true
+          description: Satisfies R4, R21.
+          schema:
+            type: string
+            format: uuid
+        - name: completed
+          in: query
+          required: false
+          description: Filter by open/closed state. Satisfies R5.
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          required: false
+          description: Satisfies R5.
+          schema:
+            type: string
+            enum: [followUpDate, -followUpDate]
+        - name: limit
+          in: query
+          required: false
+          description: Cursor pagination page size. Default 25, max 100.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque continuation token from a previous page's next_cursor.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Activity entries read successfully (satisfies R4, R5, R10). An empty list is a valid, successful answer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityListResponse'
+              examples:
+                withEntries:
+                  value:
+                    items:
+                      - id: "018f2a3e-7b1a-7c9a-8f1e-2b6a9d0c4e11"
+                        parentType: brokerage
+                        parentId: "018f2a3e-1111-7c9a-8f1e-2b6a9d0c4e11"
+                        statusId: 2
+                        note: "Called to confirm renewal date."
+                        followUpDate: "2026-09-01"
+                        enteredDate: "2026-08-18T14:03:00Z"
+                        completed: false
+                        completedDate: null
+                        userName: "jsmith"
+                    next_cursor: null
+                empty:
+                  summary: No activity entries for this parent — not an error.
+                  value:
+                    items: []
+                    next_cursor: null
+        '400':
+          description: Malformed parentType/parentId/pagination params.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    code: invalid_request
+                    message: "parentType must be 'brokerage' or 'agency'"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID1"
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    code: unauthenticated
+                    message: "Authentication required"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID2"
+        '404':
+          description: parentId not found in the caller's own tenant (satisfies R21).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    code: not_found
+                    message: "No brokerage or agency found for the given id"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID3"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    code: rate_limited
+                    message: "Too many requests"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID4"
+
+    post:
+      operationId: createActivity
+      summary: Log a new activity entry against a brokerage or agency
+      description: >
+        Satisfies R1, R2, R3, R12, R21. userName and enteredDate are always
+        server-derived; a client-supplied value for either is ignored.
+      security:
+        - bearerAuth: [ "cms:activity.write" ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityCreateRequest'
+            examples:
+              default:
+                value:
+                  parentType: brokerage
+                  parentId: "018f2a3e-1111-7c9a-8f1e-2b6a9d0c4e11"
+                  statusId: 2
+                  note: "Called to confirm renewal date."
+                  followUpDate: "2026-09-01"
+      responses:
+        '201':
+          description: Activity entry created (satisfies R1, R2, R3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+              examples:
+                created:
+                  value:
+                    id: "018f2a3e-7b1a-7c9a-8f1e-2b6a9d0c4e11"
+                    parentType: brokerage
+                    parentId: "018f2a3e-1111-7c9a-8f1e-2b6a9d0c4e11"
+                    statusId: 2
+                    note: "Called to confirm renewal date."
+                    followUpDate: "2026-09-01"
+                    enteredDate: "2026-08-18T14:03:00Z"
+                    completed: false
+                    completedDate: null
+                    userName: "jsmith"
+        '400':
+          description: Missing/malformed parentType, parentId, or statusId.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    code: invalid_request
+                    message: "statusId is required"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID5"
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    code: unauthenticated
+                    message: "Authentication required"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID6"
+        '403':
+          description: Caller authenticated but below the Editor role required to write (satisfies R20).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                forbidden:
+                  value:
+                    code: forbidden
+                    message: "Editor role required"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID7"
+        '404':
+          description: parentId not found in the caller's own tenant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    code: not_found
+                    message: "No brokerage or agency found for the given id"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID8"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    code: rate_limited
+                    message: "Too many requests"
+                    details: []
+                    trace_id: "01J8Z0000000000000000ULID9"
+        '503':
+          description: Write could not be completed atomically with its audit record (satisfies R12); safe to retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                writeFailed:
+                  value:
+                    code: write_failed
+                    message: "The request could not be completed; retry is safe"
+                    details: []
+                    trace_id: "01J8Z000000000000000ULID10"
+
+  /api/v1/activity/{id}:
+    put:
+      operationId: updateActivity
+      summary: Update an existing activity entry
+      description: >
+        Satisfies R6, R7, R8, R12, R21. Idempotent by resource id — replaying the
+        identical body produces the same resulting state (R17).
+      security:
+        - bearerAuth: [ "cms:activity.write" ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityUpdateRequest'
+            examples:
+              markComplete:
+                value:
+                  statusId: 2
+                  note: "Renewal confirmed, no further action."
+                  followUpDate: "2026-09-01"
+                  completed: true
+      responses:
+        '200':
+          description: Activity entry updated (satisfies R6, R7, R8). completedDate is server-set when completed flips true, server-cleared when it flips false.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+              examples:
+                updated:
+                  value:
+                    id: "018f2a3e-7b1a-7c9a-8f1e-2b6a9d0c4e11"
+                    parentType: brokerage
+                    parentId: "018f2a3e-1111-7c9a-8f1e-2b6a9d0c4e11"
+                    statusId: 2
+                    note: "Renewal confirmed, no further action."
+                    followUpDate: "2026-09-01"
+                    enteredDate: "2026-08-18T14:03:00Z"
+                    completed: true
+                    completedDate: "2026-08-18T15:20:00Z"
+                    userName: "jsmith"
+        '400':
+          description: Malformed request body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    code: invalid_request
+                    message: "followUpDate must be a valid date"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL11"
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    code: unauthenticated
+                    message: "Authentication required"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL12"
+        '403':
+          description: Caller authenticated but below the Editor role required to write (satisfies R20).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                forbidden:
+                  value:
+                    code: forbidden
+                    message: "Editor role required"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL13"
+        '404':
+          description: id not found, wrong tenant, or already soft-deleted (satisfies R6, R21).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    code: not_found
+                    message: "No activity entry found for the given id"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL14"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    code: rate_limited
+                    message: "Too many requests"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL15"
+        '503':
+          description: Write could not be completed atomically with its audit record (satisfies R12); safe to retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                writeFailed:
+                  value:
+                    code: write_failed
+                    message: "The request could not be completed; retry is safe"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL16"
+
+    delete:
+      operationId: softDeleteActivity
+      summary: Soft-delete an activity entry
+      description: >
+        Satisfies R9, R10, R11, R12, R21. Idempotent — deleting an
+        already-deleted entry is a no-op 204, not a 404.
+      security:
+        - bearerAuth: [ "cms:activity.write" ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Soft-deleted (or already soft-deleted — idempotent no-op). Satisfies R9, R11.
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    code: unauthenticated
+                    message: "Authentication required"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL17"
+        '403':
+          description: Caller authenticated but below the Editor role required to delete (satisfies R20, FR-ACT-3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                forbidden:
+                  value:
+                    code: forbidden
+                    message: "Editor role required"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL18"
+        '404':
+          description: id not found at all, or belongs to another tenant (satisfies R21). Never returned for an already soft-deleted entry — see 204.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    code: not_found
+                    message: "No activity entry found for the given id"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL19"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    code: rate_limited
+                    message: "Too many requests"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL20"
+        '503':
+          description: Delete could not be completed atomically with its audit record (satisfies R12); safe to retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                writeFailed:
+                  value:
+                    code: write_failed
+                    message: "The request could not be completed; retry is safe"
+                    details: []
+                    trace_id: "01J8Z000000000000000UL21"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Issuer, flow and token endpoint owned by UNIT-CMS-0001 (self-issued JWT,
+        no external IdP per stack.md). Scopes cms:activity.read (Viewer+) and
+        cms:activity.write (Editor+) required per operation.
+
+  schemas:
+    ParentType:
+      type: string
+      enum: [agency, brokerage]
+      description: Satisfies XD-0001 — closed enum, no other value accepted.
+
+    Activity:
+      type: object
+      additionalProperties: false
+      required: [id, parentType, parentId, statusId, note, followUpDate, enteredDate, completed, completedDate, userName]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: UUIDv7 per 10-platform.md. Not personal data.
+        parentType:
+          $ref: '#/components/schemas/ParentType'
+        parentId:
+          type: string
+          format: uuid
+          description: Opaque reference to a brokerage or agency owned by UNIT-CMS-0005. Not personal data.
+        statusId:
+          type: integer
+          format: int32
+          description: References the task-type/status controlled list (TskType_ID = 2) owned by UNIT-CMS-0005. Not personal data.
+        note:
+          type: string
+          description: Free text. Personal data by default (R24) — never logged, never echoed in an error message.
+        followUpDate:
+          type: string
+          format: date
+          description: Date-only, per 10-platform.md — never coerced to a timestamp.
+        enteredDate:
+          type: string
+          format: date-time
+          description: Server-derived at creation (R3). Read-only — never accepted from the client.
+        completed:
+          type: boolean
+          description: Client-settable. Drives completedDate server-side (R7, R8).
+        completedDate:
+          type: [string, "null"]
+          format: date-time
+          description: Server-set when completed flips true; server-cleared when it flips false (R7, R8). Read-only — never accepted from the client.
+        userName:
+          type: string
+          description: Server-derived from the authenticated caller (R2, XD-0003). Personal data, not special category. Read-only — never accepted from the client, and a client-supplied value in the request body is silently ignored, never merged.
+
+    ActivityCreateRequest:
+      type: object
+      additionalProperties: false
+      required: [parentType, parentId, statusId, note, followUpDate]
+      properties:
+        parentType:
+          $ref: '#/components/schemas/ParentType'
+        parentId:
+          type: string
+          format: uuid
+        statusId:
+          type: integer
+          format: int32
+        note:
+          type: string
+        followUpDate:
+          type: string
+          format: date
+      description: >
+        No userName, enteredDate, completed, or completedDate field exists on this
+        request shape — those are server-derived (R2, R3) and cannot be supplied by
+        a caller even accidentally, since the schema does not admit them
+        (additionalProperties: false).
+
+    ActivityUpdateRequest:
+      type: object
+      additionalProperties: false
+      required: [statusId, note, followUpDate, completed]
+      properties:
+        statusId:
+          type: integer
+          format: int32
+        note:
+          type: string
+        followUpDate:
+          type: string
+          format: date
+        completed:
+          type: boolean
+      description: >
+        No completedDate field exists on this request shape — it is always
+        server-derived from the completed flip (R7, R8), never client-supplied.
+
+    ActivityListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        next_cursor:
+          type: [string, "null"]
+          description: Opaque cursor for the next page, per 10-platform.md pagination convention. Null when no further page exists.
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message, details, trace_id]
+      properties:
+        code:
+          type: string
+          enum: [invalid_request, unauthenticated, forbidden, not_found, rate_limited, write_failed]
+          description: Stable snake_case, part of the contract (10-platform.md Errors).
+        message:
+          type: string
+          description: Human-readable; never personal data.
+        details:
+          type: array
+          items:
+            type: object
+        trace_id:
+          type: string
+          description: ULID.
