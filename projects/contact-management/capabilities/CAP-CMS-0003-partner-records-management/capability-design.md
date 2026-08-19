@@ -52,7 +52,7 @@ mutable table, not just some.
 |---|---|
 | Versioning | `/api/v1/...` |
 | Auth header shape | `Authorization: Bearer <access token>`, validated per CAP-CMS-0001/XD-0002 |
-| Pagination | `page`/`size` for list endpoints (e.g. brokers/agents/CGA grids); total count and page metadata included |
+| Pagination | Cursor-based only, per `10-platform.md` — `limit`+`cursor` in, `items`+`next_cursor` out, on every list endpoint (e.g. brokers/agents grids); default `limit` 25, maximum 100. No offset/page-number pagination anywhere in this contract |
 | Error envelope | `{ error: { code, message, fields? } }` — `409 conflict_version_mismatch` per XD-0002 is a distinguished error code, not a generic `409` |
 | Idempotency | `PUT` idempotent by resource id and `version`; `POST` creates are not idempotent |
 | Rate limiting response | `429` with `Retry-After` |
@@ -64,7 +64,7 @@ mutable table, not just some.
 | GET | `/api/v1/brokerages/{id}` | — | `Brokerage` (XD-0001 shape) | `404` | Viewer |
 | POST | `/api/v1/brokerages` | `Brokerage` fields (FR-BRK-1) | `Brokerage` with new id | `400` validation | Editor |
 | PUT | `/api/v1/brokerages/{id}` | `Brokerage` fields + `version` | updated `Brokerage` | `400`, `409` (XD-0002) | Editor |
-| GET | `/api/v1/brokerages/{id}/brokers` | — | `Broker[]` | — | Viewer |
+| GET | `/api/v1/brokerages/{id}/brokers` | `limit`, `cursor` (query, optional) | `{ items: Broker[], next_cursor }` | — | Viewer |
 | POST | `/api/v1/brokerages/{id}/brokers` | `Broker` fields | `Broker` with new id | `400` | Editor |
 | PUT | `/api/v1/brokers/{id}` | `Broker` fields + `version` | updated `Broker` | `400`, `409` | Editor |
 | GET | `/api/v1/brokerages/{id}/accounting` | — | `Brokerage.accounting` sub-resource | `404` | Viewer |
@@ -72,13 +72,13 @@ mutable table, not just some.
 | GET | `/api/v1/agencies/{id}` | — | `Agency` | `404` | Viewer |
 | POST | `/api/v1/agencies` | `Agency` fields (FR-AGY-1) | `Agency` with new id and generated account code | `400` | Editor |
 | PUT | `/api/v1/agencies/{id}` | `Agency` fields + `version` | updated `Agency` | `400`, `409` | Editor |
-| GET | `/api/v1/agencies/{id}/agents` | — | `Agent[]` | — | Viewer |
+| GET | `/api/v1/agencies/{id}/agents` | `limit`, `cursor` (query, optional) | `{ items: Agent[], next_cursor }` | — | Viewer |
 | POST | `/api/v1/agencies/{id}/agents` | `Agent` fields | `Agent` with new id | `400` | Editor |
 | PUT | `/api/v1/agents/{id}` | `Agent` fields + `version` | updated `Agent` | `400`, `409` | Editor |
 | GET | `/api/v1/cgas/{id}` | — | `Cga` | `404` | Viewer |
 | POST | `/api/v1/cgas` | `Cga` fields (FR-CGA-1) | `Cga` with new id | `400` | Editor |
 | PUT | `/api/v1/cgas/{id}` | `Cga` fields + `version` | updated `Cga` | `400`, `409` | Editor |
-| GET | `/api/v1/lookups/{type}` (`states`\|`broker-types`\|`agent-types`\|`broker-statuses`) | — | lookup list | — | Viewer |
+| GET | `/api/v1/lookups/{type}` (`states`\|`broker-types`\|`agent-types`\|`broker-statuses`) | — | `{ items: lookup value[] }` — unpaginated; each lookup type is a small, closed, fully-enumerated set, not a growing list | — | Viewer |
 | PUT | `/api/v1/lookups/{type}` | lookup values | updated list | `400` | Administrator |
 
 ### partner-records-ui (U2) — endpoints
@@ -172,3 +172,4 @@ U2 (tab A)                 U2 (tab B)                 U1
 
 | Date | Change | Units whose `design.md` must follow |
 |------|--------|-------------------------------------|
+| 2026-08-19 | Unified API Contract's Pagination convention corrected from `page`/`size` (offset) to cursor-based (`limit`+`cursor` in, `items`+`next_cursor` out, default 25/max 100) per `10-platform.md`'s unconditional "cursor-based only" rule — this was a design defect, not a disclosed exception, and is fixed here rather than carried forward as one. `listBrokers`/`listAgents` rows and the shared conventions row updated accordingly. | UNIT-CMS-0005, UNIT-CMS-0006 |

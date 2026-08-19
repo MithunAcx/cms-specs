@@ -148,22 +148,30 @@ rather than an original.
 | Contract | Kind | File | Satisfies |
 |---|---|---|---|
 | Consumption record (why, and error-code-to-outcome mapping, for every depended-on unit) | prose | `interfaces/consumed-contracts.yaml` | R1–R30, R31–R41, R43–R57 |
+| UNIT-CMS-0005 Partner Records API (copy — byte-identical mirror, cursor pagination corrected 2026-08-19) | sync HTTP | `interfaces/UNIT-CMS-0005.openapi.yaml` | R1–R30, R31–R41, R43–R57 |
 | UNIT-CMS-0010 Policy Integration API (copy — already published by its own unit) | sync HTTP | `interfaces/UNIT-CMS-0010.openapi.yaml` | R10, R19, R35, R47 |
 
-UNIT-CMS-0005 (brokerage/agency/CGA/broker/agent/lookup CRUD) and UNIT-CMS-0009
-(address-suggest) are both depended on by this unit, but **neither has yet authored
-its own `interfaces/openapi.yaml`** — both are still mid-pipeline in this same parallel
-work stream. Per `shared-spec-conventions`, a consumer unit's copy is only ever a
-byte-identical mirror of a producer's *existing* file; there being nothing to mirror
-yet, no `UNIT-CMS-0005.openapi.yaml` / `UNIT-CMS-0009.openapi.yaml` file is created
-here as a placeholder. `consumed-contracts.yaml` records this explicitly as `PENDING`
-for both, naming the action required (re-run `architect-unit-interfaces` for this
-unit once each producer's own file exists) so the gap is visible rather than silently
-assumed. This unit's own R1–R30/R31–R41/R43–R57 coverage of the UNIT-CMS-0005 contract
-is designed against the endpoint set `capability-design.md`'s Unified API Contract
-already fixes (XD-0001..XD-0004), which is the shape both units were designed
-against, so the design itself is not blocked by the missing copy — only the
-byte-identical mirror file is outstanding.
+UNIT-CMS-0005's own `interfaces/openapi.yaml` has since been authored and merged
+(PR #56), including the fix for `capability-design.md`'s pagination convention
+(`page`/`size` corrected to cursor-based `limit`/`cursor` in, `items`/`next_cursor`
+out — see `capability-design.md`'s Change log, 2026-08-19). `interfaces/UNIT-CMS-0005.openapi.yaml`
+here is now a byte-identical copy of that file, per `shared-spec-conventions`' rule
+that a consumer unit carries a mirror rather than an original. This unit's own
+`listBrokers`/`listAgents` consumption (R9, R18 — the Brokers/Agents grids) reads
+`items`/`next_cursor` from that contract; given this capability's stated low-hundreds
+volume (`capability.md`, intake Q8), each grid is expected to fit in a single page at
+the default `limit` of 25, but the grid still follows `next_cursor` when present
+rather than assuming a single page, so correctness does not depend on the volume
+assumption holding.
+
+UNIT-CMS-0009 (address-suggest) is still depended on by this unit but **has not yet
+authored its own `interfaces/openapi.yaml`** — it remains mid-pipeline in this same
+parallel work stream. Per `shared-spec-conventions`, a consumer unit's copy is only
+ever a byte-identical mirror of a producer's *existing* file; there being nothing to
+mirror yet, no `UNIT-CMS-0009.openapi.yaml` file is created here as a placeholder.
+`consumed-contracts.yaml` records this explicitly as `PENDING`, naming the action
+required (re-run `architect-unit-interfaces` for this unit once that producer's own
+file exists).
 
 Contracts for UNIT-CMS-0008 (activity grid) are that unit's own embedded-component
 contract, not a network API, so no copy applies — this unit's Dependencies table
