@@ -4,690 +4,1000 @@
 <meta charset="utf-8">
 <title>UNIT-CMS-0008 activity-grid-ui — mockup</title>
 <style>
-  :root[data-theme="light"] {
-    --bg: #FFFFFF;
-    --surface: #F8FAFC;
-    --surface-raised: #FFFFFF;
-    --border: #E2E8F0;
-    --border-strong: #CBD5E1;
-    --text-primary: #1E293B;
-    --text-secondary: #475569;
-    --text-disabled: #94A3B8;
-    --primary: #C8213E;
-    --primary-text: #FFFFFF;
-    --focus: #E43E54;
-    --skeleton: #E2E8F0;
-    --status-active: #047857;
-    --status-pending: #B45309;
-    --status-lapsed: #64748B;
-    --status-neutral: #64748B;
-    --danger: #A81A35;
-    --danger-surface: #FEF2F3;
-    --notice-surface: #F1F5F9;
+  /* ============================================================
+     Design tokens and component classes copied verbatim (naming
+     and structure) from requirements/contactmanagement-full-mockup.html
+     -- the sponsor-provided reference design system -- per
+     designer-unit-ux's brief for this rebuild. Motion (CSS animation/
+     transition/keyframes) is omitted throughout: a11y.md commits this
+     component to "no animation is used anywhere", and that commitment
+     is honoured here rather than the reference's own hover/open CSS
+     transitions. Box-shadow is kept (it is static, not motion) because
+     it carries real elevation meaning for the dialog/panel surfaces the
+     reference relies on for visual match. JS-driven timing (a short
+     simulated round trip before a loading/submitting state resolves) is
+     NOT CSS animation and is used deliberately below, so the switch
+     between mandatory states (loading -> populated, submitting ->
+     success) is something a reviewer can actually observe happening,
+     not just two static frames.
+     ============================================================ */
+  :root{
+    --brand:#c8213e; --brand-dark:#a81a35; --brand-light:#e43e54; --brand-50:#fef2f3; --brand-700:#a81a35;
+    --bg:#f8fafc; --panel:#ffffff; --panel-2:#f8fafc; --border:#e2e8f0; --border-strong:#cbd5e1;
+    --text:#1e293b; --text-2:#475569; --muted:#64748b; --faint:#94a3b8;
+    --emerald-50:#ecfdf5; --emerald-500:#10b981; --emerald-700:#047857;
+    --amber-50:#fffbeb; --amber-500:#f59e0b; --amber-700:#b45309;
+    --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-400:#94a3b8;
+    --shadow:0 1px 2px rgba(0,0,0,.05);
+    --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);
+    --radius:.75rem;
   }
-  :root[data-theme="dark"] {
-    --bg: #020617;
-    --surface: #1E293B;
-    --surface-raised: #0F172A;
-    --border: #334155;
-    --border-strong: #475569;
-    --text-primary: #F1F5F9;
-    --text-secondary: #CBD5E1;
-    --text-disabled: #64748B;
-    --primary: #C8213E;
-    --primary-text: #FFFFFF;
-    --focus: #E43E54;
-    --skeleton: #334155;
-    --status-active: #34D399;
-    --status-pending: #FBBF24;
-    --status-lapsed: #94A3B8;
-    --status-neutral: #94A3B8;
-    --danger: #F7A3AB;
-    --danger-surface: #3A1620;
-    --notice-surface: #1E293B;
+  :root[data-theme="dark"]{
+    --bg:#020617; --panel:#0f172a; --panel-2:#1e293b; --border:#1e293b; --border-strong:#334155;
+    --text:#f1f5f9; --text-2:#cbd5e1; --muted:#94a3b8; --faint:#64748b;
+    --brand-50:rgba(228,62,84,.12); --brand-700:#f7a3ab; --slate-100:#1e293b; --slate-200:#334155;
+    --emerald-50:rgba(16,185,129,.12); --emerald-700:#34d399; --amber-50:rgba(245,158,11,.12); --amber-700:#fbbf24;
   }
 
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;
   }
+  h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.01em}
 
-  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
-  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
-  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
-  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
-  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
-  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
-
-  /* ---- switcher chrome (scaffolding, not a specified screen) ---- */
-  .switcher {
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-    padding: 12px 16px; background: #444; border-bottom: 4px solid #222;
+  /* ---- switcher chrome (reviewer scaffolding, not a specified screen) ---- */
+  .switcher{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+    padding:12px 16px; background:#333; border-bottom:4px solid #111;
   }
-  .switcher label { color: #fff; font-size: 12px; margin-right: 4px; }
-  .switcher select, .switcher button.switcher-btn {
-    font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #888;
-    background: #fff; color: #111;
+  .switcher label{color:#fff; font-size:12px; margin-right:4px}
+  .switcher select, .switcher button.switcher-btn{
+    font-size:12px; padding:4px 8px; border-radius:4px; border:1px solid #888;
+    background:#fff; color:#111;
   }
-  .switcher button.switcher-btn[aria-pressed="true"] { outline: 2px solid #fff; }
+  .switcher button.switcher-btn[aria-pressed="true"]{outline:2px solid #fff}
+  .switcher .grp{display:flex; align-items:center; gap:6px; padding:4px 8px; border-radius:6px; background:#00000033}
+  .switcher .grp.primary{background:#00000055}
 
   /* ---- canvas ---- */
-  .canvas-outer { display: flex; justify-content: center; background: #333; padding: 24px 0; }
-  .canvas {
-    background: var(--bg);
-    min-height: 200px;
-  }
-  .canvas[data-width="360"]  { width: 360px; }
-  .canvas[data-width="768"]  { width: 768px; }
-  .canvas[data-width="1440"] { width: 1440px; }
+  .canvas-outer{display:flex; justify-content:center; background:#222; padding:24px 0}
+  .canvas{background:var(--bg); min-height:200px; position:relative}
+  .canvas[data-width="360"]{width:360px}
+  .canvas[data-width="768"]{width:768px}
+  .canvas[data-width="1440"]{width:1440px}
+  .canvas[data-width="360"] .frame-body{padding:0 16px}
+  .canvas[data-width="768"] .frame-body{padding:0 24px}
+  .canvas[data-width="1440"] .frame-body{padding:0 32px}
 
-  .canvas[data-width="360"]  .frame-body { padding: 0 16px; }
-  .canvas[data-width="768"]  .frame-body { padding: 0 24px; }
-  .canvas[data-width="1440"] .frame-body { padding: 0 32px; }
+  .app-header{
+    height:56px; width:100%; display:flex; align-items:center; gap:.6rem;
+    background:var(--panel-2); border-bottom:1px solid var(--border);
+    padding-left:32px;
+  }
+  .canvas[data-width="360"] .app-header{padding-left:16px}
+  .canvas[data-width="768"] .app-header{padding-left:24px}
+  .brandmark{
+    display:grid; place-items:center; height:1.75rem; width:1.75rem; border-radius:.5rem;
+    color:#fff; background:var(--brand);
+  }
+  .brand-title{font-size:15px; font-weight:700; line-height:1.2}
 
-  .app-header {
-    height: 56px; width: 100%;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding-left: 32px;
-  }
-  .canvas[data-width="360"] .app-header { padding-left: 16px; }
-  .canvas[data-width="768"] .app-header { padding-left: 24px; }
+  .frame-body{margin-top:24px; padding-bottom:32px; position:relative}
 
-  .frame-body { margin-top: 24px; padding-bottom: 32px; }
+  footer.frame-label{padding:8px 0 24px; color:var(--muted); font-size:12px}
+  .canvas[data-width="360"] footer.frame-label{padding-left:16px}
+  .canvas[data-width="768"] footer.frame-label{padding-left:24px}
+  .canvas[data-width="1440"] footer.frame-label{padding-left:32px}
 
-  .frame-section { display: none; }
-  .frame-section.active { display: block; }
+  /* ---- buttons (verbatim from the reference) ---- */
+  .btn{
+    display:inline-flex; align-items:center; gap:.4rem; border-radius:.5rem; padding:.5rem 1rem;
+    font-size:.875rem; font-weight:600; border:1px solid transparent; cursor:pointer;
+    background:transparent; color:var(--text); font-family:inherit;
+  }
+  .btn:disabled{opacity:.55; cursor:not-allowed}
+  .btn svg{height:1rem; width:1rem}
+  .btn-primary{background:var(--brand); color:#fff; box-shadow:var(--shadow)}
+  .btn-secondary{border-color:var(--border-strong); background:var(--panel); color:var(--text-2); box-shadow:var(--shadow)}
+  .btn-ghost{color:var(--muted); padding:.4rem .6rem}
+  .btn-sm{padding:.35rem .6rem; font-size:.78rem}
+  .btn-danger{color:#dc2626; border:1px solid var(--border-strong); background:var(--panel)}
+  .btn-disabled{
+    display:inline-flex; align-items:center; gap:.4rem; border-radius:.5rem; padding:.5rem 1rem;
+    font-size:.875rem; font-weight:600; border:1px solid var(--border-strong); background:var(--panel);
+    color:var(--faint);
+  }
+  .btn-disabled.btn-sm{padding:.35rem .6rem; font-size:.78rem}
+  .btn-row{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
+  .btn-caption{color:var(--muted); font-size:.78rem}
 
-  footer.frame-label {
-    padding: 8px 0 24px 0;
-    color: var(--text-secondary);
+  /* ---- fields (verbatim) ---- */
+  .field label{display:block; font-size:.72rem; font-weight:600; color:var(--muted); margin-bottom:.25rem}
+  .req{color:var(--brand)}
+  .inp, select.inp, textarea.inp{
+    width:100%; border-radius:.5rem; border:1px solid var(--border-strong); background:var(--panel);
+    color:var(--text); padding:.5rem .7rem; font-size:.875rem; box-shadow:var(--shadow); font-family:inherit;
   }
-  footer.frame-label.text-caption { padding-left: 32px; }
-  .canvas[data-width="360"] footer.frame-label { padding-left: 16px; }
-  .canvas[data-width="768"] footer.frame-label { padding-left: 24px; }
-  .canvas[data-width="1440"] footer.frame-label { padding-left: 32px; }
+  .inp:focus{outline:2px solid var(--brand-light); outline-offset:1px}
+  .inp.err{border-color:var(--brand); outline:2px solid var(--brand-light); outline-offset:1px}
+  .inp:disabled{opacity:.6}
+  textarea.inp{resize:vertical; min-height:64px}
+  .help-err{margin-top:.25rem; font-size:.72rem; font-weight:600; color:var(--brand)}
+  .field{margin-bottom:1rem}
+  .grid{display:grid; gap:1rem}
+  .g2{grid-template-columns:1fr}
+  .colspan2{grid-column:span 1}
+  @media(min-width:640px){ .g2{grid-template-columns:1fr 1fr} .colspan2{grid-column:span 2} }
 
-  /* ---- buttons ---- */
-  .btn-primary {
-    height: 36px; border-radius: 6px; background: var(--primary);
-    color: var(--primary-text); border: none; padding: 0 16px;
-    font-size: 14px; font-weight: 600; line-height: 20px; cursor: pointer;
+  /* ---- panel / section ---- */
+  .panel{border:1px solid var(--border); background:var(--panel); border-radius:1rem; box-shadow:var(--shadow)}
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;
+    padding:.9rem 1.1rem; border-bottom:1px solid var(--border);
   }
-  .btn-secondary {
-    height: 36px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); color: var(--text-primary);
-    padding: 0 16px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer;
-  }
-  .btn-disabled {
-    height: 36px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); color: var(--text-disabled);
-    padding: 0 16px; font-size: 14px; font-weight: 400; line-height: 20px;
-  }
-  .btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .btn-caption { color: var(--text-secondary); }
+  .panel-head h3{font-size:.95rem}
+  .count{margin-left:.4rem; border-radius:9999px; background:var(--slate-200); color:var(--text-2); padding:.05rem .5rem; font-size:.72rem; font-weight:700}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem}
+  .toolbar-group{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
+  .toolbar-group select.inp{width:auto}
 
-  /* ---- input field ---- */
-  .field { margin-bottom: 16px; }
-  .field label {
-    display: block; font-size: 12px; font-weight: 400; line-height: 16px;
-    color: var(--text-secondary); margin-bottom: 4px;
-  }
-  .field input, .field select, .field textarea {
-    height: 36px; width: 100%; border-radius: 6px;
-    background: var(--surface-raised); border: 1px solid var(--border);
-    color: var(--text-primary); font-family: inherit; font-size: 14px; padding: 0 8px;
-  }
-  .field textarea { height: 72px; padding: 8px; resize: vertical; }
-  .field.has-error input, .field.has-error select { border-color: var(--danger); }
-  .field-error {
-    margin-top: 4px; color: var(--danger); font-size: 12px; line-height: 16px;
-  }
+  /* ---- table (verbatim: .tbl-wrap / table.tbl) ---- */
+  .tbl-wrap{overflow-x:auto}
+  table.tbl{width:100%; border-collapse:collapse; font-size:.875rem; text-align:left}
+  .tbl thead{background:var(--panel-2); border-bottom:1px solid var(--border); font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; color:var(--muted)}
+  .tbl th{padding:.6rem .9rem; font-weight:600; white-space:nowrap}
+  .tbl th button.sort-th{background:none; border:none; font:inherit; color:inherit; text-transform:inherit; letter-spacing:inherit; cursor:pointer; padding:0; display:inline-flex; align-items:center; gap:.25rem}
+  .tbl td{padding:.6rem .9rem; border-top:1px solid var(--border); vertical-align:middle}
+  .tbl .strong{font-weight:600}
+  .tbl .right{text-align:right}
+  .empty{padding:2.5rem 1rem; text-align:center; color:var(--faint); font-size:.875rem}
+  .row-actions{display:flex; gap:.4rem; justify-content:flex-end; flex-wrap:wrap}
 
-  /* ---- table ---- */
-  table.activity-table { width: 100%; border-collapse: collapse; }
-  table.activity-table thead tr { height: 40px; background: var(--surface); }
-  table.activity-table th {
-    text-align: left; font-size: 12px; font-weight: 400; line-height: 16px;
-    color: var(--text-secondary); padding: 0 12px;
-  }
-  table.activity-table tbody tr { height: 48px; border-bottom: 1px solid var(--border); }
-  table.activity-table td { padding: 8px 12px; vertical-align: middle; }
-  table.activity-table td.strong { font-size: 14px; font-weight: 600; line-height: 20px; }
-  table.activity-table td.body { font-size: 14px; font-weight: 400; line-height: 20px; }
-  .row-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  /* ---- badges (verbatim: .badge / .dot) ---- */
+  .badge{display:inline-flex; align-items:center; gap:.35rem; border-radius:9999px; padding:.1rem .5rem; font-size:.72rem; font-weight:600}
+  .dot{height:.375rem; width:.375rem; border-radius:9999px}
+  .badge-active{background:var(--emerald-50); color:var(--emerald-700)} .badge-active .dot{background:var(--emerald-500)}
+  .badge-warn{background:var(--amber-50); color:var(--amber-700)} .badge-warn .dot{background:var(--amber-500)}
 
-  /* card layout (mobile, in place of table) */
-  .activity-cards { display: none; }
-  .canvas[data-width="360"] table.activity-table { display: none; }
-  .canvas[data-width="360"] .activity-cards { display: block; }
+  /* mobile card layout (below tablet width, in place of the table) */
+  .activity-cards{display:none}
+  .canvas[data-width="360"] table.tbl.activity-tbl{display:none}
+  .canvas[data-width="360"] .tbl-wrap.activity-tbl-wrap{display:none}
+  .canvas[data-width="360"] .activity-cards{display:block}
   .canvas[data-width="768"] .activity-cards,
-  .canvas[data-width="1440"] .activity-cards { display: none; }
+  .canvas[data-width="1440"] .activity-cards{display:none}
+  .card{border:1px solid var(--border); background:var(--panel); border-radius:1rem; box-shadow:var(--shadow); padding:1rem; margin-bottom:1rem}
+  .card .card-row{display:flex; justify-content:space-between; gap:.5rem; margin-bottom:.4rem}
 
-  .card {
-    border-radius: 8px; background: var(--surface-raised); border: 1px solid var(--border);
-    padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
-  }
-  .card .card-row { display: flex; justify-content: space-between; gap: 8px; }
-
-  /* ---- filter/sort bar & load-more ---- */
-  .toolbar {
-    display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
-  }
-  .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .load-more-row { display: flex; justify-content: center; margin-top: 16px; }
-  .load-more-btn {
-    height: 36px; padding: 0 16px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); color: var(--text-primary); font-size: 14px; cursor: pointer;
-  }
+  .load-more-row{display:flex; justify-content:center; margin-top:1rem}
 
   /* ---- empty state ---- */
-  .empty-state {
-    min-height: 160px; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 8px; text-align: center;
-  }
-  .empty-state .text-body { color: var(--text-secondary); }
+  .empty-state{min-height:160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; text-align:center; padding:1rem}
+  .empty-state .muted{color:var(--muted)}
 
-  /* ---- error block ---- */
-  .error-block {
-    background: var(--danger-surface); border: 1px solid var(--danger); border-radius: 8px;
-    padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
-  }
-  .error-block .title { color: var(--danger); font-size: 14px; font-weight: 600; line-height: 20px; }
-  .error-block .body { color: var(--text-primary); font-size: 14px; font-weight: 400; line-height: 20px; }
+  /* ---- error block (built from the reference's palette; not itself a reference class) ---- */
+  .error-block{background:var(--brand-50); border:1px solid var(--brand); border-radius:.75rem; padding:1rem; display:flex; flex-direction:column; gap:.75rem; align-items:flex-start}
+  .error-block .title{color:var(--brand-700); font-weight:600}
+  .error-block .body{color:var(--text)}
 
-  /* ---- dialog ---- */
-  .dialog-backdrop {
-    background: var(--bg); outline: 1px solid var(--border-strong);
-    padding: 32px; display: flex; justify-content: center;
+  /* ---- dialog (verbatim: .overlay / .scrim / .box / .dialog / .dialog-head / .dialog-body / .dialog-foot)
+         Positioned relative to the frame, not position:fixed to the viewport, so
+         the dialog stays visible within this one-file mockup's own scroll area;
+         the real component's actual fixed/modal placement is the a11y.md text
+         contract, not this rendering. ---- */
+  .overlay{display:block; position:absolute; inset:0; z-index:20}
+  .overlay .scrim{position:absolute; inset:0; background:rgba(15,23,42,.5)}
+  .overlay .box{position:relative; display:flex; align-items:flex-start; justify-content:center; padding:2rem 0}
+  .dialog{
+    position:relative; width:100%; max-width:32rem; background:var(--panel);
+    border-radius:1rem; box-shadow:var(--shadow-lg); border:1px solid var(--border);
   }
-  .dialog {
-    width: 480px; max-width: 100%; border-radius: 12px; background: var(--surface-raised);
-    border: 1px solid var(--border-strong); padding: 24px;
+  .canvas[data-width="360"] .dialog{max-width:100%; margin:0 8px}
+  .dialog-head{display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--border)}
+  .dialog-body{padding:1.25rem}
+  .dialog-foot{display:flex; justify-content:flex-end; gap:.5rem; padding:1rem 1.25rem; border-top:1px solid var(--border)}
+  .faint{color:var(--faint); font-size:.72rem}
+
+  /* ---- toast (verbatim palette/shape) ---- */
+  .toast{position:absolute; right:16px; bottom:16px; z-index:40; display:none}
+  .toast.show{display:block}
+  .toast-in{
+    display:inline-flex; align-items:center; gap:.5rem; border-radius:.75rem; background:#0f172a;
+    color:#fff; padding:.6rem 1rem; font-size:.875rem; font-weight:500; box-shadow:var(--shadow-lg);
   }
-  .canvas[data-width="360"] .dialog { width: 100%; }
+  :root[data-theme="dark"] .toast-in{background:#fff; color:#0f172a}
+  .toast-in svg{height:1rem; width:1rem; color:var(--emerald-500)}
+  .row-toast{display:inline-flex}
 
   /* ---- skeleton ---- */
-  .skeleton-bar { height: 12px; border-radius: 6px; background: var(--skeleton); margin: 8px 0; }
+  .skeleton-bar{height:12px; border-radius:6px; background:var(--slate-200); margin:8px 0}
 
-  /* ---- misc ---- */
-  .stack-16 > * + * { margin-top: 16px; }
-  .stack-24 > * + * { margin-top: 24px; }
-  .visually-hidden {
-    position: absolute; width: 1px; height: 1px; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap;
-  }
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+  .banner{padding:1rem; border-radius:.75rem; margin-bottom:1rem}
 </style>
 </head>
 <body>
 
   <div class="switcher">
-    <label for="frame-select">Frame</label>
-    <select id="frame-select" onchange="setFrame(this.value)">
-      <option value="loading">loading</option>
-      <option value="populated-editor" selected>populated-editor</option>
-      <option value="populated-viewer">populated-viewer</option>
-      <option value="empty-first-use">empty-first-use</option>
-      <option value="empty-filtered">empty-filtered</option>
-      <option value="add-form-open">add-form-open</option>
-      <option value="add-form-validation-error">add-form-validation-error</option>
-      <option value="row-submitting">row-submitting</option>
-      <option value="delete-confirm">delete-confirm</option>
-      <option value="error-dependency-down">error-dependency-down</option>
-      <option value="throttled">throttled</option>
-      <option value="session-expired">session-expired</option>
-      <option value="row-not-found">row-not-found</option>
-      <option value="offline-on-load">offline-on-load</option>
-      <option value="offline-on-submit">offline-on-submit</option>
-      <option value="success-confirmation">success-confirmation</option>
-    </select>
+    <div class="grp primary">
+      <label for="frame-select">Jump to state</label>
+      <select id="frame-select" onchange="jumpToFrame(this.value)">
+        <option value="loading">loading</option>
+        <option value="populated-editor" selected>populated-editor</option>
+        <option value="populated-viewer">populated-viewer</option>
+        <option value="empty-first-use">empty-first-use</option>
+        <option value="empty-filtered">empty-filtered</option>
+        <option value="add-form-open">add-form-open</option>
+        <option value="add-form-validation-error">add-form-validation-error</option>
+        <option value="row-submitting">row-submitting</option>
+        <option value="delete-confirm">delete-confirm</option>
+        <option value="error-dependency-down">error-dependency-down</option>
+        <option value="throttled">throttled</option>
+        <option value="session-expired">session-expired</option>
+        <option value="row-not-found">row-not-found</option>
+        <option value="offline-on-load">offline-on-load</option>
+        <option value="offline-on-submit">offline-on-submit</option>
+        <option value="success-confirmation">success-confirmation</option>
+      </select>
+      <span style="color:#cbd5e1;font-size:11px">— each option drives the real app into that state (not a static snapshot)</span>
+    </div>
 
-    <label>Theme</label>
-    <button class="switcher-btn" id="theme-light-btn" aria-pressed="true" onclick="setTheme('light')">light</button>
-    <button class="switcher-btn" id="theme-dark-btn" aria-pressed="false" onclick="setTheme('dark')">dark</button>
+    <div class="grp">
+      <label for="parent-select">Parent</label>
+      <select id="parent-select" onchange="onParentChange(this.value)">
+        <option value="agency:3001">Agency — Lonestar Insurance Agency</option>
+        <option value="brokerage:1001">Brokerage — Acme Insurance Brokers</option>
+        <option value="agency:9999">Agency — New Prospect (no activity)</option>
+      </select>
+    </div>
 
-    <label>Width</label>
-    <button class="switcher-btn" id="width-360-btn" aria-pressed="false" onclick="setWidth('360')">360</button>
-    <button class="switcher-btn" id="width-768-btn" aria-pressed="false" onclick="setWidth('768')">768</button>
-    <button class="switcher-btn" id="width-1440-btn" aria-pressed="true" onclick="setWidth('1440')">1440</button>
+    <div class="grp">
+      <label>Role</label>
+      <button class="switcher-btn" id="role-editor-btn" aria-pressed="true" onclick="setRole('editor')">Editor</button>
+      <button class="switcher-btn" id="role-viewer-btn" aria-pressed="false" onclick="setRole('viewer')">Viewer</button>
+    </div>
+
+    <div class="grp">
+      <label for="simulate-select">Simulate (next call)</label>
+      <select id="simulate-select" onchange="onSimulateChange(this.value)">
+        <option value="">none</option>
+        <option value="dependency-down">dependency down</option>
+        <option value="throttled">rate limited (429)</option>
+        <option value="not-found">row gone (404)</option>
+        <option value="session-expired">session expired (401)</option>
+        <option value="invalid-scope">invalid scope (422)</option>
+      </select>
+      <label style="margin-left:6px"><input type="checkbox" id="offline-toggle" onchange="onOfflineToggle(this.checked)"> offline</label>
+    </div>
+
+    <div class="grp">
+      <button class="switcher-btn" onclick="remount()">Remount</button>
+      <button class="switcher-btn" onclick="resetDemoData()">Reset data</button>
+    </div>
+
+    <div class="grp">
+      <label>Theme</label>
+      <button class="switcher-btn" id="theme-light-btn" aria-pressed="true" onclick="setTheme('light')">light</button>
+      <button class="switcher-btn" id="theme-dark-btn" aria-pressed="false" onclick="setTheme('dark')">dark</button>
+    </div>
+
+    <div class="grp">
+      <label>Width</label>
+      <button class="switcher-btn" id="width-360-btn" aria-pressed="false" onclick="setWidth('360')">360</button>
+      <button class="switcher-btn" id="width-768-btn" aria-pressed="false" onclick="setWidth('768')">768</button>
+      <button class="switcher-btn" id="width-1440-btn" aria-pressed="true" onclick="setWidth('1440')">1440</button>
+    </div>
   </div>
 
   <div class="canvas-outer">
     <div class="canvas" id="canvas" data-width="1440">
       <div class="app-header">
-        <span class="text-h2">Activity Grid UI</span>
+        <span class="brandmark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </span>
+        <span class="brand-title">Activity Grid UI</span>
       </div>
-      <div class="frame-body">
-
-        <!-- ============ loading ============ -->
-        <section class="frame-section active" data-frame="loading">
-          <div class="toolbar">
-            <div class="toolbar-group">
-              <span class="btn-disabled">Open only ▾</span>
-              <span class="btn-disabled">Follow-up date ▾</span>
-            </div>
-            <span class="btn-disabled">Log activity</span>
-          </div>
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr><td colspan="7"><div class="skeleton-bar" style="width:90%"></div></td></tr>
-              <tr><td colspan="7"><div class="skeleton-bar" style="width:75%"></div></td></tr>
-              <tr><td colspan="7"><div class="skeleton-bar" style="width:85%"></div></td></tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- ============ populated-editor ============ -->
-        <section class="frame-section" data-frame="populated-editor">
-          <div class="toolbar">
-            <div class="toolbar-group">
-              <select class="text-body"><option>Open only</option><option>All</option></select>
-              <select class="text-body"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
-            </div>
-            <button class="btn-primary">Log activity</button>
-          </div>
-          <table class="activity-table">
-            <thead><tr>
-              <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
-              <th scope="col">Entered</th><th scope="col">Completed</th><th scope="col">By</th><th scope="col"></th>
-            </tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Mark complete</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="strong">Site visit</td>
-                <td class="body">Scheduled site visit to review compliance documents.</td>
-                <td class="body">2026-08-20</td>
-                <td class="body">2026-08-10</td>
-                <td class="body">Yes — 2026-08-18</td>
-                <td class="body">Marcus Reed</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="strong">Email sent</td>
-                <td class="body">Sent updated COI request.</td>
-                <td class="body">2026-09-05</td>
-                <td class="body">2026-08-12</td>
-                <td class="body">No</td>
-                <td class="body">A. Whitfield</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Mark complete</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="activity-cards">
-            <div class="card">
-              <div class="card-row"><span class="text-body-strong">Follow-up call</span><span class="text-caption">2026-09-01</span></div>
-              <div class="text-body">Called to confirm renewal timeline.</div>
-              <div class="text-caption">Entered 2026-08-15 · By Dana Smith · Not completed</div>
-              <div class="row-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-secondary">Mark complete</button>
-                <button class="btn-secondary">Delete</button>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-row"><span class="text-body-strong">Site visit</span><span class="text-caption">2026-08-20</span></div>
-              <div class="text-body">Scheduled site visit to review compliance documents.</div>
-              <div class="text-caption">Entered 2026-08-10 · By Marcus Reed · Completed 2026-08-18</div>
-              <div class="row-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-secondary">Delete</button>
-              </div>
-            </div>
-          </div>
-          <div class="load-more-row">
-            <button class="load-more-btn">Load more activity</button>
-          </div>
-        </section>
-
-        <!-- ============ populated-viewer ============ -->
-        <section class="frame-section" data-frame="populated-viewer">
-          <div class="toolbar">
-            <div class="toolbar-group">
-              <select class="text-body"><option>Open only</option><option>All</option></select>
-              <select class="text-body"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
-            </div>
-            <!-- No add control for Viewer role — absent, not disabled (R12/R28) -->
-          </div>
-          <table class="activity-table">
-            <thead><tr>
-              <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
-              <th scope="col">Entered</th><th scope="col">Completed</th><th scope="col">By</th>
-            </tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <!-- No edit/complete/delete controls for Viewer role -->
-              </tr>
-              <tr>
-                <td class="strong">Site visit</td>
-                <td class="body">Scheduled site visit to review compliance documents.</td>
-                <td class="body">2026-08-20</td>
-                <td class="body">2026-08-10</td>
-                <td class="body">Yes — 2026-08-18</td>
-                <td class="body">Marcus Reed</td>
-              </tr>
-            </tbody>
-          </table>
-          <!-- No load-more control drawn here — this frame's two rows are the only
-               page; next_cursor is null, so the control does not render. -->
-        </section>
-
-        <!-- ============ empty-first-use ============ -->
-        <section class="frame-section" data-frame="empty-first-use">
-          <div class="toolbar">
-            <div class="toolbar-group">
-              <select class="text-body"><option>Open only</option><option>All</option></select>
-            </div>
-            <button class="btn-primary">Log activity</button>
-          </div>
-          <div class="empty-state">
-            <p class="text-h3">No activity logged yet.</p>
-            <p class="text-body">Use "Log activity" to record the first entry for this record.</p>
-          </div>
-        </section>
-
-        <!-- ============ empty-filtered ============ -->
-        <section class="frame-section" data-frame="empty-filtered">
-          <div class="toolbar">
-            <div class="toolbar-group">
-              <select class="text-body"><option selected>Open only</option><option>All</option></select>
-            </div>
-            <button class="btn-primary">Log activity</button>
-          </div>
-          <div class="empty-state">
-            <p class="text-h3">No entries match this filter.</p>
-            <p class="text-body">Every entry for this record is already marked complete.</p>
-            <button class="btn-secondary">Clear filter</button>
-          </div>
-        </section>
-
-        <!-- ============ add-form-open ============ -->
-        <section class="frame-section" data-frame="add-form-open">
-          <div class="stack-16" style="max-width:480px;">
-            <p class="text-h3">Log activity</p>
-            <div class="field">
-              <label for="af-tasktype">Task type</label>
-              <select id="af-tasktype"><option>Choose a task type</option><option>Follow-up call</option><option>Site visit</option><option>Email sent</option></select>
-            </div>
-            <div class="field">
-              <label for="af-note">Note</label>
-              <textarea id="af-note" placeholder="What happened?"></textarea>
-            </div>
-            <div class="field">
-              <label for="af-followup">Follow-up date</label>
-              <input id="af-followup" type="text" placeholder="YYYY-MM-DD" value="2026-09-10">
-            </div>
-            <div class="btn-row">
-              <button class="btn-primary">Save</button>
-              <button class="btn-secondary">Cancel</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ add-form-validation-error ============ -->
-        <section class="frame-section" data-frame="add-form-validation-error">
-          <div class="stack-16" style="max-width:480px;">
-            <p class="text-h3">Log activity</p>
-            <div class="field has-error">
-              <label for="afe-tasktype">Task type</label>
-              <select id="afe-tasktype"><option>Choose a task type</option></select>
-              <p class="field-error">That task type isn't valid for this record.</p>
-            </div>
-            <div class="field">
-              <label for="afe-note">Note</label>
-              <textarea id="afe-note">Called to confirm renewal timeline.</textarea>
-            </div>
-            <div class="field has-error">
-              <label for="afe-followup">Follow-up date</label>
-              <input id="afe-followup" type="text" value="next tuesday">
-              <p class="field-error">Enter a valid date.</p>
-            </div>
-            <div class="btn-row">
-              <button class="btn-primary">Save</button>
-              <button class="btn-secondary">Cancel</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ row-submitting ============ -->
-        <section class="frame-section" data-frame="row-submitting">
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <td><div class="row-actions">
-                  <span class="btn-disabled">Edit</span>
-                  <span class="btn-disabled">Mark complete</span>
-                  <span class="btn-disabled">Delete</span>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="strong">Site visit</td>
-                <td class="body">Scheduled site visit to review compliance documents.</td>
-                <td class="body">2026-08-20</td>
-                <td class="body">2026-08-10</td>
-                <td class="body">Yes — 2026-08-18</td>
-                <td class="body">Marcus Reed</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="text-caption btn-caption">Saving "Follow-up call" — other rows remain available.</p>
-        </section>
-
-        <!-- ============ delete-confirm ============ -->
-        <section class="frame-section" data-frame="delete-confirm">
-          <div class="dialog-backdrop">
-            <div class="dialog">
-              <p class="text-h3">Delete this activity entry?</p>
-              <p class="text-body" style="margin-top:12px;">This removes it from the list. This cannot be undone — no unit exposes a restore path.</p>
-              <div class="btn-row" style="margin-top:24px;">
-                <button class="btn-primary">Delete</button>
-                <button class="btn-secondary">Cancel</button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ error-dependency-down ============ -->
-        <section class="frame-section" data-frame="error-dependency-down">
-          <div class="error-block">
-            <p class="title">Activity could not be loaded.</p>
-            <p class="body">Something went wrong reaching the activity service. Your entries have not changed.</p>
-            <button class="btn-secondary">Retry</button>
-          </div>
-        </section>
-
-        <!-- ============ throttled ============ -->
-        <section class="frame-section" data-frame="throttled">
-          <div class="error-block">
-            <p class="title">Too many requests.</p>
-            <p class="body">Try again in 15s.</p>
-            <span class="btn-disabled">Retry</span>
-          </div>
-        </section>
-
-        <!-- ============ session-expired ============ -->
-        <section class="frame-section" data-frame="session-expired">
-          <div class="error-block">
-            <p class="title">Your session has ended.</p>
-            <p class="body">Sign in again to continue — your entry has been kept.</p>
-          </div>
-          <div class="stack-16" style="max-width:480px; margin-top:24px; opacity:0.85;">
-            <p class="text-h3">Log activity <span class="text-caption">(kept)</span></p>
-            <div class="field">
-              <label for="se-tasktype">Task type</label>
-              <select id="se-tasktype"><option>Follow-up call</option></select>
-            </div>
-            <div class="field">
-              <label for="se-note">Note</label>
-              <textarea id="se-note">Called to confirm renewal timeline.</textarea>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ row-not-found ============ -->
-        <section class="frame-section" data-frame="row-not-found">
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr>
-                <td colspan="7">
-                  <div class="error-block" style="padding:12px;">
-                    <p class="body" style="margin:0;">This entry is no longer available.</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="strong">Email sent</td>
-                <td class="body">Sent updated COI request.</td>
-                <td class="body">2026-09-05</td>
-                <td class="body">2026-08-12</td>
-                <td class="body">No</td>
-                <td class="body">A. Whitfield</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Mark complete</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- ============ offline-on-load ============ -->
-        <section class="frame-section" data-frame="offline-on-load">
-          <div class="error-block">
-            <p class="title">You're offline.</p>
-            <p class="body">Activity could not be loaded. Reconnect and try again.</p>
-            <button class="btn-secondary">Retry</button>
-          </div>
-        </section>
-
-        <!-- ============ offline-on-submit ============ -->
-        <section class="frame-section" data-frame="offline-on-submit">
-          <div class="stack-16" style="max-width:480px;">
-            <p class="text-h3">Log activity</p>
-            <div class="field">
-              <label for="off-tasktype">Task type</label>
-              <select id="off-tasktype"><option>Follow-up call</option></select>
-            </div>
-            <div class="field">
-              <label for="off-note">Note</label>
-              <textarea id="off-note">Called to confirm renewal timeline.</textarea>
-            </div>
-            <div class="error-block">
-              <p class="body" style="margin:0;">Can't save while offline. Try again once you're back online.</p>
-            </div>
-            <div class="btn-row">
-              <span class="btn-disabled">Save</span>
-              <button class="btn-secondary">Cancel</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ============ success-confirmation ============ -->
-        <section class="frame-section" data-frame="success-confirmation">
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <td>
-                  <span class="text-caption" style="color:var(--status-active);">✓ Saved</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <footer class="frame-label text-caption" id="frame-label">UNIT-CMS-0008 · populated-editor · 1440px · light</footer>
+      <div class="frame-body" id="frame-body">
+        <div aria-live="assertive" class="visually-hidden" id="live-assertive"></div>
+        <div aria-live="polite" class="visually-hidden" id="live-polite"></div>
+        <div id="content"></div>
+        <div id="toast" class="toast"><div class="toast-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg">Saved</span></div></div>
+        <footer class="frame-label" id="frame-label">UNIT-CMS-0008 · populated-editor · 1440px · light</footer>
       </div>
     </div>
   </div>
 
 <script>
-  // Switcher only — shows/hides already-specified frame sections and toggles
-  // theme/width. No validation, no network calls, no timers, no storage, no
-  // computed values, no state machine of its own.
-  var state = { frame: 'populated-editor', theme: 'light', width: '1440' };
+/* ============================================================
+   DEMO SEED DATA — in-memory only, matching the Activity shape
+   requirements.md § Data defines: id, parentType, parentId,
+   statusId, note, followUpDate, enteredDate, completed,
+   completedDate, userName. Nothing here persists past a reload
+   of this file, exactly as UNIT-CMS-0007's own contract is the
+   only system of record (R20).
+   ============================================================ */
+var CURRENT_USER = 'Dana Smith';
+var TASK_STATUSES = ['Follow-up call', 'Site visit', 'Email sent', 'Meeting scheduled'];
+var PAGE_SIZE = 3;
 
-  function updateLabel() {
-    document.getElementById('frame-label').textContent =
-      'UNIT-CMS-0008 · ' + state.frame + ' · ' + state.width + 'px · ' + state.theme;
-  }
-
-  function setFrame(name) {
-    state.frame = name;
-    var sections = document.querySelectorAll('.frame-section');
-    for (var i = 0; i < sections.length; i++) {
-      sections[i].classList.toggle('active', sections[i].getAttribute('data-frame') === name);
+function seedData(){
+  return {
+    'agency:3001': {
+      label: 'Agency — Lonestar Insurance Agency',
+      items: [
+        { id:'a1', statusId:'Follow-up call', note:'Called to confirm renewal timeline.', followUpDate:'2026-09-01', enteredDate:'2026-08-15', completed:false, completedDate:null, userName:'Dana Smith' },
+        { id:'a2', statusId:'Site visit', note:'Scheduled site visit to review compliance documents.', followUpDate:'', enteredDate:'2026-08-10', completed:true, completedDate:'2026-08-18', userName:'Marcus Reed' },
+        { id:'a3', statusId:'Email sent', note:'Sent updated COI request.', followUpDate:'2026-09-05', enteredDate:'2026-08-12', completed:false, completedDate:null, userName:'A. Whitfield' },
+        { id:'a4', statusId:'Meeting scheduled', note:'Quarterly business review set for Sept.', followUpDate:'2026-09-20', enteredDate:'2026-08-05', completed:false, completedDate:null, userName:'Dana Smith' },
+        { id:'a5', statusId:'Follow-up call', note:'Left voicemail re: outstanding application.', followUpDate:'2026-08-25', enteredDate:'2026-07-30', completed:false, completedDate:null, userName:'Marcus Reed' }
+      ]
+    },
+    'brokerage:1001': {
+      label: 'Brokerage — Acme Insurance Brokers',
+      items: [
+        { id:'b1', statusId:'Follow-up call', note:'Called re: renewal packet. Sending updated app.', followUpDate:'2026-08-20', enteredDate:'2026-08-01', completed:false, completedDate:null, userName:'Dana Smith' },
+        { id:'b2', statusId:'Email sent', note:'Emailed E&O certificate request.', followUpDate:'', enteredDate:'2026-07-18', completed:true, completedDate:'2026-07-19', userName:'Dana Smith' },
+        { id:'b3', statusId:'Site visit', note:'On-site review of updated compliance binder.', followUpDate:'2026-09-02', enteredDate:'2026-08-11', completed:false, completedDate:null, userName:'Marcus Reed' },
+        { id:'b4', statusId:'Meeting scheduled', note:'Quarterly review with brokerage principal.', followUpDate:'2026-09-15', enteredDate:'2026-08-14', completed:false, completedDate:null, userName:'Dana Smith' }
+      ]
+    },
+    'agency:9999': {
+      label: 'Agency — New Prospect (no activity)',
+      items: []
     }
-    updateLabel();
+  };
+}
+var PARENTS = seedData();
+
+/* ============================================================
+   State — everything the rendered view is a pure function of.
+   ============================================================ */
+var ctx = {
+  parentKey: 'agency:3001',
+  role: 'editor',
+  filter: 'open-only',      // 'open-only' | 'all'
+  sortDir: 'asc',           // 'asc' | 'desc'
+  pageSize: PAGE_SIZE,
+  loadedCount: PAGE_SIZE,
+  outcome: 'idle',          // loading | populated | empty-first-use | empty-filtered | error-dependency | error-offline-load | error-throttled | session-expired
+  offline: false,
+  simulateOnce: null,       // one-shot: dependency-down | throttled | not-found | session-expired | invalid-scope
+  dialog: null,             // {mode, id, fieldErrors, submitting, offlineBlocked, throttled, kept}
+  deleteTarget: null,       // {id, submitting}
+  rowState: {},             // id -> submitting | success | error-gone
+  throttleSeconds: 0,
+  lastFocused: null
+};
+var THROTTLE_TIMER = null;
+var uiState = { theme:'light', width:'1440' };
+
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function isValidDateStr(s){
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((s||'').trim());
+  if(!m) return false;
+  var d = new Date(s + 'T00:00:00Z');
+  return !isNaN(d.getTime()) && d.getUTCFullYear() === +m[1];
+}
+function fmtDate(iso){ return iso ? iso : '—'; } // date-only, never a time-of-day or timezone (R19)
+
+function getParent(){ return PARENTS[ctx.parentKey]; }
+
+function filteredSorted(){
+  var items = getParent().items.slice();
+  if(ctx.filter === 'open-only'){ items = items.filter(function(i){ return !i.completed; }); }
+  items.sort(function(a, b){
+    var av = a.followUpDate || '9999-99-99', bv = b.followUpDate || '9999-99-99';
+    if(av === bv) return 0;
+    var cmp = av < bv ? -1 : 1;
+    return ctx.sortDir === 'asc' ? cmp : -cmp;
+  });
+  return items;
+}
+function visibleItems(){ return filteredSorted().slice(0, ctx.loadedCount); }
+function hasMore(){ return filteredSorted().length > ctx.loadedCount; }
+
+var toastTimer;
+function toast(msg){
+  $('toastMsg').textContent = msg;
+  var t = $('toast');
+  t.classList.add('show');
+  announce('polite', msg);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+function announce(politeness, msg){
+  var el = politeness === 'assertive' ? $('live-assertive') : $('live-polite');
+  el.textContent = '';
+  window.setTimeout(function(){ el.textContent = msg; }, 30);
+}
+
+/* ============================================================
+   Mount / load — the one place this component talks to its
+   "backend" (UNIT-CMS-0007). Every mount refetches fresh; no
+   list is cached across it (R20).
+   ============================================================ */
+function mount(parentKey, cb){
+  if(parentKey){ ctx.parentKey = parentKey; }
+  ctx.loadedCount = ctx.pageSize;
+  ctx.dialog = null;
+  ctx.deleteTarget = null;
+  ctx.rowState = {};
+  ctx.outcome = 'loading';
+  render();
+  window.setTimeout(function(){
+    settleMount();
+    render();
+    if(cb) cb();
+  }, 350);
+}
+function settleMount(){
+  if(ctx.offline){ ctx.outcome = 'error-offline-load'; announce('assertive', "You're offline. Activity could not be loaded."); return; }
+  if(ctx.simulateOnce === 'dependency-down'){ ctx.simulateOnce = null; ctx.outcome = 'error-dependency'; announce('assertive', 'Activity could not be loaded.'); return; }
+  if(ctx.simulateOnce === 'throttled'){ ctx.simulateOnce = null; ctx.outcome = 'error-throttled'; startThrottle(); return; }
+  var list = filteredSorted();
+  if(list.length === 0){
+    ctx.outcome = getParent().items.length === 0 ? 'empty-first-use' : 'empty-filtered';
+  } else {
+    ctx.outcome = 'populated';
+  }
+}
+function retryLoad(){ mount(ctx.parentKey); }
+function remount(){ mount(ctx.parentKey); }
+
+function startThrottle(){
+  ctx.throttleSeconds = 15;
+  clearInterval(THROTTLE_TIMER);
+  THROTTLE_TIMER = setInterval(function(){
+    ctx.throttleSeconds--;
+    if(ctx.throttleSeconds <= 0){ clearInterval(THROTTLE_TIMER); ctx.throttleSeconds = 0; }
+    render();
+  }, 1000);
+}
+
+/* ============================================================
+   Toolbar actions
+   ============================================================ */
+function onParentChange(key){ mount(key); }
+function setRole(role){
+  ctx.role = role;
+  $('role-editor-btn').setAttribute('aria-pressed', role === 'editor');
+  $('role-viewer-btn').setAttribute('aria-pressed', role === 'viewer');
+  render();
+}
+function onSimulateChange(v){ ctx.simulateOnce = v || null; }
+function onOfflineToggle(checked){ ctx.offline = checked; render(); }
+function resetDemoData(){ PARENTS = seedData(); ctx.simulateOnce = null; ctx.offline = false; $('offline-toggle').checked = false; $('simulate-select').value = ''; mount(ctx.parentKey); toast('Demo data reset.'); }
+
+function setFilter(v){ ctx.filter = v; ctx.loadedCount = ctx.pageSize;
+  var list = filteredSorted();
+  ctx.outcome = list.length === 0 ? (getParent().items.length === 0 ? 'empty-first-use' : 'empty-filtered') : 'populated';
+  render(); }
+function setSort(v){ ctx.sortDir = v; render(); }
+function toggleSort(){ setSort(ctx.sortDir === 'asc' ? 'desc' : 'asc'); }
+function loadMore(){
+  var btn = document.activeElement;
+  ctx.loadingMore = true; render();
+  window.setTimeout(function(){
+    ctx.loadingMore = false;
+    ctx.loadedCount += ctx.pageSize;
+    render();
+  }, 300);
+}
+function clearFilterToAll(){ setFilter('all'); }
+
+/* ============================================================
+   Activity Editor dialog — add / edit
+   ============================================================ */
+function openDialog(mode, id){
+  ctx.lastFocused = document.activeElement;
+  var values = { statusId:'', note:'', followUpDate:'' };
+  if(mode === 'edit'){
+    var entry = getParent().items.filter(function(i){ return i.id === id; })[0];
+    if(!entry){ rowGone(id); return; }
+    values = { statusId: entry.statusId, note: entry.note, followUpDate: entry.followUpDate };
+  }
+  ctx.dialog = { mode: mode, id: id || null, values: values, fieldErrors: [], submitting: false, offlineBlocked: false, throttled: false, kept: false };
+  render();
+  var first = $('dlg-status');
+  if(first) first.focus();
+}
+function closeDialog(){
+  ctx.dialog = null;
+  render();
+  if(ctx.lastFocused && document.body.contains(ctx.lastFocused)) ctx.lastFocused.focus();
+}
+function validateForm(values){
+  var errors = [];
+  if(!values.statusId){ errors.push({ field:'statusId', message:'Choose a task type.' }); }
+  if(!values.followUpDate){ errors.push({ field:'followUpDate', message:'Enter a follow-up date.' }); }
+  else if(!isValidDateStr(values.followUpDate)){ errors.push({ field:'followUpDate', message:'Enter a valid date.' }); }
+  return errors;
+}
+function submitDialog(){
+  if(!ctx.dialog || ctx.dialog.submitting) return;
+  var values = {
+    statusId: $('dlg-status').value,
+    note: $('dlg-note').value.trim(),
+    followUpDate: $('dlg-followup').value.trim()
+  };
+  ctx.dialog.values = values;
+  ctx.dialog.fieldErrors = validateForm(values);
+  if(ctx.dialog.fieldErrors.length){ render(); focusFirstError(); return; }
+
+  if(ctx.simulateOnce === 'invalid-scope'){
+    ctx.simulateOnce = null;
+    ctx.dialog.fieldErrors = [{ field:'statusId', message:"That task type isn't valid for this record." }];
+    render(); focusFirstError(); return;
+  }
+  if(ctx.offline){
+    ctx.dialog.offlineBlocked = true;
+    render();
+    announce('assertive', "Can't save while offline.");
+    return;
+  }
+  if(ctx.simulateOnce === 'throttled'){
+    ctx.simulateOnce = null;
+    ctx.dialog.throttled = true;
+    startThrottle();
+    render();
+    return;
+  }
+  if(ctx.simulateOnce === 'session-expired'){
+    ctx.simulateOnce = null;
+    ctx.dialog.kept = true;
+    ctx.outcome = 'session-expired';
+    render();
+    announce('assertive', 'Your session has ended. Sign in again to continue — your entry has been kept.');
+    return;
   }
 
-  function setTheme(theme) {
-    state.theme = theme;
-    document.documentElement.setAttribute('data-theme', theme);
-    document.getElementById('theme-light-btn').setAttribute('aria-pressed', theme === 'light');
-    document.getElementById('theme-dark-btn').setAttribute('aria-pressed', theme === 'dark');
-    updateLabel();
-  }
+  ctx.dialog.submitting = true;
+  render();
+  window.setTimeout(function(){
+    if(!ctx.dialog){ return; } // dialog could have been closed by an intervening simulate path
+    var parent = getParent();
+    var wasAdd = ctx.dialog.mode === 'add';
+    if(wasAdd){
+      parent.items.unshift({
+        id: 'a' + Date.now(),
+        statusId: values.statusId, note: values.note, followUpDate: values.followUpDate,
+        enteredDate: todayISO(), completed: false, completedDate: null, userName: CURRENT_USER
+      });
+    } else {
+      var entry = parent.items.filter(function(i){ return i.id === ctx.dialog.id; })[0];
+      if(!entry){ closeDialog(); rowGone(ctx.dialog.id); return; }
+      entry.statusId = values.statusId; entry.note = values.note; entry.followUpDate = values.followUpDate;
+    }
+    closeDialog();
+    var list = filteredSorted();
+    ctx.outcome = list.length === 0 ? (getParent().items.length === 0 ? 'empty-first-use' : 'empty-filtered') : 'populated';
+    render();
+    toast(wasAdd ? 'Activity logged.' : 'Changes saved.');
+  }, 500);
+}
+function focusFirstError(){
+  if(!ctx.dialog || !ctx.dialog.fieldErrors.length) return;
+  var field = ctx.dialog.fieldErrors[0].field;
+  var el = field === 'statusId' ? $('dlg-status') : $('dlg-followup');
+  if(el) el.focus();
+}
 
-  function setWidth(width) {
-    state.width = width;
-    document.getElementById('canvas').setAttribute('data-width', width);
-    document.getElementById('width-360-btn').setAttribute('aria-pressed', width === '360');
-    document.getElementById('width-768-btn').setAttribute('aria-pressed', width === '768');
-    document.getElementById('width-1440-btn').setAttribute('aria-pressed', width === '1440');
-    updateLabel();
-  }
+/* ============================================================
+   Row actions — complete / delete
+   ============================================================ */
+function requestComplete(id){
+  if(ctx.simulateOnce === 'not-found'){ ctx.simulateOnce = null; rowGone(id); return; }
+  if(ctx.simulateOnce === 'session-expired'){ ctx.simulateOnce = null; ctx.outcome = 'session-expired'; render(); announce('assertive', 'Your session has ended. Sign in again to continue — your entry has been kept.'); return; }
+  ctx.rowState[id] = 'submitting'; render();
+  window.setTimeout(function(){
+    var entry = getParent().items.filter(function(i){ return i.id === id; })[0];
+    if(!entry){ rowGone(id); return; }
+    entry.completed = true; entry.completedDate = todayISO();
+    ctx.rowState[id] = 'success';
+    render();
+    toast('Marked complete.');
+    window.setTimeout(function(){ delete ctx.rowState[id]; render(); }, 1500);
+  }, 500);
+}
+function requestDelete(id){
+  ctx.lastFocused = document.activeElement;
+  if(ctx.simulateOnce === 'not-found'){ ctx.simulateOnce = null; rowGone(id); return; }
+  ctx.deleteTarget = { id: id, submitting: false };
+  render();
+  var btn = $('delete-confirm-btn');
+  if(btn) btn.focus();
+}
+function cancelDelete(){
+  ctx.deleteTarget = null;
+  render();
+  if(ctx.lastFocused && document.body.contains(ctx.lastFocused)) ctx.lastFocused.focus();
+}
+function confirmDelete(){
+  if(!ctx.deleteTarget || ctx.deleteTarget.submitting) return;
+  var id = ctx.deleteTarget.id;
+  ctx.deleteTarget.submitting = true; render();
+  window.setTimeout(function(){
+    var parent = getParent();
+    parent.items = parent.items.filter(function(i){ return i.id !== id; });
+    ctx.deleteTarget = null;
+    var list = filteredSorted();
+    ctx.outcome = list.length === 0 ? (getParent().items.length === 0 ? 'empty-first-use' : 'empty-filtered') : 'populated';
+    render();
+    toast('Entry removed.');
+  }, 500);
+}
+function rowGone(id){
+  ctx.rowState[id] = 'error-gone';
+  render();
+  announce('assertive', 'This entry is no longer available.');
+  window.setTimeout(function(){
+    var parent = getParent();
+    parent.items = parent.items.filter(function(i){ return i.id !== id; });
+    delete ctx.rowState[id];
+    var list = filteredSorted();
+    ctx.outcome = list.length === 0 ? (getParent().items.length === 0 ? 'empty-first-use' : 'empty-filtered') : 'populated';
+    render();
+  }, 1200);
+}
 
+/* ============================================================
+   Frame jump — drives the REAL app into each of the 16 documented
+   states via the same functions a genuine click-through uses.
+   This is a convenience for reviewers scanning states; it is not
+   a second, separate rendering path.
+   ============================================================ */
+function jumpToFrame(name){
+  ctx.simulateOnce = null; ctx.offline = false; $('offline-toggle').checked = false; $('simulate-select').value = '';
+  switch(name){
+    case 'loading':
+      ctx.parentKey = 'agency:3001'; ctx.role = 'editor'; ctx.outcome = 'loading'; ctx.dialog = null; ctx.deleteTarget = null; render();
+      break;
+    case 'populated-editor':
+      ctx.role = 'editor'; mount('agency:3001');
+      break;
+    case 'populated-viewer':
+      ctx.role = 'viewer'; mount('agency:3001');
+      break;
+    case 'empty-first-use':
+      ctx.role = 'editor'; mount('agency:9999');
+      break;
+    case 'empty-filtered':
+      ctx.role = 'editor';
+      mount('agency:3001', function(){
+        ctx.filter = 'open-only';
+        getParent().items.forEach(function(it){ it.completed = true; it.completedDate = todayISO(); });
+        ctx.outcome = filteredSorted().length === 0 ? 'empty-filtered' : 'populated';
+        render();
+      });
+      break;
+    case 'add-form-open':
+      ctx.role = 'editor'; mount('agency:3001', function(){ openDialog('add'); });
+      break;
+    case 'add-form-validation-error':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        openDialog('add');
+        window.setTimeout(function(){
+          $('dlg-status').value = TASK_STATUSES[0];
+          $('dlg-followup').value = 'next tuesday';
+          $('dlg-note').value = 'Called to confirm renewal timeline.';
+          submitDialog();
+        }, 0);
+      });
+      break;
+    case 'row-submitting':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        var first = visibleItems()[0]; if(first) requestComplete(first.id);
+      });
+      break;
+    case 'delete-confirm':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        var first = visibleItems()[0]; if(first) requestDelete(first.id);
+      });
+      break;
+    case 'error-dependency-down':
+      ctx.role = 'editor'; ctx.simulateOnce = 'dependency-down'; mount('agency:3001');
+      break;
+    case 'throttled':
+      ctx.role = 'editor'; ctx.simulateOnce = 'throttled'; mount('agency:3001');
+      break;
+    case 'session-expired':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        openDialog('add');
+        window.setTimeout(function(){
+          $('dlg-status').value = TASK_STATUSES[0];
+          $('dlg-followup').value = '2026-09-10';
+          $('dlg-note').value = 'Called to confirm renewal timeline.';
+          ctx.simulateOnce = 'session-expired';
+          submitDialog();
+        }, 0);
+      });
+      break;
+    case 'row-not-found':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        var first = visibleItems()[0];
+        if(first){ ctx.simulateOnce = 'not-found'; requestComplete(first.id); }
+      });
+      break;
+    case 'offline-on-load':
+      ctx.role = 'editor'; ctx.offline = true; $('offline-toggle').checked = true; mount('agency:3001');
+      break;
+    case 'offline-on-submit':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        ctx.offline = true; $('offline-toggle').checked = true;
+        openDialog('add');
+        window.setTimeout(function(){
+          $('dlg-status').value = TASK_STATUSES[0];
+          $('dlg-followup').value = '2026-09-10';
+          $('dlg-note').value = 'Called to confirm renewal timeline.';
+          submitDialog();
+        }, 0);
+      });
+      break;
+    case 'success-confirmation':
+      ctx.role = 'editor'; mount('agency:3001', function(){
+        var first = visibleItems()[0]; if(first) requestComplete(first.id);
+      });
+      break;
+  }
+  $('frame-select').value = name;
+}
+
+/* ============================================================
+   Rendering
+   ============================================================ */
+function currentFrameLabel(){
+  if(ctx.outcome === 'loading') return 'loading';
+  if(ctx.outcome === 'error-offline-load') return 'offline-on-load';
+  if(ctx.outcome === 'error-dependency') return 'error-dependency-down';
+  if(ctx.outcome === 'error-throttled') return 'throttled';
+  if(ctx.outcome === 'session-expired') return 'session-expired';
+  if(ctx.deleteTarget) return 'delete-confirm';
+  if(ctx.dialog){
+    if(ctx.dialog.offlineBlocked) return 'offline-on-submit';
+    if(ctx.dialog.fieldErrors && ctx.dialog.fieldErrors.length) return 'add-form-validation-error';
+    return 'add-form-open';
+  }
+  if(ctx.outcome === 'empty-first-use') return 'empty-first-use';
+  if(ctx.outcome === 'empty-filtered') return 'empty-filtered';
+  var states = Object.keys(ctx.rowState).map(function(k){ return ctx.rowState[k]; });
+  if(states.indexOf('error-gone') !== -1) return 'row-not-found';
+  if(states.indexOf('submitting') !== -1) return 'row-submitting';
+  if(states.indexOf('success') !== -1) return 'success-confirmation';
+  return ctx.role === 'viewer' ? 'populated-viewer' : 'populated-editor';
+}
+function updateLabel(){
+  $('frame-label').textContent = 'UNIT-CMS-0008 · ' + currentFrameLabel() +
+    ' (' + ctx.outcome + (ctx.dialog ? ', dialog:' + ctx.dialog.mode : '') + (ctx.deleteTarget ? ', delete-confirm' : '') + ') · ' +
+    uiState.width + 'px · ' + uiState.theme;
+}
+
+function fieldError(errors, field){
+  var hit = (errors || []).filter(function(e){ return e.field === field; })[0];
+  return hit ? hit.message : null;
+}
+
+function renderToolbar(){
+  var disabled = ctx.outcome === 'loading';
+  var filterCtl = disabled
+    ? '<span class="btn-disabled btn-sm">Open only ▾</span>'
+    : '<select class="inp" aria-label="Filter by status" onchange="setFilter(this.value)">' +
+        '<option value="open-only"' + (ctx.filter === 'open-only' ? ' selected' : '') + '>Open only</option>' +
+        '<option value="all"' + (ctx.filter === 'all' ? ' selected' : '') + '>All</option>' +
+      '</select>';
+  var sortCtl = disabled
+    ? '<span class="btn-disabled btn-sm">Follow-up date ▾</span>'
+    : '<button class="btn btn-secondary btn-sm" aria-sort="' + (ctx.sortDir === 'asc' ? 'ascending' : 'descending') + '" onclick="toggleSort()">Follow-up date ' + (ctx.sortDir === 'asc' ? '↑' : '↓') + '</button>';
+  var addCtl = ctx.role !== 'editor' ? '' :
+    (disabled
+      ? '<span class="btn-disabled">Log activity</span>'
+      : '<button class="btn btn-primary" onclick="openDialog(\'add\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Log activity</button>');
+  return '<div class="toolbar"><div class="toolbar-group">' + filterCtl + sortCtl + '</div>' + addCtl + '</div>';
+}
+
+function renderRowActions(item){
+  if(ctx.role !== 'editor') return '';
+  var subm = ctx.rowState[item.id] === 'submitting';
+  if(subm){
+    return '<div class="row-actions">' +
+      '<span class="btn-disabled btn-sm">Edit</span>' +
+      (item.completed ? '' : '<span class="btn-disabled btn-sm">Mark complete</span>') +
+      '<span class="btn-disabled btn-sm">Delete</span></div>';
+  }
+  return '<div class="row-actions">' +
+    '<button class="btn btn-ghost btn-sm" aria-label="Edit activity from ' + esc(item.enteredDate) + '" onclick="openDialog(\'edit\',\'' + item.id + '\')">Edit</button>' +
+    (item.completed ? '' : '<button class="btn btn-secondary btn-sm" aria-label="Mark complete: activity from ' + esc(item.enteredDate) + '" onclick="requestComplete(\'' + item.id + '\')">Mark complete</button>') +
+    '<button class="btn btn-danger btn-sm" aria-label="Delete activity from ' + esc(item.enteredDate) + '" onclick="requestDelete(\'' + item.id + '\')">Delete</button></div>';
+}
+function renderDoneBadge(item){
+  return item.completed
+    ? '<span class="badge badge-active"><span class="dot"></span>Complete' + (item.completedDate ? ' — ' + esc(item.completedDate) : '') + '</span>'
+    : '<span class="badge badge-warn"><span class="dot"></span>Open</span>';
+}
+function renderRowCells(item){
+  var rs = ctx.rowState[item.id];
+  if(rs === 'error-gone'){
+    return '<td colspan="' + (ctx.role === 'editor' ? 7 : 6) + '"><div class="error-block" style="padding:.75rem" role="alert"><p class="body" style="margin:0">This entry is no longer available.</p></div></td>';
+  }
+  var successBadge = rs === 'success' ? '<span class="row-toast toast-in" style="margin-left:.5rem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Saved</span>' : '';
+  return '<td class="strong">' + esc(item.statusId) + '</td>' +
+    '<td class="muted">' + esc(item.note) + '</td>' +
+    '<td>' + esc(fmtDate(item.followUpDate)) + '</td>' +
+    '<td>' + esc(fmtDate(item.enteredDate)) + '</td>' +
+    '<td>' + renderDoneBadge(item) + successBadge + '</td>' +
+    '<td>' + esc(item.userName) + '</td>' +
+    (ctx.role === 'editor' ? '<td>' + renderRowActions(item) + '</td>' : '');
+}
+function renderGrid(){
+  var items = visibleItems();
+  var cols = ctx.role === 'editor' ? 7 : 6;
+  var head = '<tr><th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>' +
+    '<th scope="col">Entered</th><th scope="col">Done</th><th scope="col">By</th>' + (ctx.role === 'editor' ? '<th scope="col"></th>' : '') + '</tr>';
+  var rows = items.map(function(item){ return '<tr>' + renderRowCells(item) + '</tr>'; }).join('');
+  if(!items.length) rows = '<tr><td class="empty" colspan="' + cols + '">No activity logged yet.</td></tr>';
+  var cards = items.map(function(item){
+    var rs = ctx.rowState[item.id];
+    if(rs === 'error-gone'){
+      return '<div class="card"><div class="error-block" style="padding:.75rem"><p class="body" style="margin:0">This entry is no longer available.</p></div></div>';
+    }
+    return '<div class="card">' +
+      '<div class="card-row"><span class="strong">' + esc(item.statusId) + '</span><span class="faint">' + esc(fmtDate(item.followUpDate)) + '</span></div>' +
+      '<div class="muted" style="margin-bottom:.4rem">' + esc(item.note) + '</div>' +
+      '<div class="faint" style="margin-bottom:.6rem">Entered ' + esc(fmtDate(item.enteredDate)) + ' · By ' + esc(item.userName) + '</div>' +
+      renderDoneBadge(item) +
+      (rs === 'success' ? ' <span class="row-toast toast-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Saved</span>' : '') +
+      (ctx.role === 'editor' ? '<div class="row-actions" style="justify-content:flex-start;margin-top:.6rem">' + renderRowActions(item) + '</div>' : '') +
+      '</div>';
+  }).join('');
+  var loadMoreRow = hasMore()
+    ? '<div class="load-more-row">' + (ctx.loadingMore
+        ? '<span class="btn-disabled">Loading…</span>'
+        : '<button class="btn btn-secondary" onclick="loadMore()">Load more activity</button>') + '</div>'
+    : '';
+  return '<div class="panel tbl-wrap activity-tbl-wrap"><table class="tbl activity-tbl" aria-label="Activity for ' + esc(getParent().label) + '"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>' +
+    '<div class="activity-cards">' + (cards || '<div class="card empty">No activity logged yet.</div>') + '</div>' +
+    loadMoreRow;
+}
+function renderSkeleton(){
+  return '<div class="panel tbl-wrap"><table class="tbl"><thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Done</th><th>By</th><th></th></tr></thead><tbody>' +
+    '<tr><td colspan="7"><div class="skeleton-bar" style="width:90%"></div></td></tr>' +
+    '<tr><td colspan="7"><div class="skeleton-bar" style="width:75%"></div></td></tr>' +
+    '<tr><td colspan="7"><div class="skeleton-bar" style="width:85%"></div></td></tr>' +
+    '</tbody></table></div>';
+}
+function renderEmpty(){
+  if(ctx.outcome === 'empty-first-use'){
+    return '<div class="panel"><div class="empty-state"><h3>No activity logged yet.</h3><p class="muted">Use "Log activity" to record the first entry for this record.</p></div></div>';
+  }
+  return '<div class="panel"><div class="empty-state"><h3>No entries match this filter.</h3><p class="muted">Every entry for this record is already marked complete.</p>' +
+    '<button class="btn btn-secondary btn-sm" onclick="clearFilterToAll()">Clear filter</button></div></div>';
+}
+function renderErrorDependency(){
+  return '<div class="error-block" role="alert" aria-label="Activity could not be loaded"><p class="title">Activity could not be loaded.</p>' +
+    '<p class="body">Something went wrong reaching the activity service. Your entries have not changed.</p>' +
+    '<button class="btn btn-secondary btn-sm" onclick="retryLoad()">Retry</button></div>';
+}
+function renderOfflineLoad(){
+  return '<div class="error-block" role="alert" aria-label="Activity could not be loaded"><p class="title">You\'re offline.</p>' +
+    '<p class="body">Activity could not be loaded. Reconnect and try again.</p>' +
+    '<button class="btn btn-secondary btn-sm" onclick="retryLoad()">Retry</button></div>';
+}
+function renderThrottled(){
+  var waiting = ctx.throttleSeconds > 0;
+  return '<div class="error-block" role="alert"><p class="title">Too many requests.</p>' +
+    '<p class="body">Try again in ' + ctx.throttleSeconds + 's.</p>' +
+    (waiting ? '<span class="btn-disabled btn-sm">Retry</span>' : '<button class="btn btn-secondary btn-sm" onclick="retryLoad()">Retry</button>') + '</div>';
+}
+function renderSessionExpired(){
+  var kept = ctx.dialog && ctx.dialog.kept;
+  var html = '<div class="banner error-block" role="alert" aria-label="Your session has ended"><p class="title">Your session has ended.</p>' +
+    '<p class="body">Sign in again to continue — your entry has been kept.</p></div>';
+  if(kept){
+    html += '<div style="position:relative;opacity:.85;margin-top:1rem"><div class="box"><div class="dialog">' +
+      '<div class="dialog-head"><h3>' + (ctx.dialog.mode === 'add' ? 'Log activity' : 'Edit activity') + ' <span class="faint">(kept)</span></h3></div>' +
+      '<div class="dialog-body"><div class="grid g2">' +
+      '<div class="field"><label>Task Type / Status</label><select class="inp" disabled><option>' + esc(ctx.dialog.values.statusId) + '</option></select></div>' +
+      '<div class="field"><label>Follow-up Date</label><input class="inp" disabled value="' + esc(ctx.dialog.values.followUpDate) + '"></div>' +
+      '<div class="field colspan2"><label>Note</label><textarea class="inp" disabled>' + esc(ctx.dialog.values.note) + '</textarea></div>' +
+      '</div></div></div></div></div>';
+  }
+  return html;
+}
+function renderDialog(){
+  if(!ctx.dialog) return '';
+  var d = ctx.dialog;
+  var title = d.mode === 'add' ? 'Log activity' : 'Edit activity';
+  var statusErr = fieldError(d.fieldErrors, 'statusId');
+  var dateErr = fieldError(d.fieldErrors, 'followUpDate');
+  var options = '<option value="">Choose a task type</option>' + TASK_STATUSES.map(function(s){
+    return '<option value="' + esc(s) + '"' + (s === d.values.statusId ? ' selected' : '') + '>' + esc(s) + '</option>';
+  }).join('');
+  var offlineNotice = d.offlineBlocked ? '<div class="field colspan2"><div class="error-block" style="padding:.75rem" role="alert"><p class="body" style="margin:0">Can\'t save while offline. Try again once you\'re back online.</p></div></div>' : '';
+  var throttleNotice = d.throttled ? '<div class="field colspan2"><div class="error-block" style="padding:.75rem" role="alert"><p class="body" style="margin:0">Too many requests — try again in ' + ctx.throttleSeconds + 's.</p></div></div>' : '';
+  var saveDisabled = d.submitting || d.offlineBlocked || (d.throttled && ctx.throttleSeconds > 0);
+  return '<div class="overlay open"><div class="scrim" onclick="' + (d.submitting ? '' : 'closeDialog()') + '"></div>' +
+    '<div class="box"><div class="dialog" role="dialog" aria-modal="true" aria-label="' + esc(title) + '">' +
+    '<div class="dialog-head"><h3>' + esc(title) + '</h3><button class="btn btn-ghost" aria-label="Close" onclick="closeDialog()">✕</button></div>' +
+    '<div class="dialog-body"><div class="grid g2">' +
+    '<div class="field"><label>Task Type / Status</label>' +
+    '<select id="dlg-status" class="inp' + (statusErr ? ' err' : '') + '" aria-describedby="dlg-status-err" ' + (d.submitting ? 'disabled' : '') + '>' + options + '</select>' +
+    (statusErr ? '<p class="help-err" id="dlg-status-err">' + esc(statusErr) + '</p>' : '<span id="dlg-status-err" class="visually-hidden"></span>') + '</div>' +
+    '<div class="field"><label>Follow-up Date</label>' +
+    '<input id="dlg-followup" class="inp' + (dateErr ? ' err' : '') + '" placeholder="yyyy-mm-dd" value="' + esc(d.values.followUpDate) + '" aria-describedby="dlg-followup-err" ' + (d.submitting ? 'disabled' : '') + '>' +
+    (dateErr ? '<p class="help-err" id="dlg-followup-err">' + esc(dateErr) + '</p>' : '<span id="dlg-followup-err" class="visually-hidden"></span>') + '</div>' +
+    '<div class="field colspan2"><label>Note</label><textarea id="dlg-note" class="inp" ' + (d.submitting ? 'disabled' : '') + '>' + esc(d.values.note) + '</textarea></div>' +
+    offlineNotice + throttleNotice +
+    '</div></div>' +
+    '<div class="dialog-foot"><button class="btn btn-secondary" ' + (d.submitting ? 'disabled' : '') + ' onclick="closeDialog()">Cancel</button>' +
+    '<button class="btn btn-primary" ' + (saveDisabled ? 'disabled' : '') + ' onclick="submitDialog()">' + (d.submitting ? 'Saving…' : 'Save') + '</button></div>' +
+    '</div></div></div>';
+}
+function renderDeleteConfirm(){
+  if(!ctx.deleteTarget) return '';
+  var submitting = ctx.deleteTarget.submitting;
+  return '<div class="overlay open"><div class="scrim" onclick="' + (submitting ? '' : 'cancelDelete()') + '"></div>' +
+    '<div class="box"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="Delete this activity entry?">' +
+    '<div class="dialog-head"><h3>Delete this activity entry?</h3><button class="btn btn-ghost" aria-label="Close" ' + (submitting ? 'disabled' : '') + ' onclick="cancelDelete()">✕</button></div>' +
+    '<div class="dialog-body"><p>This removes it from the list. This cannot be undone — no unit exposes a restore path.</p></div>' +
+    '<div class="dialog-foot"><button class="btn btn-secondary" ' + (submitting ? 'disabled' : '') + ' onclick="cancelDelete()">Cancel</button>' +
+    '<button id="delete-confirm-btn" class="btn btn-danger" ' + (submitting ? 'disabled' : '') + ' onclick="confirmDelete()">' + (submitting ? 'Deleting…' : 'Delete') + '</button></div>' +
+    '</div></div></div>';
+}
+
+function render(){
+  var html = '';
+  if(ctx.outcome === 'session-expired'){
+    html = renderSessionExpired();
+  } else if(ctx.outcome === 'error-dependency'){
+    html = renderErrorDependency();
+  } else if(ctx.outcome === 'error-offline-load'){
+    html = renderOfflineLoad();
+  } else if(ctx.outcome === 'error-throttled'){
+    html = renderThrottled();
+  } else if(ctx.outcome === 'loading'){
+    html = renderToolbar() + renderSkeleton();
+  } else if(ctx.outcome === 'empty-first-use' || ctx.outcome === 'empty-filtered'){
+    html = renderToolbar() + renderEmpty();
+  } else {
+    html = renderToolbar() + renderGrid();
+  }
+  html += renderDialog();
+  html += renderDeleteConfirm();
+  var content = $('content');
+  content.setAttribute('data-frame', currentFrameLabel());
+  content.innerHTML = html;
   updateLabel();
+}
+
+/* ============================================================
+   Theme / width switcher (unchanged mechanism) plus keyboard map
+   ============================================================ */
+function setTheme(theme){
+  uiState.theme = theme;
+  document.documentElement.setAttribute('data-theme', theme);
+  $('theme-light-btn').setAttribute('aria-pressed', theme === 'light');
+  $('theme-dark-btn').setAttribute('aria-pressed', theme === 'dark');
+  updateLabel();
+}
+function setWidth(width){
+  uiState.width = width;
+  $('canvas').setAttribute('data-width', width);
+  $('width-360-btn').setAttribute('aria-pressed', width === '360');
+  $('width-768-btn').setAttribute('aria-pressed', width === '768');
+  $('width-1440-btn').setAttribute('aria-pressed', width === '1440');
+  updateLabel();
+}
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  if(ctx.deleteTarget && !ctx.deleteTarget.submitting){ cancelDelete(); return; }
+  if(ctx.dialog && !ctx.dialog.submitting){ closeDialog(); }
+});
+
+/* Initial mount — mirrors the original default frame (populated-editor). */
+mount('agency:3001');
 </script>
 </body>
 </html>

@@ -22,7 +22,7 @@ action; for Viewer, those controls are absent from the DOM, not present-and-disa
 | loading | Component mounts for a given `parentType`/`parentId` | Skeleton rows in place of the grid; sort/filter/load-more controls are present but disabled until the first response arrives | None — wait |
 | empty — first-use | List call succeeds, `items` is empty, no filter is applied | "No activity logged yet." plus, for Editor only, the add control remains available | Add (Editor only) |
 | empty — filtered-to-nothing | List call succeeds, `items` is empty, a completed/open filter or non-default sort is applied | "No entries match this filter." plus a control to clear the filter | Clear filter; Add (Editor only) |
-| populated | List call succeeds, `items` non-empty | The grid: task/status, note, follow-up date, entered date, completed indicator, acting user, and (Editor only) per-row edit/complete/delete controls; sort/filter controls active, a "load more" control shown only while `next_cursor` is non-null | Sort, filter, load more (while available); add/edit/complete/delete (Editor only) |
+| populated | List call succeeds, `items` non-empty | The grid: task/status, note, follow-up date, entered date, completed indicator, acting user, and (Editor only) per-row edit/complete/delete controls; sort/filter controls active, a "load more" control shown only while `next_cursor` is non-null. Follow-up date and entered date render as date-only values, with no time-of-day or timezone component attached (R19) | Sort, filter, load more (while available); add/edit/complete/delete (Editor only) |
 | partial | — | N/A — a single bounded list call either returns a full page or it does not; there is no path where some rows of one response loaded and others failed | — |
 | submitting | A caller triggers add, edit, complete, or delete | The triggering control (and, for delete, the confirm dialog's confirm button) disables for the call's duration; the rest of the grid stays interactive (R14) | Wait; nothing else on that row |
 | success | Add/edit/complete/delete call returns success | A brief inline confirmation on the affected row (e.g. a check mark and "Saved"), then the row reflects the new server-returned state; the form/dialog closes | Continue working the grid |
@@ -40,7 +40,7 @@ action; for Viewer, those controls are absent from the DOM, not present-and-disa
 | Field | Rule | Message |
 |---|---|---|
 | Task type / status | Required; must be one of the controlled list values scoped to this parent type | "Choose a task type." / "That task type isn't valid for this record." |
-| Follow-up date | Required; must be a well-formed date | "Enter a follow-up date." / "Enter a valid date." |
+| Follow-up date | Required; must be a well-formed date, captured and stored as date-only with no time-of-day or timezone component (R19) | "Enter a follow-up date." / "Enter a valid date." |
 | Note | No client-side rule beyond presence of the field itself (free text; server has no length rule surfaced to this unit) | — |
 
 ## Copy
