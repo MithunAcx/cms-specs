@@ -1,0 +1,64 @@
+# Consumed contracts — UNIT-CMS-0004-partner-directory-ui
+#
+# This unit exposes no API of its own (capability-design.md: U2 owns "nothing of
+# its own"). It consumes UNIT-CMS-0003's read-only search endpoints as a closed
+# shape. This file is authored prose; the local copy below it is a mirror, never
+# hand-edited.
+
+consumes:
+  - unit: UNIT-CMS-0003
+    capability: CAP-CMS-0002
+    why: >
+      Every search mode (R2-R10, R12) and the Assigned Underwriter filter (R5)
+      are answered entirely by UNIT-CMS-0003's /api/v1/search and
+      /api/v1/lookups/assigned-uws operations. This unit performs no query
+      logic, filtering, or data access of its own.
+    generated_from:
+      source: ./UNIT-CMS-0003.openapi.yaml   # local copy in this same folder
+      note: >
+        UNIT-CMS-0003 had not yet authored its own interfaces/openapi.yaml at
+        the time this copy was produced (parallel unit, still in progress).
+        The copy below was constructed from CAP-CMS-0002/capability-design.md's
+        Unified API Contract section (Shared conventions + the
+        partner-search-api endpoint table) instead of mirrored from a
+        producer file. It MUST be re-copied verbatim from
+        UNIT-CMS-0003/interfaces/openapi.yaml once that unit authors it —
+        this is staleness to fix by re-copying, not a design decision to
+        reconcile, per shared-spec-conventions and ba-spec-validate's I11.
+    operations_used:
+      - operationId: searchPartners
+        path: GET /api/v1/search
+        used_for: R2, R3, R4, R5, R6, R7, R9, R10, R12
+      - operationId: listAssignedUnderwriters
+        path: GET /api/v1/lookups/assigned-uws
+        used_for: R5
+
+error_handling:
+  - code: validation_error (HTTP 400)
+    user_visible_outcome: >
+      Surfaced as the inline validation message on the offending field
+      (R3/R4) — but note this unit's own client-side validation (design.md
+      Cross-cutting/validation) should prevent most 400s from ever being
+      sent; a 400 that does arrive is treated the same as the client-side
+      case.
+  - code: unauthorized / forbidden (HTTP 401/403)
+    user_visible_outcome: >
+      401 routes to the session guard's re-authentication flow (R25); 403
+      renders the access-denied state (R17), never a silently empty result.
+  - code: rate_limited (HTTP 429)
+    user_visible_outcome: >
+      Rate-limited state per R23; Retry-After honoured before any automatic
+      retry, manual retry always available.
+  - code: any 5xx / network failure / timeout
+    user_visible_outcome: >
+      Retryable error state (R21), distinct from the empty-result state
+      (R8); search input preserved for retry.
+
+open_questions:
+  - id: Q2
+    question: >
+      Re-copy UNIT-CMS-0003.openapi.yaml verbatim from UNIT-CMS-0003's own
+      interfaces/openapi.yaml once that unit authors it, and confirm no
+      shape drift against this constructed version.
+    owner: "@MithunAcx"
+    blocks: nothing before ready (this unit does not own the source of truth); blocks UNIT-CMS-0004's contract from being authoritative
