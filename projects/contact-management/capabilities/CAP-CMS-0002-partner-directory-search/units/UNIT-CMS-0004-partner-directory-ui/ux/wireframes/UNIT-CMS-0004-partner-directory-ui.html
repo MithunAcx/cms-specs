@@ -58,18 +58,27 @@
   .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
   .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
   .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
-  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
-  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
-  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; margin: 0; }
+  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; margin: 0; }
+  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; margin: 0; }
 
-  /* --- switcher chrome (scaffolding, not a specified screen) --- */
+  /* --- reviewer chrome (scaffolding, not a specified screen) --- */
   .chrome {
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
     padding: 12px 16px; background: #eee; border-bottom: 2px dashed #999;
     font-family: system-ui, sans-serif; font-size: 12px;
   }
   .chrome label { display: flex; flex-direction: column; gap: 2px; color: #333; }
   .chrome select { font-size: 12px; padding: 4px; }
+  .chrome-sim {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+    margin: 0; padding: 8px 12px 4px; border: 1px dashed #999; border-radius: 4px;
+  }
+  .chrome-sim legend {
+    padding: 0 4px; font-weight: 600; color: #333;
+  }
+  .chrome-sim label[data-inline] { flex-direction: row; align-items: center; gap: 6px; }
+  .chrome-sim button { font-size: 12px; padding: 5px 10px; cursor: pointer; }
 
   /* --- canvas --- */
   .canvas-outer { display: flex; justify-content: center; background: var(--surface); padding: 24px 0; }
@@ -92,17 +101,14 @@
   .canvas[data-width="768"] .app-header  { padding-left: 24px; }
   .canvas[data-width="1440"] .app-header { padding-left: 32px; }
 
-  .frame-content {
-    margin-top: 24px;
-  }
-  .canvas[data-width="360"]  .frame-content { padding: 0 16px; }
-  .canvas[data-width="768"]  .frame-content { padding: 0 24px; }
-  .canvas[data-width="1440"] .frame-content { padding: 0 32px; }
+  .frame-content { margin-top: 24px; }
+  .canvas[data-width="360"]  .frame-content { padding: 0 16px 24px; }
+  .canvas[data-width="768"]  .frame-content { padding: 0 24px 24px; }
+  .canvas[data-width="1440"] .frame-content { padding: 0 32px 24px; }
 
-  .frame { display: none; }
-  .frame.active { display: block; }
+  .screen[hidden] { display: none; }
 
-  /* --- components --- */
+  /* --- buttons (design-system.md §5) --- */
   .btn-primary {
     height: 36px; border-radius: 6px; background: var(--primary);
     color: var(--primary-text); border: none; padding: 0 16px; cursor: pointer;
@@ -115,433 +121,925 @@
     height: 36px; border-radius: 6px; background: var(--surface-raised);
     border: 1px solid var(--border); color: var(--text-disabled); padding: 0 16px;
   }
-  .input-field {
-    display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px;
+
+  /* --- layout helpers, named after requirements/contactmanagement-full-mockup.html's
+         reference structure (.pagehead / .panel / .row), rebuilt on design-system tokens --- */
+  .row { display: flex; align-items: center; }
+  .wrap { flex-wrap: wrap; }
+  .pagehead {
+    display: flex; flex-direction: column; gap: 16px;
+    margin-bottom: 24px;
   }
-  .input-field label { color: var(--text-secondary); }
-  .input-field input, .input-field select {
+  @media (min-width: 640px) {
+    .pagehead { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  }
+  .panel {
+    border: 1px solid var(--border); background: var(--surface-raised);
+    border-radius: 8px;
+  }
+  .panel-pad { padding: 16px; }
+  .section-title { color: var(--text-secondary); }
+
+  /* --- segmented mode switcher (.seg), unit-added component, built on
+         the shared button geometry + tokens; active option also carries a
+         2px underline so selection is never colour alone (a11y.md) --- */
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seg button {
+    height: 36px; border-radius: 24px; padding: 0 16px;
+    border: 1px solid var(--border-strong); background: var(--surface-raised);
+    color: var(--text-secondary); cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .seg button[aria-checked="true"] {
+    background: var(--primary); color: var(--primary-text);
+    border-color: var(--primary); border-bottom: 2px solid var(--text-primary);
+  }
+
+  /* --- chip / count badges --- */
+  .chip {
+    display: inline-flex; align-items: center; border-radius: 6px;
+    padding: 4px 8px; background: var(--notice-surface); color: var(--text-secondary);
+  }
+  .count {
+    display: inline-flex; align-items: center; border-radius: 24px;
+    padding: 4px 8px; background: var(--surface); color: var(--text-secondary);
+    margin-left: 8px;
+  }
+
+  /* --- input field (design-system.md §5) --- */
+  .field { margin-bottom: 4px; }
+  .field label { display: block; margin-bottom: 4px; color: var(--text-secondary); }
+  .inp {
     height: 36px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); padding: 0 8px; color: var(--text-primary);
-    font-family: inherit;
+    border: 1px solid var(--border); padding: 0 12px; color: var(--text-primary);
+    font-family: inherit; width: 100%;
   }
-  .input-field.invalid input { border-color: var(--danger); }
-  .field-error { color: var(--danger); margin-top: 4px; }
+  .inp.err { border-color: var(--danger); }
+  .inp:disabled { color: var(--text-disabled); background: var(--surface); }
+  .field-err { color: var(--danger); margin-top: 4px; }
 
-  .mode-switcher {
-    display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border);
-  }
-  .mode-option {
-    height: 44px; min-width: 96px; padding: 0 12px; display: flex; align-items: center;
-    color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer;
-  }
-  .mode-option[aria-checked="true"] {
-    color: var(--text-primary); border-bottom: 2px solid var(--primary); font-weight: 600;
-  }
+  /* --- table (design-system.md §5) --- */
+  .tbl-wrap { overflow-x: auto; }
+  table.tbl { width: 100%; border-collapse: collapse; }
+  .tbl thead { background: var(--surface); border-bottom: 1px solid var(--border); }
+  .tbl th { height: 40px; padding: 0 16px; text-align: left; color: var(--text-secondary); }
+  .tbl td { height: 48px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+  .tbl tbody tr[data-row] { cursor: pointer; }
+  .link { color: var(--primary); }
 
-  table.results-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-  table.results-table thead tr { height: 40px; background: var(--surface); }
-  table.results-table th { text-align: left; color: var(--text-secondary); font-size: 12px; font-weight: 400; padding: 0 8px; }
-  table.results-table tbody tr { height: 48px; border-bottom: 1px solid var(--border); cursor: pointer; }
-  table.results-table td { padding: 0 8px; font-size: 14px; }
-  table.results-table td:first-child { font-weight: 600; }
-  table.results-table tbody tr:hover { background: var(--surface); }
-
-  .card-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  /* --- card (mobile result layout) --- */
   .card {
     border-radius: 8px; background: var(--surface-raised); border: 1px solid var(--border);
-    padding: 16px; display: flex; flex-direction: column; gap: 12px; cursor: pointer;
+    padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px;
   }
-  .card .row { display: flex; justify-content: space-between; font-size: 14px; }
-  .card .row .k { color: var(--text-secondary); }
+  .card-row { display: flex; justify-content: space-between; gap: 8px; }
+  .card-row .k { color: var(--text-secondary); }
 
-  .status-badge {
-    height: 22px; border-radius: 11px; padding: 0 10px; display: inline-flex;
-    align-items: center; gap: 6px; font-size: 12px;
+  /* --- status badge (design-system.md §7) --- */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px; height: 22px;
+    border-radius: 11px; padding: 0 10px;
   }
-  .status-badge.active  { color: var(--status-active); }
-  .status-badge.pending { color: var(--status-pending); }
-  .status-badge.lapsed  { color: var(--status-lapsed); }
-  .status-badge.neutral { color: var(--status-neutral); }
+  .badge .mark { line-height: 1; }
+  .badge-active .mark { color: var(--status-active); }
+  .badge-active { background: var(--surface); color: var(--status-active); }
+  .badge-pending .mark { color: var(--status-pending); }
+  .badge-pending { background: var(--surface); color: var(--status-pending); }
+  .badge-lapsed .mark { color: var(--status-lapsed); }
+  .badge-lapsed { background: var(--surface); color: var(--status-lapsed); }
+  .badge-neutral .mark { color: var(--status-neutral); }
+  .badge-neutral { background: var(--surface); color: var(--status-neutral); }
 
+  /* --- empty / error / notice / skeleton (design-system.md §5) --- */
   .empty-state {
     min-height: 160px; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 8px; color: var(--text-secondary); margin-top: 16px;
+    justify-content: center; gap: 8px; text-align: center;
   }
-
   .error-block {
-    background: var(--danger-surface); border: 1px solid var(--danger); border-radius: 8px;
-    padding: 16px; margin-top: 16px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--danger-surface); border: 1px solid var(--danger);
+    border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 8px;
   }
   .error-block .title { color: var(--danger); }
-  .error-block .body { color: var(--text-primary); }
-
   .notice {
-    background: var(--notice-surface); border-radius: 6px; padding: 12px; color: var(--text-secondary);
-    margin-top: 8px;
+    background: var(--notice-surface); border-radius: 6px; padding: 12px;
+    color: var(--text-secondary);
+  }
+  .skeleton-bar {
+    height: 12px; border-radius: 6px; background: var(--skeleton);
   }
 
-  .skeleton-bar { height: 12px; border-radius: 6px; background: var(--skeleton); margin-bottom: 8px; }
+  footer.frame-label { margin-top: 24px; color: var(--text-secondary); }
 
-  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 8px; }
-  .create-actions { display: flex; gap: 8px; }
+  /* --- full-screen alternate states (access-denied / offline-load / session-expired) --- */
+  .full-screen-panel { margin-top: 48px; }
 
-  .frame-label {
-    margin-top: 24px; color: var(--text-secondary); padding-bottom: 24px;
+  /* --- component reference (status-badge full set — not a unit state, design-system.md §7) --- */
+  .component-ref { margin-top: 40px; padding-top: 24px; border-top: 1px dashed var(--border-strong); }
+
+  /* --- toast --- */
+  .hide-field { display: none !important; }
+  #demoToast {
+    position: fixed; bottom: 20px; left: 50%; z-index: 9999;
+    transform: translateX(-50%) translateY(16px); opacity: 0;
+    transition: opacity .2s ease, transform .2s ease; pointer-events: none;
+    background: var(--text-primary); color: var(--bg);
+    padding: 10px 16px; border-radius: 6px; font: 14px system-ui, sans-serif;
+    max-width: 90vw;
   }
-
-  .badge-row { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
 
 <div class="chrome">
-  <label>Frame
-    <select id="frame-select"></select>
-  </label>
   <label>Theme
-    <select id="theme-select">
+    <select id="themeSelect">
       <option value="light">light</option>
       <option value="dark">dark</option>
     </select>
   </label>
   <label>Width
-    <select id="width-select">
-      <option value="360">360 (mobile)</option>
-      <option value="768">768 (tablet)</option>
-      <option value="1440" selected>1440 (desktop)</option>
+    <select id="widthSelect">
+      <option value="360">360 · mobile</option>
+      <option value="768">768 · tablet</option>
+      <option value="1440" selected>1440 · desktop</option>
     </select>
   </label>
+
+  <fieldset class="chrome-sim">
+    <legend>Simulate condition — fakes the dependency; the same render code runs</legend>
+    <label data-inline><input type="checkbox" id="simOffline"> Offline</label>
+    <label>Access
+      <select id="simRole">
+        <option value="full">Full access (create-capable)</option>
+        <option value="no-create">Viewer (no create permission)</option>
+        <option value="none">No screen access (below Viewer)</option>
+      </select>
+    </label>
+    <label>Search dependency
+      <select id="simDep">
+        <option value="none">Normal</option>
+        <option value="failing">Failing (recoverable → terminal on retry)</option>
+        <option value="rate-limited">Rate limited (429)</option>
+      </select>
+    </label>
+    <label data-inline><input type="checkbox" id="simUwDown"> Underwriters lookup unavailable</label>
+    <button type="button" class="btn-secondary" id="expireSessionBtn">Expire session now</button>
+  </fieldset>
 </div>
 
 <div class="canvas-outer">
-<div class="canvas" data-width="1440" id="canvas">
-  <div class="app-header"><span class="text-h2">Partner Directory</span></div>
+<div class="canvas" id="canvas" data-width="1440">
+  <div class="app-header">
+    <span class="text-h2">Partner Directory</span>
+  </div>
   <div class="frame-content">
 
-    <!-- 1: directory-idle -->
-    <section class="frame" data-frame="directory-idle">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Broker)</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Agency</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By CGA</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Agent)</div>
-      </div>
-      <div class="toolbar">
-        <div style="display:flex; gap:12px; align-items:flex-end;">
-          <div class="input-field"><label class="text-caption">Search term</label><input type="text" placeholder="Enter a brokerage name" /></div>
-          <div class="input-field"><label class="text-caption">Assigned Underwriter</label><select><option>All underwriters</option></select></div>
-          <button class="btn-primary text-body-strong">Search</button>
+    <!-- Whole-screen alternate: access-denied (frame 13). Real — driven by the
+         Access harness control above, which fakes the session-guard's role
+         resolution; the same access-denied markup renders regardless of why the
+         guard produced "none". -->
+    <section class="screen" id="screen-access-denied" hidden>
+      <div class="panel full-screen-panel">
+        <div class="empty-state">
+          <p class="text-h3" tabindex="-1" id="accessDeniedHeading">You don't have access to this screen</p>
+          <p class="text-body section-title">Contact your administrator if you believe this is a mistake.</p>
         </div>
-        <div class="create-actions">
-          <button class="btn-secondary text-body">Add New Agency</button>
-          <button class="btn-secondary text-body">Add New Brokerage</button>
-        </div>
-      </div>
-      <div class="empty-state">
-        <div class="text-h3">Search the directory</div>
-        <div class="text-body">Choose a mode and enter a term to get started.</div>
       </div>
     </section>
 
-    <!-- 2: directory-validation-error -->
-    <section class="frame" data-frame="directory-validation-error">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Broker)</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Agency</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By CGA</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Agent)</div>
+    <!-- Whole-screen alternate: offline on load (frame 15). Real — reached when
+         the Offline harness control is on before any search has been attempted
+         this session (the harness's stand-in for "no connectivity when the
+         screen is first opened", since a static file cannot itself detect a
+         real network state). Once a search has been attempted, going offline
+         no longer blanks the screen — see offline-submit below. -->
+    <section class="screen" id="screen-offline-load" hidden>
+      <div class="panel full-screen-panel">
+        <div class="empty-state">
+          <p class="text-h3" tabindex="-1" id="offlineLoadHeading">You're offline</p>
+          <p class="text-body section-title">Connect to the network to search the directory.</p>
+          <button class="btn-secondary text-body-strong" id="offlineRetryBtn">Try again</button>
+        </div>
       </div>
-      <div class="toolbar">
-        <div style="display:flex; gap:12px; align-items:flex-start;">
-          <div class="input-field invalid">
-            <label class="text-caption">Search term</label>
-            <input type="text" value="" />
-            <div class="field-error text-caption">Enter a search term to search by By Brokerage.</div>
+    </section>
+
+    <!-- Whole-screen alternate: session expiry mid-flow (frame 17). Real — the
+         "Expire session now" harness control flags the session; the NEXT search
+         attempt (Search, UW filter, or Load more) is intercepted here before it
+         reaches computeMatches, exactly as it would be intercepted by a real
+         401 from the dependency. The pending search is preserved and re-issued
+         automatically on return. -->
+    <section class="screen" id="screen-session-expired" hidden>
+      <div class="panel full-screen-panel">
+        <div class="empty-state">
+          <p class="text-h3" tabindex="-1" id="sessionExpiredHeading">Your session expired. Sign in again to continue.</p>
+          <button class="btn-primary text-body-strong" id="signInAgainBtn">Sign in again</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- The Directory / Search screen (frames 1-12, 14, 16 — this unit's whole
+         real scope). One live screen: every search mode, the term/state input,
+         the Assigned Underwriter filter, results rendering, Load more, and every
+         loading/empty/partial/error/validation state are reached by actually
+         interacting with it, against the in-memory demo dataset below. -->
+    <section class="screen" id="screen-directory">
+      <div class="pagehead">
+        <div>
+          <div class="text-h1">Partner Directory</div>
+          <p class="text-body section-title" style="margin-top:4px">Search brokerages, brokers, agencies and CGAs.</p>
+        </div>
+        <div class="row wrap" style="gap:8px" id="createLaunchGroup">
+          <button class="btn-secondary text-body-strong" onclick="launchAddAgency()">Add New Agency</button>
+          <button class="btn-primary text-body-strong" onclick="launchAddBrokerage()">Add New Brokerage</button>
+        </div>
+      </div>
+      <div class="panel panel-pad">
+        <p class="text-caption section-title" style="margin-bottom:8px">Search by</p>
+        <div class="seg" role="radiogroup" aria-label="Search mode" id="segModes">
+          <button aria-checked="true" class="text-body-strong" data-mode="brokerage" onclick="setMode('brokerage')">By Brokerage</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="broker" onclick="setMode('broker')">By Broker</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="state-broker" onclick="setMode('state-broker')">By State (Broker)</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="agency" onclick="setMode('agency')">By Agency</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="cga" onclick="setMode('cga')">By CGA</button>
+          <button aria-checked="false" class="text-body-strong" data-mode="state-agent" onclick="setMode('state-agent')">By State (Agent)</button>
+        </div>
+        <div style="margin-top:16px;max-width:480px" class="field" id="searchTermField">
+          <label class="text-caption" for="searchTermInput">Search term</label>
+          <input class="inp text-body" id="searchTermInput" value="" autocomplete="off" />
+        </div>
+        <div style="margin-top:16px;max-width:320px" class="field hide-field" id="searchStateField">
+          <label class="text-caption" for="searchStateInput">State</label>
+          <select class="inp text-body" id="searchStateInput">
+            <option value="">Select a state…</option>
+          </select>
+        </div>
+        <p id="searchValidationMsg" class="text-caption field-err hide-field" role="alert"></p>
+        <div style="margin-top:16px">
+          <button class="btn-primary text-body-strong" id="searchSubmitBtn">Search</button>
+          <button class="btn-secondary text-body-strong" style="margin-left:8px" id="clearSearchBtn">Clear</button>
+        </div>
+        <div style="margin-top:16px;max-width:320px">
+          <div class="field">
+            <label class="text-caption" for="uwFilterSelect" id="uwFilterLabel">Assigned Underwriter</label>
+            <select class="inp text-body" id="uwFilterSelect">
+              <option value="">All underwriters</option>
+            </select>
+            <p id="uwUnavailableNotice" class="text-caption notice hide-field" role="status" aria-live="polite" style="margin-top:8px">Underwriters unavailable right now — mode search still works.</p>
           </div>
-          <button class="btn-primary text-body-strong">Search</button>
         </div>
       </div>
+      <section style="margin-top:24px" id="resultsRegion"></section>
     </section>
 
-    <!-- 3: directory-loading -->
-    <section class="frame" data-frame="directory-loading">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
-      </div>
-      <div class="toolbar">
-        <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-      </div>
-      <table class="results-table">
-        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
-        <tbody>
-          <tr><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80%"></div></td><td><div class="skeleton-bar" style="width:50%"></div></td><td><div class="skeleton-bar" style="width:30%"></div></td></tr>
-          <tr><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80%"></div></td><td><div class="skeleton-bar" style="width:50%"></div></td><td><div class="skeleton-bar" style="width:30%"></div></td></tr>
-          <tr><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80%"></div></td><td><div class="skeleton-bar" style="width:50%"></div></td><td><div class="skeleton-bar" style="width:30%"></div></td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 4: directory-populated-desktop -->
-    <section class="frame" data-frame="directory-populated-desktop">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
-      </div>
-      <div class="toolbar">
-        <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-        <div class="create-actions">
-          <button class="btn-secondary text-body">Add New Agency</button>
-          <button class="btn-secondary text-body">Add New Brokerage</button>
+    <!-- Component reference (frame 18: status-matrix). Not a unit state — the
+         shared status-badge component's full four-variant set, per
+         design-system.md §7. This unit's own screens use only two of the four
+         (Active/Disabled). Kept as a collapsed reference panel, never part of
+         the interactive Directory flow above, so it cannot be mistaken for a
+         reachable screen state. -->
+    <section class="component-ref" id="componentRef">
+      <button type="button" class="btn-secondary text-body-strong" id="componentRefToggle" aria-expanded="false" aria-controls="componentRefBody">Show status-badge reference set</button>
+      <div id="componentRefBody" hidden style="margin-top:16px">
+        <h2 class="text-h2">Status badge — full set (greyscale check reference)</h2>
+        <div class="row wrap" style="gap:16px;margin-top:16px">
+          <span class="badge badge-active"><span class="mark">●</span>In force</span>
+          <span class="badge badge-pending"><span class="mark">◐</span>Pending</span>
+          <span class="badge badge-lapsed"><span class="mark">⊘</span>Lapsed</span>
+          <span class="badge badge-neutral"><span class="mark">○</span>Unknown</span>
         </div>
-      </div>
-      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
-      <table class="results-table">
-        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
-        <tbody>
-          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
-          <tr><td class="text-body-strong">Riverbend Brokerage LLC</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Marcus Reed</td><td class="text-body">OH</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 5: directory-populated-mobile -->
-    <section class="frame" data-frame="directory-populated-mobile">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
-      </div>
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
-      <div class="card-list">
-        <div class="card">
-          <div class="row"><span class="k text-caption">Brokerage</span><span class="text-body-strong">Northgate Insurance Partners</span></div>
-          <div class="row"><span class="k text-caption">Address</span><span class="text-body">400 W Broad St, Columbus, OH 43215</span></div>
-          <div class="row"><span class="k text-caption">Assigned UW</span><span class="text-body">Dana Smith</span></div>
-          <div class="row"><span class="k text-caption">State</span><span class="text-body">OH</span></div>
-        </div>
-        <div class="card">
-          <div class="row"><span class="k text-caption">Brokerage</span><span class="text-body-strong">Riverbend Brokerage LLC</span></div>
-          <div class="row"><span class="k text-caption">Address</span><span class="text-body">400 W Broad St, Columbus, OH 43215</span></div>
-          <div class="row"><span class="k text-caption">Assigned UW</span><span class="text-body">Marcus Reed</span></div>
-          <div class="row"><span class="k text-caption">State</span><span class="text-body">OH</span></div>
-        </div>
+        <p class="text-caption section-title" style="margin-top:16px">This unit's own screens use only Active (mapped to In force) and Disabled (mapped to Lapsed); the other two variants are shown here as the shared component's full set, per design-system.md §7.</p>
       </div>
     </section>
 
-    <!-- 6: directory-broker-mode -->
-    <section class="frame" data-frame="directory-broker-mode">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Broker</div>
-      </div>
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Smith" /></div>
-      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
-      <table class="results-table">
-        <thead><tr><th>First</th><th>Last</th><th>Brokerage</th><th>Title/Type</th><th>Email</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr>
-            <td class="text-body-strong">Dana</td><td class="text-body">Smith</td><td class="text-body">Northgate Insurance Partners</td><td class="text-body">Broker</td>
-            <td class="text-body"><a href="#" style="color:var(--primary)">d.smith@example.invalid</a></td>
-            <td><span class="status-badge active"><span aria-hidden="true">&#9679;</span>Active</span></td>
-          </tr>
-          <tr>
-            <td class="text-body-strong">A.</td><td class="text-body">Whitfield</td><td class="text-body">Riverbend Brokerage LLC</td><td class="text-body">Broker</td>
-            <td class="text-body"><a href="#" style="color:var(--primary)">a.whitfield@example.invalid</a></td>
-            <td><span class="status-badge lapsed"><span aria-hidden="true">&#8856;</span>Disabled</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 7: directory-uw-filter -->
-    <section class="frame" data-frame="directory-uw-filter">
-      <div class="toolbar">
-        <div class="input-field"><label class="text-caption">Assigned Underwriter</label><select><option>Dana Smith</option></select></div>
-      </div>
-      <div class="text-body-strong" style="margin-top:16px;">1 result — scoped to Dana Smith</div>
-      <table class="results-table">
-        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
-        <tbody>
-          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 8: directory-empty -->
-    <section class="frame" data-frame="directory-empty">
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Zzzznotfound" /></div>
-      <div class="text-body-strong" style="margin-top:16px;">0 results</div>
-      <div class="empty-state">
-        <div class="text-h3">No records to display</div>
-        <div class="text-body">Try a different search term, state, or underwriter.</div>
-      </div>
-    </section>
-
-    <!-- 9: directory-partial -->
-    <section class="frame" data-frame="directory-partial">
-      <div class="toolbar">
-        <div class="input-field">
-          <label class="text-caption">Assigned Underwriter</label>
-          <select disabled><option>Unavailable</option></select>
-          <div class="notice text-caption">Underwriters unavailable right now — mode search still works.</div>
-        </div>
-      </div>
-      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
-      <table class="results-table">
-        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
-        <tbody>
-          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
-          <tr><td class="text-body-strong">Riverbend Brokerage LLC</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Marcus Reed</td><td class="text-body">OH</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 10: directory-error-recoverable -->
-    <section class="frame" data-frame="directory-error-recoverable">
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-      <div class="error-block">
-        <div class="text-body-strong title">We couldn't load results</div>
-        <div class="text-body body">Something went wrong reaching the search service.</div>
-        <button class="btn-secondary text-body" style="width:fit-content;">Retry</button>
-      </div>
-    </section>
-
-    <!-- 11: directory-error-terminal -->
-    <section class="frame" data-frame="directory-error-terminal">
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-      <div class="error-block">
-        <div class="text-body-strong title">Search is unavailable</div>
-        <div class="text-body body">This keeps failing. Contact support if it continues.</div>
-      </div>
-    </section>
-
-    <!-- 12: directory-rate-limited -->
-    <section class="frame" data-frame="directory-rate-limited">
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-      <div class="error-block">
-        <div class="text-body-strong title">Too many searches</div>
-        <div class="text-body body">Please wait a moment before searching again.</div>
-      </div>
-    </section>
-
-    <!-- 13: directory-access-denied -->
-    <section class="frame" data-frame="directory-access-denied">
-      <div class="empty-state">
-        <div class="text-h3">You don't have access to this screen</div>
-        <div class="text-body">Contact your administrator if you believe this is a mistake.</div>
-      </div>
-    </section>
-
-    <!-- 14: directory-no-create-permission -->
-    <section class="frame" data-frame="directory-no-create-permission">
-      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
-        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
-        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
-      </div>
-      <div class="toolbar">
-        <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-        <div class="create-actions"><!-- Add New Agency / Add New Brokerage intentionally absent --></div>
-      </div>
-      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
-      <table class="results-table">
-        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
-        <tbody>
-          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
-          <tr><td class="text-body-strong">Riverbend Brokerage LLC</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Marcus Reed</td><td class="text-body">OH</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- 15: directory-offline-load -->
-    <section class="frame" data-frame="directory-offline-load">
-      <div class="empty-state">
-        <div class="text-h3">You're offline</div>
-        <div class="text-body">Connect to the network to search the directory.</div>
-        <button class="btn-secondary text-body" style="width:fit-content;">Try again</button>
-      </div>
-    </section>
-
-    <!-- 16: directory-offline-submit -->
-    <section class="frame" data-frame="directory-offline-submit">
-      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
-      <div class="error-block">
-        <div class="text-body-strong title">We couldn't load results</div>
-        <div class="text-body body">You appear to be offline. Reconnect and try again.</div>
-        <button class="btn-secondary text-body" style="width:fit-content;">Try again</button>
-      </div>
-    </section>
-
-    <!-- 17: directory-session-expired -->
-    <section class="frame" data-frame="directory-session-expired">
-      <div class="notice text-body">Your session expired. Sign in again to continue.</div>
-    </section>
-
-    <!-- 18: status-matrix -->
-    <section class="frame" data-frame="status-matrix">
-      <div class="text-h3">Status badge — component reference</div>
-      <div class="text-caption" style="color:var(--text-secondary); margin-top:4px;">
-        This unit uses only Active/Disabled (mapped to active/lapsed below); the
-        other two variants are shown for the shared component's full set per the
-        design system's greyscale check.
-      </div>
-      <div class="badge-row">
-        <span class="status-badge active"><span aria-hidden="true">&#9679;</span>In force</span>
-        <span class="status-badge pending"><span aria-hidden="true">&#9680;</span>Pending</span>
-        <span class="status-badge lapsed"><span aria-hidden="true">&#8856;</span>Lapsed</span>
-        <span class="status-badge neutral"><span aria-hidden="true">&#9675;</span>Unknown</span>
-      </div>
-    </section>
-
-    <footer class="frame-label text-caption" id="frame-label">UNIT-CMS-0004 · directory-idle · 1440px · light</footer>
+    <footer class="frame-label text-caption" id="frameLabel">UNIT-CMS-0004 · directory · idle · 1440px · light</footer>
   </div>
 </div>
 </div>
 
+<div id="demoToast" role="status" aria-live="polite"></div>
+
 <script>
-  // Switcher only — navigates between already-specified states. No validation,
-  // no fetch, no timers, no storage, no computed values, no state machine.
-  var frames = Array.prototype.map.call(document.querySelectorAll('.frame'), function (el) {
-    return el.getAttribute('data-frame');
+/* ============================================================
+   UNIT-CMS-0004 partner-directory-ui — real prototype.
+
+   This mockup is a genuine single-page interactive prototype of the
+   Directory/Search landing screen (this unit's whole scope), matching the
+   architecture of requirements/contactmanagement-full-mockup.html: there is
+   no frame-picker driving the primary UI. Every state states.md documents is
+   reached through real interaction against the in-memory demo dataset below,
+   exactly the way the reference reaches its states through renderResults().
+
+   The "Simulate condition" controls above are a reviewer harness for the
+   handful of states that cannot occur naturally against fake in-memory data
+   — a genuine dependency failure, an offline condition, an expired session, a
+   throttled response, and a dependency lookup outage. Each control only fakes
+   the underlying condition (sets a flag the real render functions read); it
+   never swaps in a separately authored static block. Row-open and the two
+   create launch points are real navigation *attempts* that resolve to a toast
+   stub, because the destination screens are UNIT-CMS-0006's scope and do not
+   exist in this file (requirements.md Scope/Out of scope, R10/R11).
+   ============================================================ */
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) {
+  return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
   });
+};
 
-  var frameSelect = document.getElementById('frame-select');
-  frames.forEach(function (name) {
-    var opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    frameSelect.appendChild(opt);
-  });
+/* ---------------- in-memory demo dataset ---------------- */
+var STATES = ["AZ", "CA", "CO", "FL", "GA", "IL", "MA", "NY", "OH", "TX", "WA"];
 
-  var themeSelect = document.getElementById('theme-select');
-  var widthSelect = document.getElementById('width-select');
-  var canvas = document.getElementById('canvas');
-  var label = document.getElementById('frame-label');
+var BROKERAGES = [
+  { producerNumber: "1001", brokerage: "Northgate Insurance Partners", address: "400 W Broad St", city: "Columbus", state: "OH", zip: "43215", uw: "Dana Smith" },
+  { producerNumber: "1002", brokerage: "Riverbend Brokerage LLC", address: "400 W Broad St", city: "Columbus", state: "OH", zip: "43215", uw: "Marcus Reed" },
+  { producerNumber: "1003", brokerage: "Acme Insurance Brokers", address: "123 Main St", city: "Austin", state: "TX", zip: "78701", uw: "Dana Smith" },
+  { producerNumber: "1004", brokerage: "Coastal Brokerage Group", address: "500 Bay St", city: "Houston", state: "TX", zip: "77002", uw: "A. Whitfield" },
+  { producerNumber: "1005", brokerage: "Lone Star Underwriting Partners", address: "250 Riverwalk", city: "San Antonio", state: "TX", zip: "78205", uw: "Marcus Reed" },
+  { producerNumber: "1006", brokerage: "Sunrise Risk Advisors", address: "88 Peachtree St", city: "Atlanta", state: "GA", zip: "30303", uw: "Dana Smith" },
+  { producerNumber: "1007", brokerage: "Pacific Crest Brokers", address: "1 Market Plaza", city: "San Francisco", state: "CA", zip: "94105", uw: "A. Whitfield" },
+  { producerNumber: "1008", brokerage: "Empire State Underwriters", address: "350 Fifth Ave", city: "New York", state: "NY", zip: "10118", uw: "Marcus Reed" },
+  { producerNumber: "1009", brokerage: "Sunshine Coast Insurance", address: "200 Biscayne Blvd", city: "Miami", state: "FL", zip: "33131", uw: "Dana Smith" },
+  { producerNumber: "1010", brokerage: "Prairie Mutual Brokerage", address: "10 LaSalle St", city: "Chicago", state: "IL", zip: "60603", uw: "A. Whitfield" },
+  { producerNumber: "1011", brokerage: "Desert Sky Insurance Partners", address: "2 N Central Ave", city: "Phoenix", state: "AZ", zip: "85004", uw: "Marcus Reed" },
+  { producerNumber: "1012", brokerage: "Rocky Mountain Brokers", address: "1700 Lincoln St", city: "Denver", state: "CO", zip: "80203", uw: "Dana Smith" },
+  { producerNumber: "1013", brokerage: "Evergreen Insurance Group", address: "1201 3rd Ave", city: "Seattle", state: "WA", zip: "98101", uw: "A. Whitfield" },
+  { producerNumber: "1014", brokerage: "Bay State Brokerage Partners", address: "1 Beacon St", city: "Boston", state: "MA", zip: "02108", uw: "Marcus Reed" }
+];
 
-  function render() {
-    var frame = frameSelect.value;
-    var theme = themeSelect.value;
-    var width = widthSelect.value;
+var BROKERS = [
+  { producerNumber: "1001", first: "Marcus", last: "Reed", type: "Producer", email: "m.reed@example.invalid", disabled: false },
+  { producerNumber: "1002", first: "A.", last: "Whitfield", type: "Account Manager", email: "a.whitfield@example.invalid", disabled: true },
+  { producerNumber: "1003", first: "John", last: "Smith", type: "Producer", email: "jsmith@acmeins.example.invalid", disabled: false },
+  { producerNumber: "1004", first: "Maria", last: "Garcia", type: "CSR", email: "mgarcia@coastalbrokerage.example.invalid", disabled: false },
+  { producerNumber: "1005", first: "David", last: "Lee", type: "Producer", email: "dlee@lonestaruw.example.invalid", disabled: true },
+  { producerNumber: "1003", first: "Emily", last: "Nguyen", type: "Account Manager", email: "enguyen@acmeins.example.invalid", disabled: false },
+  { producerNumber: "1006", first: "Grace", last: "Kim", type: "Producer", email: "gkim@sunriserisk.example.invalid", disabled: false },
+  { producerNumber: "1007", first: "Oliver", last: "Bennett", type: "CSR", email: "obennett@pacificcrest.example.invalid", disabled: false },
+  { producerNumber: "1008", first: "Sofia", last: "Ramirez", type: "Producer", email: "sramirez@empirestate.example.invalid", disabled: false },
+  { producerNumber: "1009", first: "Liam", last: "Walker", type: "Principal", email: "lwalker@sunshinecoast.example.invalid", disabled: false },
+  { producerNumber: "1010", first: "Ava", last: "Chen", type: "Producer", email: "achen@prairiemutual.example.invalid", disabled: true },
+  { producerNumber: "1011", first: "Noah", last: "Carter", type: "CSR", email: "ncarter@desertsky.example.invalid", disabled: false },
+  { producerNumber: "1012", first: "Isabella", last: "Brooks", type: "Account Manager", email: "ibrooks@rockymtn.example.invalid", disabled: false },
+  { producerNumber: "1013", first: "Ethan", last: "Foster", type: "Producer", email: "efoster@evergreenins.example.invalid", disabled: false }
+];
 
-    document.querySelectorAll('.frame').forEach(function (el) {
-      el.classList.toggle('active', el.getAttribute('data-frame') === frame);
-    });
-    document.documentElement.setAttribute('data-theme', theme);
-    canvas.setAttribute('data-width', width);
-    label.textContent = 'UNIT-CMS-0004 · ' + frame + ' · ' + width + 'px · ' + theme;
+var AGENCIES = [
+  { agencyId: "3001", agency: "Lonestar Insurance Agency", address: "100 Congress Ave", city: "Austin", state: "TX", zip: "78701", agent: "Sarah Connor" },
+  { agencyId: "3002", agency: "Gulf Coast Underwriters", address: "500 Bay St", city: "Houston", state: "TX", zip: "77002", agent: "Miguel Torres" },
+  { agencyId: "3003", agency: "Alamo Risk Partners", address: "250 Riverwalk", city: "San Antonio", state: "TX", zip: "78205", agent: "Priya Nair" },
+  { agencyId: "3004", agency: "Peachtree Agency Partners", address: "77 Peachtree St", city: "Atlanta", state: "GA", zip: "30303", agent: "Alex Chen" },
+  { agencyId: "3005", agency: "Golden Gate Agency Group", address: "1 Market Plaza", city: "San Francisco", state: "CA", zip: "94105", agent: "Wei Zhang" },
+  { agencyId: "3006", agency: "Empire Agency Partners", address: "350 Fifth Ave", city: "New York", state: "NY", zip: "10118", agent: "Olivia Brown" },
+  { agencyId: "3007", agency: "Sunbelt Agency Alliance", address: "200 Biscayne Blvd", city: "Miami", state: "FL", zip: "33131", agent: "Carlos Mendez" },
+  { agencyId: "3008", agency: "Midwest Agency Collective", address: "10 LaSalle St", city: "Chicago", state: "IL", zip: "60603", agent: "Karen White" },
+  { agencyId: "3009", agency: "Cactus Agency Partners", address: "2 N Central Ave", city: "Phoenix", state: "AZ", zip: "85004", agent: "Daniel Ortiz" },
+  { agencyId: "3010", agency: "Summit Agency Group", address: "1700 Lincoln St", city: "Denver", state: "CO", zip: "80203", agent: "Rachel Kim" }
+];
+
+var CGAS = [
+  { cgaId: "4001", agent: "Texas General Agency Corp", address: "300 Main St", city: "Austin", state: "TX", zip: "78701" },
+  { cgaId: "4002", agent: "Bayou CGA Solutions", address: "600 Bay St", city: "Houston", state: "TX", zip: "77002" },
+  { cgaId: "4003", agent: "Alamo CGA Services", address: "260 Riverwalk", city: "San Antonio", state: "TX", zip: "78205" },
+  { cgaId: "4004", agent: "Peach State CGA Group", address: "90 Peachtree St", city: "Atlanta", state: "GA", zip: "30303" },
+  { cgaId: "4005", agent: "Golden CGA Partners", address: "5 Market Plaza", city: "San Francisco", state: "CA", zip: "94105" },
+  { cgaId: "4006", agent: "Empire CGA Solutions", address: "360 Fifth Ave", city: "New York", state: "NY", zip: "10118" },
+  { cgaId: "4007", agent: "Sunshine CGA Alliance", address: "210 Biscayne Blvd", city: "Miami", state: "FL", zip: "33131" },
+  { cgaId: "4008", agent: "Lakeside CGA Group", address: "20 LaSalle St", city: "Chicago", state: "IL", zip: "60603" }
+];
+
+var PAGE_SIZE = 5;
+
+/* ---------------- search state ---------------- */
+var currentMode = "brokerage";
+var lastMode = "brokerage";
+var lastMatches = [];
+var pageOffset = 0;
+var currentResultState = "idle"; /* idle | validation-error | loading | populated | empty | partial-shown-alongside-populated | error-recoverable | error-terminal | rate-limited | offline-submit */
+
+/* ---------------- harness-simulated conditions ---------------- */
+var harness = { offline: false, role: "full", dep: "none", uwDown: false };
+var hasAttemptedSearch = false;   /* flips true on the first real search/UW-filter/load-more attempt */
+var lastFailedQueryKey = null;    /* used to detect "the same request failing again after a retry" (R21 -> terminal) */
+var sessionExpired = false;
+var pendingResume = null;         /* { kind, mode, value, uw } captured when a search is intercepted by session expiry */
+
+/* ---------------- helpers shared with the reference's structure ---------------- */
+function brokerageName(pn) {
+  var b = BROKERAGES.filter(function (x) { return x.producerNumber === pn; })[0];
+  return b ? b.brokerage : "";
+}
+function requiresState(mode) { return mode === "state-broker" || mode === "state-agent"; }
+function requiresTerm(mode) { return mode === "brokerage" || mode === "broker" || mode === "agency" || mode === "cga"; }
+function needsValue(mode) { return requiresTerm(mode) || requiresState(mode); }
+function modeLabel(mode) {
+  return {
+    brokerage: "By Brokerage", broker: "By Broker", "state-broker": "By State (Broker)",
+    agency: "By Agency", cga: "By CGA", "state-agent": "By State (Agent)"
+  }[mode];
+}
+
+function theadForMode(mode) {
+  if (mode === "brokerage" || mode === "state-broker") return ["Brokerage", "Address", "Assigned UW", "State"];
+  if (mode === "broker") return ["First", "Last", "Brokerage", "Title/Type", "Email", "Status"];
+  if (mode === "agency" || mode === "state-agent") return ["Agency", "Address", "Agent"];
+  return ["CGA Agent", "Address"];
+}
+
+function computeMatches(mode, value) {
+  var v = (value || "").toLowerCase();
+  var m = function (s) { return String(s || "").toLowerCase().indexOf(v) !== -1; };
+  if (mode === "brokerage") return BROKERAGES.filter(function (r) { return m(r.brokerage) || m(r.city); });
+  if (mode === "state-broker") return BROKERAGES.filter(function (r) { return r.state.toLowerCase() === v; });
+  if (mode === "broker") return BROKERS.filter(function (r) { return m(r.first + " " + r.last) || m(brokerageName(r.producerNumber)); });
+  if (mode === "agency") return AGENCIES.filter(function (r) { return m(r.agency) || m(r.city) || m(r.agent); });
+  if (mode === "state-agent") return AGENCIES.filter(function (r) { return r.state.toLowerCase() === v; });
+  if (mode === "cga") return CGAS.filter(function (r) { return m(r.agent) || m(r.address) || m(r.city); });
+  return [];
+}
+
+function rowHtmlForMode(mode, item) {
+  if (mode === "brokerage" || mode === "state-broker") {
+    return '<tr data-row tabindex="0" onclick="openRow(\'' + mode + '\',\'' + item.producerNumber + '\')" onkeydown="rowKeydown(event,\'' + mode + '\',\'' + item.producerNumber + '\')">' +
+      '<td class="text-body-strong">' + esc(item.brokerage) + '</td>' +
+      '<td class="text-body">' + esc(item.address + ", " + item.city + ", " + item.state + " " + item.zip) + '</td>' +
+      '<td class="text-body">' + esc(item.uw) + '</td>' +
+      '<td class="text-body"><span class="chip">' + esc(item.state) + '</span></td></tr>';
   }
+  if (mode === "broker") {
+    var status = item.disabled
+      ? '<span class="badge badge-lapsed"><span class="mark">⊘</span>Disabled</span>'
+      : '<span class="badge badge-active"><span class="mark">●</span>Active</span>';
+    return '<tr data-row tabindex="0" onclick="openRow(\'brokerage\',\'' + item.producerNumber + '\')" onkeydown="rowKeydown(event,\'brokerage\',\'' + item.producerNumber + '\')">' +
+      '<td class="text-body-strong">' + esc(item.first) + '</td>' +
+      '<td class="text-body">' + esc(item.last) + '</td>' +
+      '<td class="text-body">' + esc(brokerageName(item.producerNumber)) + '</td>' +
+      '<td class="text-body">' + esc(item.type) + '</td>' +
+      '<td class="text-body"><a class="link" href="mailto:' + esc(item.email) + '" onclick="event.stopPropagation()">' + esc(item.email) + '</a></td>' +
+      '<td>' + status + '</td></tr>';
+  }
+  if (mode === "agency" || mode === "state-agent") {
+    return '<tr data-row tabindex="0" onclick="openRow(\'agency\',\'' + item.agencyId + '\')" onkeydown="rowKeydown(event,\'agency\',\'' + item.agencyId + '\')">' +
+      '<td class="text-body-strong">' + esc(item.agency) + '</td>' +
+      '<td class="text-body">' + esc(item.address + ", " + item.city + ", " + item.state + " " + item.zip) + '</td>' +
+      '<td class="text-body">' + esc(item.agent) + '</td></tr>';
+  }
+  return '<tr data-row tabindex="0" onclick="openRow(\'cga\',\'' + item.cgaId + '\')" onkeydown="rowKeydown(event,\'cga\',\'' + item.cgaId + '\')">' +
+    '<td class="text-body-strong">' + esc(item.agent) + '</td>' +
+    '<td class="text-body">' + esc(item.address + ", " + item.city + ", " + item.state + " " + item.zip) + '</td></tr>';
+}
 
-  frameSelect.addEventListener('change', render);
-  themeSelect.addEventListener('change', render);
-  widthSelect.addEventListener('change', render);
+function cardHtmlForMode(mode, item) {
+  var rows = [];
+  if (mode === "brokerage" || mode === "state-broker") {
+    rows = [["Address", item.address + ", " + item.city + ", " + item.state + " " + item.zip], ["Assigned UW", item.uw], ["State", item.state]];
+    return cardHtml(item.brokerage, rows, mode, item.producerNumber);
+  }
+  if (mode === "broker") {
+    rows = [["Brokerage", brokerageName(item.producerNumber)], ["Title/Type", item.type], ["Email", item.email], ["Status", item.disabled ? "Disabled" : "Active"]];
+    return cardHtml(item.first + " " + item.last, rows, "brokerage", item.producerNumber);
+  }
+  if (mode === "agency" || mode === "state-agent") {
+    rows = [["Address", item.address + ", " + item.city + ", " + item.state + " " + item.zip], ["Agent", item.agent]];
+    return cardHtml(item.agency, rows, "agency", item.agencyId);
+  }
+  rows = [["Address", item.address + ", " + item.city + ", " + item.state + " " + item.zip]];
+  return cardHtml(item.agent, rows, "cga", item.cgaId);
+}
+function cardHtml(title, rows, mode, id) {
+  var body = rows.map(function (r) {
+    return '<div class="card-row"><span class="text-caption k">' + esc(r[0]) + '</span><span class="text-body">' + esc(r[1]) + '</span></div>';
+  }).join("");
+  return '<div class="card" tabindex="0" role="button" onclick="openRow(\'' + mode + '\',\'' + id + '\')" onkeydown="rowKeydown(event,\'' + mode + '\',\'' + id + '\')">' +
+    '<div class="card-row"><span class="text-body-strong">' + esc(title) + '</span></div>' + body + '</div>';
+}
 
-  frameSelect.value = frames[0];
-  render();
+/* ---------------- input visibility / validation ---------------- */
+function toggleInputVisibility(mode) {
+  var stateMode = requiresState(mode);
+  $("searchTermField").classList.toggle("hide-field", stateMode);
+  $("searchStateField").classList.toggle("hide-field", !stateMode);
+}
+
+function clearValidation() {
+  $("searchValidationMsg").classList.add("hide-field");
+  $("searchTermInput").classList.remove("err");
+  $("searchStateInput").classList.remove("err");
+}
+function showValidation(mode) {
+  var msg = requiresState(mode) ? "Select a state to search." : ("Enter a search term to search by " + modeLabel(mode) + ".");
+  $("searchValidationMsg").textContent = msg;
+  $("searchValidationMsg").classList.remove("hide-field");
+  var input = requiresState(mode) ? $("searchStateInput") : $("searchTermInput");
+  input.classList.add("err");
+  input.setAttribute("aria-describedby", "searchValidationMsg");
+  currentResultState = "validation-error";
+  $("resultsRegion").innerHTML = "";
+  updateFrameLabel();
+}
+
+/* ---------------- results-region renderers (the same functions run whether
+   reached by real typing, a real Search submit, or a harness-faked failure) ---------------- */
+function renderLoading(mode) {
+  currentResultState = "loading";
+  var desktop = canvas.getAttribute("data-width") === "1440";
+  var html = '<h2 class="text-h2">Search results</h2>';
+  if (desktop) {
+    var cols = theadForMode(mode);
+    html += '<div class="panel tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr>' +
+      cols.map(function (c) { return '<th class="text-caption">' + c + '</th>'; }).join("") +
+      '</tr></thead><tbody>' +
+      '<tr><td colspan="' + cols.length + '"><div class="skeleton-bar" style="width:60%"></div></td></tr>' +
+      '<tr><td colspan="' + cols.length + '"><div class="skeleton-bar" style="width:80%"></div></td></tr>' +
+      '<tr><td colspan="' + cols.length + '"><div class="skeleton-bar" style="width:45%"></div></td></tr>' +
+      '</tbody></table></div>';
+  } else {
+    /* card skeleton on mobile/tablet, per states.md's loading row */
+    html += '<div style="margin-top:12px">' +
+      '<div class="card"><div class="skeleton-bar" style="width:55%"></div><div class="skeleton-bar" style="width:80%"></div><div class="skeleton-bar" style="width:40%"></div></div>' +
+      '<div class="card"><div class="skeleton-bar" style="width:65%"></div><div class="skeleton-bar" style="width:70%"></div><div class="skeleton-bar" style="width:35%"></div></div>' +
+      '</div>';
+  }
+  $("resultsRegion").innerHTML = html;
+  updateFrameLabel();
+}
+function renderEmpty() {
+  currentResultState = "empty";
+  $("resultsRegion").innerHTML = '<h2 class="text-h2" tabindex="-1">0 results</h2>' +
+    '<div class="panel" style="margin-top:12px"><div class="empty-state">' +
+    '<p class="text-h3">No records to display</p>' +
+    '<p class="text-body section-title">Try a different search term, state, or underwriter.</p>' +
+    '</div></div>';
+  updateFrameLabel();
+}
+function renderRecoverableError() {
+  currentResultState = "error-recoverable";
+  $("resultsRegion").innerHTML = '<div class="error-block">' +
+    '<p class="text-body-strong title" tabindex="-1" id="errorHeading">We couldn\'t load results</p>' +
+    '<p class="text-body">Something went wrong reaching the search service.</p>' +
+    '<button class="btn-secondary text-body-strong" style="align-self:flex-start" onclick="retryLastSearch()">Retry</button>' +
+    '</div>';
+  focusHeading("errorHeading");
+  updateFrameLabel();
+}
+function renderTerminalError() {
+  currentResultState = "error-terminal";
+  $("resultsRegion").innerHTML = '<div class="error-block">' +
+    '<p class="text-body-strong title" tabindex="-1" id="errorHeading">Search is unavailable</p>' +
+    '<p class="text-body">This keeps failing. Contact support if it continues.</p>' +
+    '</div>';
+  focusHeading("errorHeading");
+  updateFrameLabel();
+}
+function renderRateLimited() {
+  currentResultState = "rate-limited";
+  $("resultsRegion").innerHTML = '<div class="error-block">' +
+    '<p class="text-body-strong title" tabindex="-1" id="errorHeading">Too many searches</p>' +
+    '<p class="text-body">Please wait a moment before searching again.</p>' +
+    '<button class="btn-secondary text-body-strong" style="align-self:flex-start" onclick="retryLastSearch()">Retry</button>' +
+    '</div>';
+  focusHeading("errorHeading");
+  updateFrameLabel();
+}
+function renderOfflineSubmitError() {
+  currentResultState = "offline-submit";
+  $("resultsRegion").innerHTML = '<div class="error-block">' +
+    '<p class="text-body-strong title" tabindex="-1" id="errorHeading">We couldn\'t load results</p>' +
+    '<p class="text-body">You appear to be offline. Reconnect and try again.</p>' +
+    '<button class="btn-secondary text-body-strong" style="align-self:flex-start" onclick="retryLastSearch()">Try again</button>' +
+    '</div>';
+  focusHeading("errorHeading");
+  updateFrameLabel();
+}
+function renderPopulated() {
+  currentResultState = "populated";
+  var mode = lastMode;
+  var total = lastMatches.length;
+  var shown = lastMatches.slice(0, pageOffset);
+  var desktop = canvas.getAttribute("data-width") === "1440";
+  var html = '<h2 class="text-h2" tabindex="-1">' + total + (total === 1 ? " result" : " results") + '</h2>';
+  if (desktop) {
+    var cols = theadForMode(mode);
+    html += '<div class="panel tbl-wrap" style="margin-top:12px"><table class="tbl"><thead><tr>' +
+      cols.map(function (c) { return '<th class="text-caption">' + c + '</th>'; }).join("") +
+      '</tr></thead><tbody>' +
+      shown.map(function (it) { return rowHtmlForMode(mode, it); }).join("") +
+      '</tbody></table></div>';
+  } else {
+    html += '<div style="margin-top:12px">' + shown.map(function (it) { return cardHtmlForMode(mode, it); }).join("") + '</div>';
+  }
+  if (pageOffset < total) {
+    html += '<div style="margin-top:16px"><button class="btn-secondary text-body-strong" onclick="loadMore()">Load more</button></div>';
+  }
+  $("resultsRegion").innerHTML = html;
+  updateFrameLabel();
+}
+function focusHeading(id) {
+  var el = $(id);
+  if (el && el.focus) { try { el.focus(); } catch (e) {} }
+}
+
+/* ---------------- the search flow: gate -> loading -> resolve ---------------- */
+function queryKey(mode, value) { return mode + "::" + (value || ""); }
+
+/** Intercepts a real search attempt if the session has been flagged expired by
+    the harness — mirrors design.md's session guard rerouting a 401 into
+    re-authentication rather than rendering it as a data error (R25). */
+function gateOrDefer(kind, mode, value) {
+  if (sessionExpired) {
+    pendingResume = { kind: kind, mode: mode, value: value };
+    showScreen("session-expired");
+    return false;
+  }
+  return true;
+}
+
+function runQuery(mode, value) {
+  hasAttemptedSearch = true;
+  if (!gateOrDefer("search", mode, value)) return;
+  renderLoading(mode);
+  window.setTimeout(function () {
+    if (harness.offline) { renderOfflineSubmitError(); return; }
+    if (harness.dep === "rate-limited") { renderRateLimited(); return; }
+    if (harness.dep === "failing") {
+      var key = queryKey(mode, value);
+      if (lastFailedQueryKey === key) { renderTerminalError(); return; }
+      lastFailedQueryKey = key;
+      renderRecoverableError();
+      return;
+    }
+    lastFailedQueryKey = null;
+    var matches = computeMatches(mode, value);
+    lastMode = mode; lastMatches = matches; pageOffset = Math.min(PAGE_SIZE, matches.length);
+    if (matches.length === 0) renderEmpty(); else renderPopulated();
+  }, 450); /* artificial delay so the loading state above is genuinely reachable */
+}
+
+function retryLastSearch() {
+  runQuery(lastMode, requiresState(lastMode) ? $("searchStateInput").value : $("searchTermInput").value.trim());
+}
+
+function startSearch() {
+  clearValidation();
+  var mode = currentMode;
+  var value = requiresState(mode) ? $("searchStateInput").value : $("searchTermInput").value.trim();
+  if (needsValue(mode) && !value) { showValidation(mode); return; }
+  $("uwFilterSelect").value = "";
+  runQuery(mode, value);
+}
+
+/** Real, instant, client-side re-render as the user types — this is a live
+    filter over the already-available demo dataset, not a request, so it is
+    not subject to the offline/session/dependency-failure harness (those
+    simulate the search dependency call itself, which a live filter never
+    makes). Mirrors the reference's mode-scoped renderResults() shape. */
+function liveFilter() {
+  var mode = currentMode;
+  var value = requiresState(mode) ? $("searchStateInput").value : $("searchTermInput").value.trim();
+  clearValidation();
+  $("uwFilterSelect").value = "";
+  if (needsValue(mode) && !value) { currentResultState = "idle"; $("resultsRegion").innerHTML = ""; lastMatches = []; updateFrameLabel(); return; }
+  var matches = computeMatches(mode, value);
+  lastMode = mode; lastMatches = matches; pageOffset = Math.min(PAGE_SIZE, matches.length);
+  if (matches.length === 0) renderEmpty(); else renderPopulated();
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  Array.prototype.forEach.call(document.querySelectorAll("#segModes button"), function (b) {
+    b.setAttribute("aria-checked", b.getAttribute("data-mode") === mode ? "true" : "false");
+  });
+  $("searchTermInput").value = "";
+  $("searchStateInput").value = "";
+  $("uwFilterSelect").value = "";
+  clearValidation();
+  toggleInputVisibility(mode);
+  currentResultState = "idle";
+  $("resultsRegion").innerHTML = "";
+  lastMatches = [];
+  lastFailedQueryKey = null;
+  updateFrameLabel();
+}
+
+function clearSearch() {
+  $("searchTermInput").value = "";
+  $("searchStateInput").value = "";
+  $("uwFilterSelect").value = "";
+  clearValidation();
+  currentResultState = "idle";
+  $("resultsRegion").innerHTML = "";
+  lastMatches = [];
+  lastFailedQueryKey = null;
+  updateFrameLabel();
+}
+
+function onUwFilter() {
+  var uw = $("uwFilterSelect").value;
+  if (!uw) { liveFilter(); return; }
+  hasAttemptedSearch = true;
+  if (!gateOrDefer("uw", "brokerage", uw)) return;
+  clearValidation();
+  /* the UW filter runs its own By-Brokerage-shaped query (R5) — it goes
+     through the same request sequencer/failure surface as mode search */
+  renderLoading("brokerage");
+  window.setTimeout(function () {
+    if (harness.offline) { renderOfflineSubmitError(); return; }
+    if (harness.dep === "rate-limited") { renderRateLimited(); return; }
+    if (harness.dep === "failing") {
+      var key = "uw::" + uw;
+      if (lastFailedQueryKey === key) { renderTerminalError(); return; }
+      lastFailedQueryKey = key;
+      renderRecoverableError();
+      return;
+    }
+    lastFailedQueryKey = null;
+    var matches = BROKERAGES.filter(function (b) { return b.uw === uw; });
+    lastMode = "brokerage"; lastMatches = matches; pageOffset = Math.min(PAGE_SIZE, matches.length);
+    if (matches.length === 0) renderEmpty(); else renderPopulated();
+  }, 450);
+}
+
+function loadMore() {
+  /* simulates paging over UNIT-CMS-0003's cursor-based next_cursor (R12) —
+     each click reveals the next in-memory batch of PAGE_SIZE rows */
+  pageOffset = Math.min(pageOffset + PAGE_SIZE, lastMatches.length);
+  renderPopulated();
+}
+
+/* ---------------- row / create navigation (real attempt, stubbed target —
+   UNIT-CMS-0006 owns the destination screens, out of this unit's scope) ---------------- */
+function openRow(mode, id) {
+  var family = mode === "cga" ? "CGA Detail" : (mode === "agency" || mode === "state-agent") ? "Agency Detail" : "Brokerage Detail";
+  toast("Would navigate to " + family + " for " + id + " — owned by UNIT-CMS-0006, out of this unit's scope");
+}
+function rowKeydown(e, mode, id) {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openRow(mode, id); }
+}
+function launchAddAgency() { toast("Would navigate to the Add Agency create flow — owned by UNIT-CMS-0006, out of this unit's scope"); }
+function launchAddBrokerage() { toast("Would navigate to the Add Brokerage create flow — owned by UNIT-CMS-0006, out of this unit's scope"); }
+
+var toastTimer;
+function toast(msg) {
+  var t = $("demoToast");
+  t.textContent = msg;
+  t.style.opacity = "1";
+  t.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () {
+    t.style.opacity = "0";
+    t.style.transform = "translateX(-50%) translateY(16px)";
+  }, 2600);
+}
+
+/* ---------------- Assigned Underwriter dropdown / partial state ---------------- */
+function buildUwFilter() {
+  var uws = [];
+  BROKERAGES.forEach(function (b) { if (uws.indexOf(b.uw) === -1) uws.push(b.uw); });
+  uws.sort();
+  $("uwFilterSelect").innerHTML = '<option value="">All underwriters</option>' +
+    uws.map(function (u) { return "<option>" + esc(u) + "</option>"; }).join("");
+}
+/** Real toggle between the UW filter's populated and partial (dependency-down)
+    presentation — states.md's "partial" row: the lookup fails while the rest
+    of the screen (mode search) stays fully usable. */
+function applyUwAvailability() {
+  var down = harness.uwDown;
+  $("uwFilterSelect").classList.toggle("hide-field", down);
+  $("uwFilterSelect").disabled = down;
+  $("uwUnavailableNotice").classList.toggle("hide-field", !down);
+}
+function buildStateOptions() {
+  $("searchStateInput").innerHTML = '<option value="">Select a state…</option>' +
+    STATES.map(function (s) { return "<option>" + s + "</option>"; }).join("");
+}
+
+/* ---------------- whole-screen state gating (access-denied / offline-load /
+   session-expired) — driven by the harness controls, read by one shell
+   render function so the swap logic lives in exactly one place ---------------- */
+function updateCreateVisibility() {
+  $("createLaunchGroup").classList.toggle("hide-field", harness.role !== "full");
+}
+
+function showScreen(name) {
+  ["access-denied", "offline-load", "session-expired", "directory"].forEach(function (n) {
+    var el = $("screen-" + n);
+    if (n === name) el.removeAttribute("hidden"); else el.setAttribute("hidden", "");
+  });
+  /* focus the outcome heading on every whole-screen swap, per a11y.md's
+     focus-after-error/terminal-outcome rule */
+  if (name === "access-denied") focusHeading("accessDeniedHeading");
+  else if (name === "offline-load") focusHeading("offlineLoadHeading");
+  else if (name === "session-expired") focusHeading("sessionExpiredHeading");
+  updateFrameLabel();
+}
+
+function renderShell() {
+  if (harness.role === "none") { showScreen("access-denied"); return; }
+  /* offline-load is this harness's stand-in for "no connectivity when the
+     screen is first opened": Offline is on and no search has been attempted
+     yet this session. Once a search has been attempted, the screen is
+     considered already loaded, and the same Offline flag instead surfaces as
+     offline-submit on the next search attempt (see runQuery/onUwFilter). */
+  if (harness.offline && !hasAttemptedSearch) { showScreen("offline-load"); return; }
+  showScreen("directory");
+  updateCreateVisibility();
+}
+
+function resumeAfterSignIn() {
+  sessionExpired = false;
+  showScreen("directory");
+  updateCreateVisibility();
+  if (pendingResume) {
+    var p = pendingResume; pendingResume = null;
+    if (p.kind === "uw") { $("uwFilterSelect").value = p.value; onUwFilter(); }
+    else { runQuery(p.mode, p.value); }
+  }
+}
+
+function expireSessionNow() {
+  sessionExpired = true;
+  toast("Session flagged as expired — the next search attempt will require sign-in.");
+}
+
+/* ---------------- theme / width / harness controls (reviewer chrome —
+   scaffolding, not part of the specified screen) ---------------- */
+var canvas = document.getElementById("canvas");
+var themeSelect = document.getElementById("themeSelect");
+var widthSelect = document.getElementById("widthSelect");
+var frameLabel = document.getElementById("frameLabel");
+var html = document.documentElement;
+
+function updateFrameLabel() {
+  var theme = themeSelect.value;
+  var width = widthSelect.value;
+  var screenName = $("screen-directory").hasAttribute("hidden")
+    ? (!$("screen-access-denied").hasAttribute("hidden") ? "access-denied"
+      : !$("screen-offline-load").hasAttribute("hidden") ? "offline-load"
+      : "session-expired")
+    : "directory";
+  var suffix = screenName === "directory" ? (" · " + currentResultState) : "";
+  frameLabel.textContent = "UNIT-CMS-0004 · " + screenName + suffix + " · " + width + "px · " + theme;
+}
+
+themeSelect.addEventListener("change", function () {
+  html.setAttribute("data-theme", themeSelect.value);
+  updateFrameLabel();
+});
+widthSelect.addEventListener("change", function () {
+  canvas.setAttribute("data-width", widthSelect.value);
+  /* re-render the results region so table-vs-card layout reflects the new
+     width immediately, per R13/components.md's breakpoint table */
+  if (currentResultState === "populated") renderPopulated();
+  if (currentResultState === "loading") renderLoading(lastMode);
+  updateFrameLabel();
+});
+
+$("simOffline").addEventListener("change", function () {
+  harness.offline = $("simOffline").checked;
+  renderShell();
+});
+$("simRole").addEventListener("change", function () {
+  harness.role = $("simRole").value;
+  renderShell();
+});
+$("simDep").addEventListener("change", function () {
+  harness.dep = $("simDep").value;
+  lastFailedQueryKey = null; /* a fresh harness setting starts a fresh failure sequence */
+});
+$("simUwDown").addEventListener("change", function () {
+  harness.uwDown = $("simUwDown").checked;
+  applyUwAvailability();
+});
+$("expireSessionBtn").addEventListener("click", expireSessionNow);
+$("offlineRetryBtn").addEventListener("click", function () {
+  /* manual re-check, per states.md's offline-load row; if the reviewer has
+     already unchecked Offline this returns to the Directory screen, exactly
+     as an automatic connectivity re-check would */
+  renderShell();
+});
+$("signInAgainBtn").addEventListener("click", resumeAfterSignIn);
+
+$("searchSubmitBtn").addEventListener("click", startSearch);
+$("clearSearchBtn").addEventListener("click", clearSearch);
+$("searchTermInput").addEventListener("input", liveFilter);
+$("searchTermInput").addEventListener("keydown", function (e) { if (e.key === "Enter") startSearch(); });
+$("searchStateInput").addEventListener("change", startSearch);
+$("uwFilterSelect").addEventListener("change", onUwFilter);
+
+$("componentRefToggle").addEventListener("click", function () {
+  var body = $("componentRefBody");
+  var showing = !body.hasAttribute("hidden");
+  if (showing) { body.setAttribute("hidden", ""); $("componentRefToggle").setAttribute("aria-expanded", "false"); $("componentRefToggle").textContent = "Show status-badge reference set"; }
+  else { body.removeAttribute("hidden"); $("componentRefToggle").setAttribute("aria-expanded", "true"); $("componentRefToggle").textContent = "Hide status-badge reference set"; }
+});
+
+/* ---------------- init ---------------- */
+buildUwFilter();
+buildStateOptions();
+applyUwAvailability();
+toggleInputVisibility(currentMode);
+renderShell();
+updateFrameLabel();
 </script>
-
 </body>
 </html>

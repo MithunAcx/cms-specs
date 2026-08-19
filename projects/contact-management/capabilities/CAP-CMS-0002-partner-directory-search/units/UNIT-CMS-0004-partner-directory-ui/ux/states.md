@@ -3,6 +3,17 @@
 Every state the user can observe. A state with no row here is an
 unspecified state, and `ba-spec-validate` fails the unit for it.
 
+**Mockup note.** `ux/wireframes/UNIT-CMS-0004-partner-directory-ui.html` is a real,
+single-page interactive prototype of this screen — there is no frame-picker; every
+row below is reached by actually operating the mockup (typing, switching mode,
+searching, filtering, loading more), against an in-memory demo dataset. A small
+"Simulate condition" harness fakes the handful of conditions that dataset cannot
+produce on its own — a genuine dependency failure, an offline connection, an
+expired session, a throttled response, a failed lookup call — but the harness only
+flips a flag the same render code reads; it never substitutes a separately-authored
+static block for a row below. See `ux/wireframes/frame-inventory.md`'s "The
+interaction model" section for exactly how each row is reached.
+
 ## Per view
 
 ### Directory / Search screen — satisfies R1-R41
@@ -16,7 +27,7 @@ mandatory set in `60-frontend.md`.
 |-------|---------|--------------------|-------------------|
 | loading | A search is submitted (mode search or UW-filter select) and the response has not yet arrived | The results region shows skeleton rows (table skeleton on desktop/tablet, card skeleton on mobile) in place of the previous result set; the search controls remain visible and editable | Change mode/term/state/UW filter (starts a new search per R20); no cancel affordance is exposed, since a newer search silently supersedes the older one |
 | empty | A resolved (non-stale) response returns zero items | "No records to display" empty-state block, plus the result count showing 0 | Change mode/term/state/UW filter and search again; Add New Agency / Add New Brokerage remain available (R11) |
-| populated | A resolved (non-stale) response returns ≥1 item | Table (desktop/tablet) or stacked cards (mobile) with the mode's column set (R6), plus the total result count (R9) | Click a row to open its detail screen (R10); change search inputs; use pagination |
+| populated | A resolved (non-stale) response returns ≥1 item | Table (desktop/tablet) or stacked cards (mobile) with the mode's column set (R6), plus the total result count (R9); a "Load more" control is shown whenever the response carries a `next_cursor` (R12 — cursor-based, never a page-number control) | Click a row to open its detail screen (R10); change search inputs; activate "Load more" to fetch the next cursor-based batch |
 | partial | The Assigned Underwriter lookup (`/lookups/assigned-uws`) fails to load while the rest of the screen is otherwise usable | The UW filter dropdown shows an inline "Underwriters unavailable" notice in place of its option list; the six-mode search path is unaffected and fully usable | Retry loading the UW list; use mode-based search normally |
 | error — recoverable | UNIT-CMS-0003 is unreachable, times out, or returns a 5xx (R21) | An error block replacing the results region: message plus a "Retry" secondary button; the search inputs the user entered are preserved | Retry (re-issues the same search); change inputs and search again |
 | error — terminal | The same dependency failure recurs after the user has already retried the retryable error at least once in this session | An error block with a message that does not offer another retry button, and points the user to contact support instead; search inputs are preserved | Change search inputs and try a different search; no further retry of the identical failing request is offered |
@@ -41,6 +52,11 @@ All user-visible strings, so they are reviewable and translatable.
 | Key | Copy |
 |---|---|
 | screen.title | "Partner Directory" |
+| screen.subtitle | "Search brokerages, brokers, agencies and CGAs." |
+| results.heading | "Search results" |
+| action.load-more | "Load more" |
+| session.expired.action | "Sign in again" |
+| error.offline-submit.body | "You appear to be offline. Reconnect and try again." |
 | mode.brokerage | "By Brokerage" |
 | mode.broker | "By Broker" |
 | mode.state-broker | "By State (Broker)" |
