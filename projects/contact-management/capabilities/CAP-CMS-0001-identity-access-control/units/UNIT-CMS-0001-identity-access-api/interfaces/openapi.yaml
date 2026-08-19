@@ -1,0 +1,536 @@
+openapi: 3.1.0
+info:
+  title: Identity Access API
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0001 — issues and validates the JWT access/refresh token pair,
+    carries the `role` and `tenantId` claims every other capability's backend unit
+    validates locally (XD-0002), and owns the audit-log write path every mutating
+    endpoint in the system invokes (XD-0003). See
+    projects/contact-management/capabilities/CAP-CMS-0001-identity-access-control/units/UNIT-CMS-0001-identity-access-api/requirements.md
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/auth/login:
+    post:
+      operationId: login
+      summary: Authenticate with a username and password
+      description: >
+        Satisfies R1, R2, R3, R13, R22. No prior authentication required.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                value:
+                  username: "jsmith"
+                  password: "correct horse battery staple"
+      responses:
+        '200':
+          description: Login succeeded (satisfies R1, R2, R3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+              examples:
+                default:
+                  value:
+                    accessToken: "eyJhbGciOi...UNRESOLVED-example-jwt"
+                    refreshToken: "01J8Z...ULID-shaped-opaque-token"
+                    expiresIn: 900
+        '400':
+          description: Malformed request body (satisfies R1 behaviour detail).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "username and password are both required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: Unknown username or wrong password — identical shape for both (satisfies R1).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidCredentials:
+                  value:
+                    error:
+                      code: invalid_credentials
+                      message: "Username or password is incorrect"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: Exchange a refresh token for a new access/refresh token pair
+      description: >
+        Satisfies R4, R18, R19. Not idempotent — rotates the token on every valid
+        call; a reused, already-consumed token is rejected (R4 behaviour detail).
+        No prior authentication required — the refresh token itself is the credential.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            examples:
+              default:
+                value:
+                  refreshToken: "01J8Z...ULID-shaped-opaque-token"
+      responses:
+        '200':
+          description: Token rotated successfully (satisfies R4).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+              examples:
+                default:
+                  value:
+                    accessToken: "eyJhbGciOi...UNRESOLVED-example-jwt"
+                    refreshToken: "01J8Z...ULID-shaped-new-opaque-token"
+                    expiresIn: 900
+        '400':
+          description: Malformed request body.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "refreshToken is required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: >
+            Token not found, expired, revoked, or already consumed by an earlier
+            refresh — including the reuse case, which also revokes every other
+            active refresh token for that user (satisfies R4, R19).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRefreshToken:
+                  value:
+                    error:
+                      code: invalid_refresh_token
+                      message: "Refresh token is invalid, expired, or already used"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      summary: Revoke a refresh token
+      description: >
+        Satisfies R5. Idempotent — a token already revoked or expired still
+        returns 204.
+      security:
+        - bearerAuth: [ "cms:sessions.manage" ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            examples:
+              default:
+                value:
+                  refreshToken: "01J8Z...ULID-shaped-opaque-token"
+      responses:
+        '204':
+          description: Refresh token revoked, or was already revoked/expired (satisfies R5).
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/me:
+    get:
+      operationId: getCurrentSession
+      summary: The caller's own resolved identity
+      description: >
+        Satisfies R6. Resolved entirely from the caller's own access-token
+        claims — no request parameter consulted.
+      security:
+        - bearerAuth: [ "cms:profile.read" ]
+      responses:
+        '200':
+          description: Current session identity (satisfies R6).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionIdentity'
+              examples:
+                default:
+                  value:
+                    username: "jsmith"
+                    displayName: "Jane Smith"
+                    role: viewer
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/auth/change-password:
+    post:
+      operationId: changePassword
+      summary: Change the caller's own password
+      description: >
+        Satisfies R7. Local credentials only — unconditionally available, since
+        every credential in this build is local (no SSO). Does not rotate the
+        caller's current token pair.
+      security:
+        - bearerAuth: [ "cms:credentials.update" ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+            examples:
+              default:
+                value:
+                  oldPassword: "correct horse battery staple"
+                  newPassword: "a different, stronger passphrase"
+      responses:
+        '204':
+          description: Password changed (satisfies R7).
+        '400':
+          description: New password fails the strength policy (satisfies R7).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                weakPassword:
+                  value:
+                    error:
+                      code: weak_password
+                      message: "New password does not meet the minimum strength policy"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: >
+            Unauthenticated, or the presented old password does not match
+            (satisfies R7).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidCredentials:
+                  value:
+                    error:
+                      code: invalid_credentials
+                      message: "Current password is incorrect"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /api/v1/audit-log:
+    get:
+      operationId: listAuditLogEntries
+      summary: Search the audit log
+      description: >
+        Satisfies R8, R9, R10, R22, R23. Restricted to Administrator; scoped to
+        the caller's own tenant.
+      security:
+        - bearerAuth: [ "cms:audit.read" ]
+      parameters:
+        - name: entityType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filters to one entity type, e.g. brokerage, agency, contactActivity.
+        - name: entityId
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: Filters to one entity instance.
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+          description: Satisfies 10-platform.md Pagination — default 25, maximum 100.
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Opaque continuation cursor from a previous page's `next_cursor`.
+      responses:
+        '200':
+          description: Audit-log page (satisfies R8, R22).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditLogPage'
+              examples:
+                default:
+                  value:
+                    items:
+                      - actor: "jsmith"
+                        timestamp: "2026-08-18T14:03:00Z"
+                        entityType: "brokerage"
+                        entityId: "01J8Z...ULID"
+                        action: "update"
+                        metadata: { field: "status", from: "active", to: "inactive" }
+                    next_cursor: null
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: Caller's role is below Administrator (satisfies R8).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                insufficientRole:
+                  value:
+                    error:
+                      code: insufficient_role
+                      message: "Administrator role required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Issued and rotated by this unit's `/auth/login` and `/auth/refresh`
+        operations. Carries `username`, `displayName`, `role`
+        (viewer|editor|administrator), and `tenantId` claims (R2, R3, R22,
+        XD-0002) — every other capability's backend unit validates this token
+        and reads these claims **locally**, without calling back to this unit.
+        Signing/verification key material is owned by the engineering repo's
+        own configuration, not named here.
+
+  responses:
+    Unauthenticated:
+      description: Missing or invalid bearer token (satisfies R11, R12).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unauthenticated:
+              value:
+                error:
+                  code: unauthenticated
+                  message: "Authentication required"
+                  details: []
+                  trace_id: "01J8Z...ULID"
+    RateLimited:
+      description: Rate limit exceeded (gateway-enforced per stack.md, satisfies R17, R20).
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          description: Seconds until the caller may retry.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            rateLimited:
+              value:
+                error:
+                  code: rate_limited
+                  message: "Too many requests"
+                  details: []
+                  trace_id: "01J8Z...ULID"
+
+  schemas:
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          description: >
+            Accepted with or without a domain prefix; the prefix is stripped
+            server-side before lookup (R2). Never logged (R25).
+        password:
+          type: string
+          format: password
+          description: Never logged, never echoed in any response (R25).
+
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+          description: Opaque token identifier. Never logged in full (R25).
+
+    TokenPair:
+      type: object
+      additionalProperties: false
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived JWT (R1, R3). Never logged in full (R25).
+        refreshToken:
+          type: string
+          description: Opaque, individually revocable (XD-0001). Never logged in full (R25).
+        expiresIn:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Access-token lifetime in seconds.
+
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword:
+          type: string
+          format: password
+          description: Never logged (R25).
+        newPassword:
+          type: string
+          format: password
+          description: Never logged (R25). Must pass the server-side strength policy.
+
+    SessionIdentity:
+      type: object
+      additionalProperties: false
+      required: [username, displayName, role]
+      properties:
+        username:
+          type: string
+          description: Domain-prefix stripped (R2). Personal data (R25).
+        displayName:
+          type: string
+          description: First + last name (R2). Personal data (R25).
+        role:
+          $ref: '#/components/schemas/Role'
+
+    Role:
+      type: string
+      enum: [viewer, editor, administrator]
+      description: Closed enum — satisfies R3, XD-0002.
+
+    AuditLogEntry:
+      type: object
+      additionalProperties: false
+      required: [actor, timestamp, entityType, entityId, action, metadata]
+      properties:
+        actor:
+          type: string
+          description: >
+            Server-derived username of the acting user (R10). Never
+            client-supplied. Personal data (R25).
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC, RFC 3339, server-assigned at write time (10-platform.md Formats).
+        entityType:
+          type: string
+          description: e.g. brokerage, agency, contactActivity. Not an enum here — owned by each writing unit's own domain.
+        entityId:
+          type: string
+          format: uuid
+        action:
+          type: string
+          enum: [create, update, delete]
+          description: Closed enum (R23).
+        metadata:
+          type: object
+          description: >
+            Free-form per-entity detail (XD-0003). Must never carry
+            special-category data (R25) — enforced by convention on every
+            writer of this shared contract, not by this schema alone.
+
+    AuditLogPage:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLogEntry'
+        next_cursor:
+          type: string
+          nullable: true
+          description: Opaque continuation cursor, or null when no further page exists (10-platform.md Pagination).
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, trace_id]
+          properties:
+            code:
+              type: string
+              enum:
+                - invalid_request
+                - invalid_credentials
+                - invalid_refresh_token
+                - weak_password
+                - unauthenticated
+                - insufficient_role
+                - rate_limited
+              description: Stable snake_case, part of the contract (10-platform.md Errors).
+            message:
+              type: string
+              description: Human-readable; never personal data.
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              description: ULID.
