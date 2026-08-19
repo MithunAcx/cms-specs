@@ -14,13 +14,10 @@ consumes:
     generated_from:
       source: "./UNIT-CMS-0007.openapi.yaml"
       status: >
-        DERIVED, NOT COPIED — UNIT-CMS-0007-activity-api had not yet published
-        its own interfaces/openapi.yaml as of 2026-08-19 (only a .gitkeep
-        present on main at that date). The local file was authored from
-        CAP-CMS-0004/capability-design.md's fixed endpoint table instead. Once
-        UNIT-CMS-0007 publishes its own file, re-run architect-unit-interfaces
-        for this unit to replace the local file with a byte-for-byte copy and
-        flip this status to COPIED.
+        COPIED VERBATIM from UNIT-CMS-0007-activity-api/interfaces/openapi.yaml
+        on 2026-08-19, now that UNIT-CMS-0007 has published its own contract
+        (PR #50). Re-copy whenever that file changes; never hand-patch this
+        file to reconcile a disagreement (ba-spec-validate I11).
     operations_used:
       - operationId: listActivity
         satisfies: [R1, R2, R3, R29]
@@ -28,12 +25,12 @@ consumes:
         satisfies: [R4, R5, R9]
       - operationId: updateActivity
         satisfies: [R6, R7, R9]
-      - operationId: deleteActivity
+      - operationId: softDeleteActivity
         satisfies: [R8, R9, R16]
 
 error_to_outcome_map:
-  - code: validation_failed
-    http: [400, 422]
+  - code: invalid_request
+    http: 400
     user_visible_outcome: >
       Inline, field-scoped error on the offending add/edit control (R10); the
       form stays open and populated so nothing typed is lost.
@@ -47,13 +44,26 @@ error_to_outcome_map:
     user_visible_outcome: >
       Session-expired state; any in-progress form's values are retained locally
       until the host re-authenticates and remounts this component (R13).
+  - code: forbidden
+    http: 403
+    user_visible_outcome: >
+      Not reachable through this unit's own UI — the role-gate presenter never
+      renders a write control for a caller below Editor (R12/R28), so a 403
+      would only occur via a stale client; treated the same as "no longer
+      available" (R11) if it ever occurs.
   - code: rate_limited
     http: 429
     user_visible_outcome: >
       A "try again" state honoring the response's Retry-After header; the
       triggering control re-enables once that interval elapses (R18).
-  - code: (none — connection failure, timeout, or 5xx)
-    http: "n/a or 5xx"
+  - code: write_failed
+    http: 503
+    user_visible_outcome: >
+      A write whose atomicity with its audit record failed upstream; treated
+      the same as a timeout with unknown outcome — a list re-fetch to reconcile
+      before any further write is permitted, never a blind retry (R15).
+  - code: (none — connection failure or timeout)
+    http: "n/a"
     user_visible_outcome: >
       On initial load: an error state with a retry action (R17). On a write
       whose outcome is unknown: a list re-fetch to reconcile before any further

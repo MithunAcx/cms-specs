@@ -22,8 +22,8 @@ capability-wide lifecycle badge design-system.md § 7 describes) — no
 | # | Frame (kebab-case) | Width | What it shows | States.md row |
 |---|---|---|---|---|
 | 1 | `loading` | desktop | Skeleton rows in place of the grid on initial mount | loading |
-| 2 | `populated-editor` | desktop | Full grid, Editor role — sort/filter/pagination controls, add/edit/complete/delete controls all visible | populated (Editor) |
-| 3 | `populated-viewer` | desktop | Same data, Viewer role — sort/filter/pagination visible, no write controls rendered | populated (Viewer); disabled/unauthorized |
+| 2 | `populated-editor` | desktop | Full grid, Editor role — sort/filter controls and a load-more control (shown while `next_cursor` is non-null), add/edit/complete/delete controls all visible | populated (Editor) |
+| 3 | `populated-viewer` | desktop | Same data, Viewer role — sort/filter/load-more visible, no write controls rendered | populated (Viewer); disabled/unauthorized |
 | 4 | `empty-first-use` | desktop | Zero entries exist yet for this parent, no filter applied | empty — first-use |
 | 5 | `empty-filtered` | desktop | A filter/sort is applied and zero entries match it | empty — filtered-to-nothing |
 | 6 | `add-form-open` | desktop | Inline add form open, valid empty state, submit enabled once required fields are filled | submitting (pre-submit) |
@@ -58,8 +58,9 @@ unit where some rows of one response succeeded and others failed, so the row in
 - No completion-date input anywhere, including in `add-form-open` or any edit
   frame — completion date is never a field a caller can type into (R7).
 - No `userName` input field anywhere — it is display-only, never editable (R5).
-- No pagination style other than page-number/page-size (no infinite scroll) —
-  matching UNIT-CMS-0007's page/size contract.
+- No page-number/page-size pagination style anywhere — matching UNIT-CMS-0007's
+  cursor-based contract (`limit`+`cursor` in, `items`+`next_cursor` out), rendered
+  as a single "load more" control, not a page-number list.
 - No retry affordance on `row-not-found` — a 404'd row is removed, not retried
   (R11).
 

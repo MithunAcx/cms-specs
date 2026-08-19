@@ -11,7 +11,7 @@ engineering:
   frontend: { applicable: false }
   api:      { applicable: true }
 created: 2026-08-18
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Activity API
@@ -44,7 +44,7 @@ reuse, never delete.
 | R1 | `POST /api/v1/activity` creates one activity entry against a `parentType` (`agency`\|`brokerage`) and `parentId`, capturing `statusId`, `note`, and `followUpDate` from the request body. | CAP-CMS-0004/A1, FR-ACT-1, FR-ACT-2 | P0 |
 | R2 | The created entry's `userName` is set server-side from the authenticated caller's identity; no client-supplied `userName` value is ever read from the request body or applied. | CAP-CMS-0004/A1, M1, AUTHZ-2, XD-0003 | P0 |
 | R3 | The created entry's `enteredDate` is set server-side to the current timestamp at creation time; no client-supplied `enteredDate` is accepted. | FR-ACT-2 | P0 |
-| R4 | `GET /api/v1/activity?parentType=&parentId=&page=&size=&completed=&sort=followUpDate` returns the page of activity entries for the named parent, excluding soft-deleted entries by default. | CAP-CMS-0004/A3, FR-ACT-1, FR-ACT-5 | P0 |
+| R4 | `GET /api/v1/activity?parentType=&parentId=&limit=&cursor=&completed=&sort=followUpDate` returns a cursor-based page of activity entries for the named parent (default `limit` 25, maximum 100), excluding soft-deleted entries by default. | CAP-CMS-0004/A3, FR-ACT-1, FR-ACT-5 | P0 |
 | R5 | The list operation supports filtering by `completed` (open vs. closed) and sorting by `followUpDate`, so a caller can produce a "what is owed this partner next" view. | CAP-CMS-0004/A3, FR-ACT-5 | P0 |
 | R6 | `PUT /api/v1/activity/{id}` updates `statusId`, `note`, `followUpDate`, and `completed` on an existing, non-deleted entry. | FR-ACT-3 | P0 |
 | R7 | When an update flips `completed` from `false` to `true`, the entry's `completedDate` is set server-side to the current timestamp; no client-supplied `completedDate` is ever accepted. | CAP-CMS-0004/A2, FR-ACT-4 | P0 |
