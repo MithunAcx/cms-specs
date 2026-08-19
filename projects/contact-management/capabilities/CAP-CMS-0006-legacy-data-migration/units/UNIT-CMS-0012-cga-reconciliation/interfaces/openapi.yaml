@@ -1,0 +1,459 @@
+openapi: 3.1.0
+info:
+  title: CGA Reconciliation
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0012 — operator-triggered CGA reconciliation pass over legacy
+    pp_agent rows, plus manual-review resolution for ambiguous matches. Not a
+    public or partner-facing API — the same operator-only surface class as
+    UNIT-CMS-0011's own execution trigger. See
+    projects/contact-management/capabilities/CAP-CMS-0006-legacy-data-migration/units/UNIT-CMS-0012-cga-reconciliation/requirements.md
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/cga-reconciliation/runs:
+    post:
+      operationId: startReconciliationRun
+      summary: Trigger a CGA reconciliation pass
+      description: >
+        Satisfies R1, R9, R14, R20, R22. Rejected if UNIT-CMS-0011 has not yet
+        completed agency migration, or if a run is already in progress.
+      security:
+        - bearerAuth: [ "cms:cga-reconciliation.run" ]
+      responses:
+        '202':
+          description: Run accepted and started (satisfies R1).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationRun'
+              examples:
+                started:
+                  value:
+                    runId: "01J8ZR7RUN0000000000000001"
+                    status: running
+                    startedAt: "2026-08-19T09:00:00Z"
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    error:
+                      code: unauthenticated
+                      message: "Authentication required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '403':
+          description: Caller lacks the migration-execution role (satisfies R22).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                forbidden:
+                  value:
+                    error:
+                      code: forbidden
+                      message: "Caller does not hold the migration-execution role"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '409':
+          description: >
+            A run is already in progress (satisfies R14, R20), or UNIT-CMS-0011 has
+            not yet completed agency migration (satisfies R1) — distinguished by
+            `code` so an operator can tell the two apart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alreadyRunning:
+                  value:
+                    error:
+                      code: run_already_in_progress
+                      message: "A CGA reconciliation run is already in progress"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+                agenciesNotMigrated:
+                  value:
+                    error:
+                      code: agency_migration_incomplete
+                      message: "UNIT-CMS-0011 has not yet completed agency migration"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+  /api/v1/cga-reconciliation/runs/{runId}:
+    get:
+      operationId: getReconciliationRun
+      summary: Read a run's status and summary
+      description: Satisfies R7, R25.
+      security:
+        - bearerAuth: [ "cms:cga-reconciliation.read" ]
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run status and, once complete, its summary counts (satisfies R7).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationRun'
+              examples:
+                completed:
+                  value:
+                    runId: "01J8ZR7RUN0000000000000001"
+                    status: completed
+                    startedAt: "2026-08-19T09:00:00Z"
+                    completedAt: "2026-08-19T09:04:12Z"
+                    summary:
+                      evaluated: 340
+                      reconciled: 12
+                      flagged: 3
+                      skipped: 324
+                      failed: 1
+                      loggingGaps: 0
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No run with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    error:
+                      code: not_found
+                      message: "No reconciliation run found for the given id"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+  /api/v1/cga-reconciliation/candidates:
+    get:
+      operationId: listReconciliationCandidates
+      summary: List candidates by processing state
+      description: Satisfies R4, R10, R25 — used to find rows pending manual review.
+      security:
+        - bearerAuth: [ "cms:cga-reconciliation.read" ]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by current processing state. Defaults to `flagged`.
+          schema:
+            $ref: '#/components/schemas/CandidateStatus'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Candidates matching the filter (satisfies R4, R10).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateListResponse'
+              examples:
+                flagged:
+                  value:
+                    items:
+                      - candidateId: "01J8ZCAND00000000000000001"
+                        legacyAgentId: "AGT-88213"
+                        status: flagged
+                        agencyIdNew: "01J8ZAGY000000000000000042"
+                        detectedAt: "2026-08-19T09:01:03Z"
+                    next_cursor: null
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/cga-reconciliation/candidates/{candidateId}/resolution:
+    post:
+      operationId: resolveReconciliationCandidate
+      summary: Resolve a flagged candidate
+      description: >
+        Satisfies R4, R11. Only legal from status `flagged` (or `pending` prior to
+        first evaluation is not a legal source — see 409). Recorded, not applied
+        immediately — the next reconciliation run processes it per R11.
+      security:
+        - bearerAuth: [ "cms:cga-reconciliation.resolve" ]
+      parameters:
+        - name: candidateId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolutionRequest'
+            examples:
+              isCga:
+                value:
+                  resolution: is_cga
+              isNotCga:
+                value:
+                  resolution: is_not_cga
+      responses:
+        '200':
+          description: Resolution recorded (satisfies R11).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+              examples:
+                resolved:
+                  value:
+                    candidateId: "01J8ZCAND00000000000000001"
+                    legacyAgentId: "AGT-88213"
+                    status: flagged
+                    resolution: is_cga
+                    agencyIdNew: "01J8ZAGY000000000000000042"
+                    detectedAt: "2026-08-19T09:01:03Z"
+        '400':
+          description: Malformed resolution value.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "resolution must be 'is_cga' or 'is_not_cga'"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Caller lacks the migration-execution role (satisfies R22).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: No candidate with this id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: >
+            Candidate is not currently in a resolvable state — either not yet
+            flagged, or already resolved (satisfies R4, R11's "resolved once" rule).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                alreadyResolved:
+                  value:
+                    error:
+                      code: candidate_not_resolvable
+                      message: "Candidate is not currently pending manual review"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Issuer, flow and token endpoint owned by UNIT-CMS-0001; scopes
+        cms:cga-reconciliation.run, cms:cga-reconciliation.read,
+        cms:cga-reconciliation.resolve required per operation, all restricted to
+        the operator/migration-execution role (R22).
+
+  schemas:
+    CandidateStatus:
+      type: string
+      enum: [pending, reconciled, skipped, flagged, failed]
+      description: >
+        Satisfies R4, R5, R9, R10, R11 — closed enum matching the
+        ReconciliationCandidate state machine in design.md.
+
+    ResolutionValue:
+      type: string
+      enum: [is_cga, is_not_cga]
+      description: Satisfies R11 — closed enum, no other resolution accepted.
+
+    ReconciliationRun:
+      type: object
+      additionalProperties: false
+      required: [runId, status, startedAt]
+      properties:
+        runId:
+          type: string
+          description: UUIDv7 or ULID per 10-platform.md; not a legacy identifier.
+        status:
+          type: string
+          enum: [running, completed, failed]
+          description: Closed enum.
+        startedAt:
+          type: string
+          format: date-time
+          description: RFC 3339 UTC per 10-platform.md.
+        completedAt:
+          type: string
+          format: date-time
+          description: RFC 3339 UTC per 10-platform.md. Absent while status is running.
+        summary:
+          $ref: '#/components/schemas/RunSummary'
+
+    RunSummary:
+      type: object
+      additionalProperties: false
+      required: [evaluated, reconciled, flagged, skipped, failed, loggingGaps]
+      properties:
+        evaluated:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Satisfies R7 — total pp_agent rows evaluated this run.
+        reconciled:
+          type: integer
+          format: int32
+          minimum: 0
+        flagged:
+          type: integer
+          format: int32
+          minimum: 0
+        skipped:
+          type: integer
+          format: int32
+          minimum: 0
+        failed:
+          type: integer
+          format: int32
+          minimum: 0
+        loggingGaps:
+          type: integer
+          format: int32
+          minimum: 0
+          description: >
+            Satisfies R13 — rows whose outcome was recorded but whose call to
+            UNIT-CMS-0011's logging contract never succeeded.
+
+    Candidate:
+      type: object
+      additionalProperties: false
+      required: [candidateId, legacyAgentId, status, detectedAt]
+      properties:
+        candidateId:
+          type: string
+          description: UUIDv7 per 10-platform.md. This unit's own identifier, not the legacy row's key.
+        legacyAgentId:
+          type: string
+          description: >
+            The legacy pp_agent row's own identifying key — the idempotency key
+            per design.md's State and idempotency section (R8, R12, R19).
+        status:
+          $ref: '#/components/schemas/CandidateStatus'
+        resolution:
+          $ref: '#/components/schemas/ResolutionValue'
+        agencyIdNew:
+          type: string
+          description: >
+            Satisfies R3 — the post-migration agency id this candidate would link
+            to if reconciled. Absent if the target agency has not yet been
+            migrated (R9).
+        detectedAt:
+          type: string
+          format: date-time
+          description: RFC 3339 UTC per 10-platform.md.
+
+    ResolutionRequest:
+      type: object
+      additionalProperties: false
+      required: [resolution]
+      properties:
+        resolution:
+          $ref: '#/components/schemas/ResolutionValue'
+
+    CandidateListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Candidate'
+        next_cursor:
+          type: string
+          nullable: true
+          description: Cursor pagination per 10-platform.md. Default limit 25, max 100.
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, trace_id]
+          properties:
+            code:
+              type: string
+              enum:
+                - invalid_request
+                - unauthenticated
+                - forbidden
+                - not_found
+                - run_already_in_progress
+                - agency_migration_incomplete
+                - candidate_not_resolvable
+              description: Stable snake_case, part of the contract (10-platform.md Errors).
+            message:
+              type: string
+              description: Human-readable; never personal data.
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              description: ULID.
