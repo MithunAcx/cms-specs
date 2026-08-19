@@ -11,3 +11,4 @@ current status.
 | 4 | 2026-08-19 | framed | designed | @MithunAcx | — | design.md complete (all R1-R25 covered, ADR-0001 recorded) and interfaces/ complete (5 contract files: 2 SQL migrations, 2 JSON Schemas, 1 AsyncAPI) |
 | 5 | 2026-08-19 | designed | ready | @MithunAcx | — | tasks.md complete with full R1-R25 coverage; ba-spec-validate run against this unit — 0 FAILs after fixing an I5 gap (missing unrecognized_history_value reason code) and an H4 gap (tenant isolation stated for reads, not only writes); tracker.md is stale pending the centrally-run pm-state-rollup (deferred per coordinator instruction) |
 | 6 | 2026-08-19 | ready | ready | @MithunAcx | — | spec-review: APPROVE WITH CONDITIONS — 2 conditions (self-review, disclosed), PR #57 |
+| 7 | 2026-08-19 | ready | ready | @MithunAcx | — | spec-review: APPROVE WITH CONDITIONS — 2 conditions (independent review), PR #57 |
