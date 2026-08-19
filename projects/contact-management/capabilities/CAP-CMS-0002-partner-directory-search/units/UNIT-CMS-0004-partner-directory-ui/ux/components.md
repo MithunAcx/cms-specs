@@ -3,6 +3,14 @@
 Unit-local inventory. Describes components by behaviour and contract, never by
 framework or file path.
 
+**Mockup note.** The generated mockup implements every component below as a real,
+interactive component against an in-memory demo dataset — not as static per-state
+snapshots behind a frame-picker. A "Simulate condition" harness fakes the small set
+of conditions the demo dataset cannot produce naturally (dependency failure,
+offline, session expiry, a failed lookup, a throttled response); every other state
+each component below must render is reached by ordinary interaction. See
+`ux/wireframes/frame-inventory.md`'s "The interaction model" section.
+
 ## Reused
 
 Components that already exist elsewhere and are used as-is (per

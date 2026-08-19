@@ -3,6 +3,17 @@
 Every state the user can observe. A state with no row here is an
 unspecified state, and `ba-spec-validate` fails the unit for it.
 
+**Mockup note.** `ux/wireframes/UNIT-CMS-0004-partner-directory-ui.html` is a real,
+single-page interactive prototype of this screen — there is no frame-picker; every
+row below is reached by actually operating the mockup (typing, switching mode,
+searching, filtering, loading more), against an in-memory demo dataset. A small
+"Simulate condition" harness fakes the handful of conditions that dataset cannot
+produce on its own — a genuine dependency failure, an offline connection, an
+expired session, a throttled response, a failed lookup call — but the harness only
+flips a flag the same render code reads; it never substitutes a separately-authored
+static block for a row below. See `ux/wireframes/frame-inventory.md`'s "The
+interaction model" section for exactly how each row is reached.
+
 ## Per view
 
 ### Directory / Search screen — satisfies R1-R41
