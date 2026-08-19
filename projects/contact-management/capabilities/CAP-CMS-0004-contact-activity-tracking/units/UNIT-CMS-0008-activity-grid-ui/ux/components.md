@@ -231,7 +231,13 @@ font request is permitted in a self-contained mockup) are copied from the same
 reference file. Two deliberate departures from the reference, both required by
 this repo's accessibility floor rather than by preference: no CSS `animation`
 or `transition` is used anywhere (`a11y.md` commits this component to no
-motion), and the `.overlay` construct is positioned relative to its own frame
-section rather than `position: fixed` to the viewport, so each of this one
-file's frames stays independently switchable — the real component's actual
-modal/fixed placement is specified in `a11y.md`'s text, not by this rendering.
+motion), and the `.overlay` construct is positioned relative to the mockup's
+own single scroll area rather than `position: fixed` to the viewport, so the
+dialog stays visible within this one-file mockup's own scroll area regardless
+of where the reviewer has scrolled — the real component's actual modal/fixed
+placement is specified in `a11y.md`'s text, not by this rendering. The mockup
+itself is a single live view whose content is replaced in place as the
+caller interacts with it — add/edit/complete/delete/filter/sort/load-more/
+retry all mutate one in-memory dataset and re-render — not a set of
+independently switchable static frames; see `wireframes/frame-inventory.md`
+§ Reachability.
