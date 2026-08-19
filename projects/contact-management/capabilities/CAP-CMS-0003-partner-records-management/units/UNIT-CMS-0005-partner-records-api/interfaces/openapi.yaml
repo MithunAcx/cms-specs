@@ -1,0 +1,1024 @@
+openapi: 3.1.0
+info:
+  title: Partner Records API
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0005 — owns the Brokerage, Broker, Agency, Agent, Cga, and
+    ReferenceLookup entities in the clean domain-model shape (XD-0001), with
+    optimistic concurrency (XD-0002) and the single `disabled` boolean convention
+    (XD-0003). See
+    projects/contact-management/capabilities/CAP-CMS-0003-partner-records-management/units/UNIT-CMS-0005-partner-records-api/requirements.md
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/brokerages/{id}:
+    get:
+      operationId: getBrokerage
+      summary: Read a brokerage's master detail
+      description: Satisfies R1, R29, R43.
+      security:
+        - bearerAuth: ["cms:brokerages.read"]
+      parameters:
+        - $ref: '#/components/parameters/BrokerageId'
+      responses:
+        '200':
+          description: Brokerage read successfully (R1).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brokerage'
+              examples:
+                found:
+                  value:
+                    id: "01J8Z0000000000000000BRK1"
+                    version: 3
+                    name: "Example Brokerage LLC"
+                    address: { line1: "100 Main St", line2: null, city: "Austin", state: "TX", zip: "78701" }
+                    phone: "(512) 555-0100"
+                    fax: "(512) 555-0101"
+                    taxId: "12-3456789"
+                    assignedUnderwriter: "J. Rivera"
+                    status: "active"
+                    contractReceivedDate: "2026-01-15"
+                    disabled: false
+                    accountCode: "EPY-000042"
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateBrokerage
+      summary: Update a brokerage's master detail
+      description: Satisfies R3, R4, R5, R26, R28, R29, R33, R34.
+      security:
+        - bearerAuth: ["cms:brokerages.write"]
+      parameters:
+        - $ref: '#/components/parameters/BrokerageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrokerageWrite'
+            examples:
+              update:
+                value:
+                  version: 3
+                  name: "Example Brokerage LLC"
+                  address: { line1: "100 Main St", line2: null, city: "Austin", state: "TX", zip: "78701" }
+                  phone: "5125550100"
+                  fax: "5125550101"
+                  taxId: "12-3456789"
+                  assignedUnderwriter: "J. Rivera"
+                  status: "active"
+                  contractReceivedDate: "2026-01-15"
+                  disabled: false
+      responses:
+        '200':
+          description: Brokerage updated (R3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brokerage'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+  /api/v1/brokerages:
+    post:
+      operationId: createBrokerage
+      summary: Create a brokerage
+      description: Satisfies R2, R4, R28, R32.
+      security:
+        - bearerAuth: ["cms:brokerages.write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrokerageCreate'
+            examples:
+              create:
+                value:
+                  name: "Example Brokerage LLC"
+                  address: { line1: "100 Main St", line2: null, city: "Austin", state: "TX", zip: "78701" }
+                  phone: "5125550100"
+                  fax: "5125550101"
+                  taxId: "12-3456789"
+                  assignedUnderwriter: "J. Rivera"
+                  status: "active"
+                  contractReceivedDate: "2026-01-15"
+                  disabled: false
+      responses:
+        '201':
+          description: Brokerage created (R2), `version` initialized to 1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Brokerage'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/v1/brokerages/{id}/brokers:
+    get:
+      operationId: listBrokers
+      summary: List a brokerage's brokers
+      description: >
+        Satisfies R6, R29. Cursor-paginated per 10-platform.md — this is a
+        deliberate, project-wide-consistent choice for every list operation in
+        this contract; see the note on `LookupListResponse`'s sibling
+        `BrokerListResponse`/`AgentListResponse` for why this supersedes
+        `capability-design.md`'s illustrative `page`/`size` convention row.
+      security:
+        - bearerAuth: ["cms:brokerages.read"]
+      parameters:
+        - $ref: '#/components/parameters/BrokerageId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Brokers read successfully (R6).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerListResponse'
+              examples:
+                found:
+                  value:
+                    items:
+                      - id: "01J8Z0000000000000000BRO1"
+                        brokerageId: "01J8Z0000000000000000BRK1"
+                        version: 1
+                        firstName: "Sam"
+                        lastName: "Diaz"
+                        brokerType: "Principal"
+                        email: "sam.diaz@example.com"
+                        npn: "8675309"
+                        disabled: false
+                    next_cursor: null
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: createBroker
+      summary: Create a broker under a brokerage
+      description: Satisfies R7, R28, R29, R32.
+      security:
+        - bearerAuth: ["cms:brokerages.write"]
+      parameters:
+        - $ref: '#/components/parameters/BrokerageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrokerWrite'
+            examples:
+              create:
+                value:
+                  firstName: "Sam"
+                  lastName: "Diaz"
+                  brokerType: "Principal"
+                  email: "sam.diaz@example.com"
+                  npn: "8675309"
+                  disabled: false
+      responses:
+        '201':
+          description: Broker created (R7), `version` initialized to 1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Broker'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/brokers/{id}:
+    put:
+      operationId: updateBroker
+      summary: Update a broker
+      description: Satisfies R8, R26, R33.
+      security:
+        - bearerAuth: ["cms:brokerages.write"]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrokerWrite'
+      responses:
+        '200':
+          description: Broker updated (R8).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Broker'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+  /api/v1/brokerages/{id}/accounting:
+    get:
+      operationId: getBrokerageAccounting
+      summary: Read a brokerage's accounting/billing address
+      description: Satisfies R9, R29.
+      security:
+        - bearerAuth: ["cms:brokerages.read"]
+      parameters:
+        - $ref: '#/components/parameters/BrokerageId'
+      responses:
+        '200':
+          description: Accounting sub-resource read successfully (R9).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerageAccounting'
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateBrokerageAccounting
+      summary: Update a brokerage's accounting/billing address
+      description: >
+        Satisfies R10, R26, R33. Shares the brokerage's own `version` (design.md §
+        Approach) — a concurrent write to the brokerage's main fields can cause this
+        operation to observe a stale `version` and receive 409, and vice versa.
+      security:
+        - bearerAuth: ["cms:brokerages.write"]
+      parameters:
+        - $ref: '#/components/parameters/BrokerageId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BrokerageAccountingWrite'
+      responses:
+        '200':
+          description: Accounting sub-resource updated (R10).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrokerageAccounting'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+  /api/v1/agencies/{id}:
+    get:
+      operationId: getAgency
+      summary: Read an agency's master detail
+      description: Satisfies R11, R29, R43.
+      security:
+        - bearerAuth: ["cms:agencies.read"]
+      parameters:
+        - $ref: '#/components/parameters/AgencyId'
+      responses:
+        '200':
+          description: Agency read successfully (R11).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agency'
+              examples:
+                found:
+                  value:
+                    id: "01J8Z0000000000000000AGY1"
+                    version: 2
+                    name: "Example Agency Inc"
+                    address: { line1: "200 Oak Ave", line2: "Suite 4", city: "Dallas", state: "TX", zip: "75201" }
+                    phone: "(214) 555-0100"
+                    agencyNumber: "G1-000042"
+                    billingContact: "Pat Lee"
+                    billingContactPhone: "(214) 555-0199"
+                    notes: "Prefers email contact"
+                    highPotential: true
+                    premiumFinancing: false
+                    disabled: false
+                    accountCode: "AGC-000042"
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateAgency
+      summary: Update an agency's master detail
+      description: Satisfies R13, R14, R26, R28, R29, R33, R34.
+      security:
+        - bearerAuth: ["cms:agencies.write"]
+      parameters:
+        - $ref: '#/components/parameters/AgencyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgencyWrite'
+      responses:
+        '200':
+          description: Agency updated (R13).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agency'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+  /api/v1/agencies:
+    post:
+      operationId: createAgency
+      summary: Create an agency
+      description: >
+        Satisfies R12, R14, R28, R32. Runs account-code generation as part of the
+        same create operation — see `decisions/ADR-0001-account-code-generation.md`.
+      security:
+        - bearerAuth: ["cms:agencies.write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgencyCreate'
+      responses:
+        '201':
+          description: Agency created (R12) with a generated `accountCode`, `version` initialized to 1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agency'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/v1/agencies/{id}/agents:
+    get:
+      operationId: listAgents
+      summary: List an agency's agents
+      description: Satisfies R15, R29. Cursor-paginated per 10-platform.md.
+      security:
+        - bearerAuth: ["cms:agencies.read"]
+      parameters:
+        - $ref: '#/components/parameters/AgencyId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: Agents read successfully (R15).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentListResponse'
+              examples:
+                found:
+                  value:
+                    items:
+                      - id: "01J8Z0000000000000000AGT1"
+                        agencyId: "01J8Z0000000000000000AGY1"
+                        version: 1
+                        firstName: "Jordan"
+                        lastName: "Kim"
+                        agentType: "Sub-agent"
+                        phone: "2145550100"
+                        email: "jordan.kim@example.com"
+                        npn: "1122334"
+                        disabled: false
+                    next_cursor: null
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: createAgent
+      summary: Create an agent under an agency
+      description: Satisfies R16, R28, R29, R32.
+      security:
+        - bearerAuth: ["cms:agencies.write"]
+      parameters:
+        - $ref: '#/components/parameters/AgencyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentWrite'
+      responses:
+        '201':
+          description: Agent created (R16), `version` initialized to 1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/v1/agents/{id}:
+    put:
+      operationId: updateAgent
+      summary: Update an agent
+      description: Satisfies R17, R26, R33.
+      security:
+        - bearerAuth: ["cms:agencies.write"]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentWrite'
+      responses:
+        '200':
+          description: Agent updated (R17).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+  /api/v1/cgas/{id}:
+    get:
+      operationId: getCga
+      summary: Read a CGA record
+      description: Satisfies R18, R29.
+      security:
+        - bearerAuth: ["cms:cgas.read"]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: CGA read successfully (R18).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cga'
+              examples:
+                found:
+                  value:
+                    id: "01J8Z0000000000000000CGA1"
+                    version: 1
+                    agentName: "Morgan Blake"
+                    address: { line1: "300 Elm St", line2: null, city: "Houston", state: "TX", zip: "77002" }
+                    email: "morgan.blake@example.com"
+                    phone: "713.555.0100"
+                    agencyId: "01J8Z0000000000000000AGY1"
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      operationId: updateCga
+      summary: Update a CGA record
+      description: Satisfies R20, R21, R22, R26, R33.
+      security:
+        - bearerAuth: ["cms:cgas.write"]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CgaWrite'
+      responses:
+        '200':
+          description: CGA updated (R20).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cga'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+  /api/v1/cgas:
+    post:
+      operationId: createCga
+      summary: Create a CGA record
+      description: >
+        Satisfies R19, R21, R22, R28, R32. Writes exclusively to the CGA entity —
+        never to the Agent entity (DR-1 regression correction, CAP-CMS-0003/A2).
+      security:
+        - bearerAuth: ["cms:cgas.write"]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CgaCreate'
+            examples:
+              create:
+                value:
+                  agentName: "Morgan Blake"
+                  address: { line1: "300 Elm St", line2: null, city: "Houston", state: "TX", zip: "77002" }
+                  email: "morgan.blake@example.com"
+                  phone: "713.555.0100"
+                  agencyId: "01J8Z0000000000000000AGY1"
+      responses:
+        '201':
+          description: CGA created (R19), `version` initialized to 1.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cga'
+        '400': { $ref: '#/components/responses/InvalidRequest' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/v1/lookups/{type}:
+    get:
+      operationId: getLookup
+      summary: Read a reference lookup list
+      description: Satisfies R23, R43.
+      security:
+        - bearerAuth: ["cms:lookups.read"]
+      parameters:
+        - $ref: '#/components/parameters/LookupType'
+      responses:
+        '200':
+          description: Lookup list read successfully (R23).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LookupListResponse'
+              examples:
+                states:
+                  summary: type=states
+                  value:
+                    items:
+                      - value: "TX"
+                        label: "Texas"
+                brokerStatuses:
+                  summary: type=broker-statuses — statusId is the enforced unique key (R25, DR-7)
+                  value:
+                    items:
+                      - value: "active"
+                        label: "Active"
+                        statusId: 1
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404':
+          description: Unknown lookup `type`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      operationId: replaceLookup
+      summary: Replace a reference lookup list
+      description: Satisfies R24, R25, R26.
+      security:
+        - bearerAuth: ["cms:lookups.write"]
+      parameters:
+        - $ref: '#/components/parameters/LookupType'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LookupWrite'
+      responses:
+        '200':
+          description: Lookup list replaced (R24).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LookupListResponse'
+        '400':
+          description: >
+            Validation failure, including a `broker-statuses` list containing a
+            duplicate `statusId` (R25, DR-7).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicateStatusId:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "Duplicate statusId in broker-statuses list"
+                      details: [{ field: "items[3].statusId" }]
+                      trace_id: "01J8Z...ULID"
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403':
+          description: Caller is not an Administrator (R24).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                forbidden:
+                  value:
+                    error:
+                      code: forbidden
+                      message: "Administrator role required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '409': { $ref: '#/components/responses/VersionConflict' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Self-issued JWT per stack.md (no external IdP). Issuer, rotation and
+        revocation owned by UNIT-CMS-0001. Scopes: cms:brokerages.read/write,
+        cms:agencies.read/write, cms:cgas.read/write, cms:lookups.read/write.
+
+  parameters:
+    BrokerageId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    AgencyId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    LookupType:
+      name: type
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/LookupType'
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: >
+        Cursor pagination per 10-platform.md. Default 25, maximum 100 — supersedes
+        capability-design.md's illustrative `page`/`size` convention row, since
+        10-platform.md's cursor-only rule is a platform-wide, always-loaded
+        standard rather than a per-capability choice.
+      schema: { type: integer, minimum: 1, maximum: 100, default: 25 }
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque continuation token from a previous page's `next_cursor`.
+      schema: { type: string }
+
+  responses:
+    Unauthenticated:
+      description: Missing or invalid bearer token (R30).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            unauthenticated:
+              value:
+                error: { code: unauthenticated, message: "Authentication required", details: [], trace_id: "01J8Z...ULID" }
+    Forbidden:
+      description: Authenticated but lacking the required scope (R31).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            forbidden:
+              value:
+                error: { code: forbidden, message: "Required scope not granted", details: [], trace_id: "01J8Z...ULID" }
+    NotFound:
+      description: >
+        Id does not exist, or belongs to another tenant (R29) — the two cases are
+        indistinguishable by design.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            notFound:
+              value:
+                error: { code: not_found, message: "No matching record found", details: [], trace_id: "01J8Z...ULID" }
+    InvalidRequest:
+      description: A required field is missing or malformed (R28).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            invalidRequest:
+              value:
+                error: { code: invalid_request, message: "One or more fields failed validation", details: [{ field: "name", reason: "required" }], trace_id: "01J8Z...ULID" }
+    VersionConflict:
+      description: Supplied `version` does not match the stored value (R3, R26).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            conflict:
+              value:
+                error: { code: conflict_version_mismatch, message: "The record was modified since it was loaded", details: [], trace_id: "01J8Z...ULID" }
+
+  schemas:
+    Address:
+      type: object
+      additionalProperties: false
+      required: [line1, line2, city, state, zip]
+      description: >
+        Shape agreed with UNIT-CMS-0009's address-suggest contract (XD-0004) so no
+        reshaping is needed between suggestion and persistence.
+      properties:
+        line1: { type: string }
+        line2: { type: [string, "null"] }
+        city: { type: string }
+        state: { type: string, description: "Must match a currently active `states` lookup value (R23)." }
+        zip: { type: string }
+
+    LookupType:
+      type: string
+      enum: [states, broker-types, agent-types, broker-statuses]
+      description: Closed enum per 10-platform.md.
+
+    LookupItem:
+      type: object
+      additionalProperties: false
+      required: [value, label]
+      properties:
+        value: { type: string, description: "Logical key. For type=broker-statuses this is a string mirror of statusId." }
+        label: { type: string }
+        statusId:
+          type: [integer, "null"]
+          format: int32
+          description: >
+            Present and enforced unique only when type=broker-statuses (R25, DR-7) —
+            the logical key `Status_ID` even though the legacy table declared no
+            primary key. Null for every other lookup type.
+
+    LookupListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LookupItem'
+
+    LookupWrite:
+      type: object
+      additionalProperties: false
+      required: [version, items]
+      properties:
+        version: { type: integer, format: int64, description: "R26." }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LookupItem'
+
+    Brokerage:
+      allOf:
+        - $ref: '#/components/schemas/BrokerageWrite'
+        - type: object
+          additionalProperties: false
+          required: [id, accountCode]
+          properties:
+            id: { type: string, format: uuid }
+            accountCode:
+              type: string
+              description: "Server-assigned ePay/AccountCode. Read-only — never accepted on write (R5)."
+
+    BrokerageWrite:
+      allOf:
+        - $ref: '#/components/schemas/BrokerageCreate'
+        - type: object
+          additionalProperties: false
+          required: [version]
+          properties:
+            version: { type: integer, format: int64, description: "R26." }
+
+    BrokerageCreate:
+      type: object
+      additionalProperties: false
+      required: [name, address, phone, fax, taxId, assignedUnderwriter, status, contractReceivedDate, disabled]
+      properties:
+        name: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+        phone: { type: string, description: "Normalized to digits on save, formatted (nnn) nnn-nnnn on read (R4)." }
+        fax: { type: string, description: "Same normalization as phone (R4)." }
+        taxId: { type: string, description: "FEIN. Personal data (R46)." }
+        assignedUnderwriter: { type: string, description: "Free text — not a managed lookup (capability.md non-goals)." }
+        status: { type: string, description: "Must match a currently active `broker-statuses` lookup value." }
+        contractReceivedDate: { type: string, format: date, description: "Date-only, never a timestamp (R34)." }
+        disabled: { type: boolean, description: "XD-0003. Not a terminal state (R33)." }
+
+    BrokerageAccounting:
+      allOf:
+        - $ref: '#/components/schemas/BrokerageAccountingWrite'
+        - type: object
+          additionalProperties: false
+          required: [brokerageId]
+          properties:
+            brokerageId: { type: string, format: uuid }
+
+    BrokerageAccountingWrite:
+      type: object
+      additionalProperties: false
+      required: [version, contactName, address]
+      properties:
+        version: { type: integer, format: int64, description: "Shared with the parent Brokerage's own version (design.md § Approach)." }
+        contactName: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+
+    BrokerListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Broker'
+        next_cursor:
+          type: [string, "null"]
+          description: Opaque cursor for the next page, or null when no further page exists.
+
+    AgentListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agent'
+        next_cursor:
+          type: [string, "null"]
+          description: Opaque cursor for the next page, or null when no further page exists.
+
+    Broker:
+      allOf:
+        - $ref: '#/components/schemas/BrokerWrite'
+        - type: object
+          additionalProperties: false
+          required: [id, brokerageId, version]
+          properties:
+            id: { type: string, format: uuid }
+            brokerageId: { type: string, format: uuid }
+            version: { type: integer, format: int64 }
+
+    BrokerWrite:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName, brokerType, email, npn, disabled]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        brokerType: { type: string, description: "Must match a currently active `broker-types` lookup value." }
+        email: { type: string, format: email, description: "Personal data (R46)." }
+        npn: { type: string, description: "Personal data (R46)." }
+        disabled: { type: boolean, description: "XD-0003." }
+
+    Agency:
+      allOf:
+        - $ref: '#/components/schemas/AgencyWrite'
+        - type: object
+          additionalProperties: false
+          required: [id, accountCode]
+          properties:
+            id: { type: string, format: uuid }
+            accountCode:
+              type: string
+              description: "Server-generated at creation — ADR-0001. Read-only after creation."
+
+    AgencyWrite:
+      allOf:
+        - $ref: '#/components/schemas/AgencyCreate'
+        - type: object
+          additionalProperties: false
+          required: [version]
+          properties:
+            version: { type: integer, format: int64, description: "R26." }
+
+    AgencyCreate:
+      type: object
+      additionalProperties: false
+      required: [name, address, phone, agencyNumber, billingContact, billingContactPhone, notes, highPotential, premiumFinancing, disabled]
+      properties:
+        name: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+        phone: { type: string, description: "Punctuation stripped on save (R14)." }
+        agencyNumber: { type: string, description: "\"G1 Agency ID\"." }
+        billingContact: { type: string }
+        billingContactPhone: { type: string, description: "Punctuation stripped on save (R14)." }
+        notes: { type: [string, "null"] }
+        highPotential: { type: boolean }
+        premiumFinancing: { type: boolean }
+        disabled: { type: boolean, description: "XD-0003. Not a terminal state (R33)." }
+
+    Agent:
+      allOf:
+        - $ref: '#/components/schemas/AgentWrite'
+        - type: object
+          additionalProperties: false
+          required: [id, agencyId, version]
+          properties:
+            id: { type: string, format: uuid }
+            agencyId: { type: string, format: uuid }
+            version: { type: integer, format: int64 }
+
+    AgentWrite:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName, agentType, phone, email, npn, disabled]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        agentType: { type: string, description: "Must match a currently active `agent-types` lookup value." }
+        phone: { type: string }
+        email: { type: string, format: email, description: "Personal data (R46)." }
+        npn: { type: string, description: "Personal data (R46)." }
+        disabled: { type: boolean, description: "XD-0003." }
+
+    Cga:
+      allOf:
+        - $ref: '#/components/schemas/CgaWrite'
+        - type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id: { type: string, format: uuid }
+
+    CgaWrite:
+      allOf:
+        - $ref: '#/components/schemas/CgaCreate'
+        - type: object
+          additionalProperties: false
+          required: [version]
+          properties:
+            version: { type: integer, format: int64, description: "R26." }
+
+    CgaCreate:
+      type: object
+      additionalProperties: false
+      required: [agentName, address, email, phone, agencyId]
+      properties:
+        agentName: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+        email: { type: string, format: email, description: "Personal data (R46)." }
+        phone:
+          type: string
+          description: >
+            Always a string, preserving caller formatting — never coerced to a
+            numeric type (R21, DR-2).
+        agencyId:
+          type: string
+          description: >
+            Accepted as either a string or an integer-shaped value and normalized to
+            one internal representation server-side (R22, DR-6). Represented here as
+            a string because that is the caller-visible, normalized form.
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, trace_id]
+          properties:
+            code:
+              type: string
+              enum: [invalid_request, unauthenticated, forbidden, not_found, conflict_version_mismatch, rate_limited]
+              description: Stable snake_case, part of the contract (10-platform.md Errors).
+            message:
+              type: string
+              description: Human-readable; never personal data.
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              description: ULID.
