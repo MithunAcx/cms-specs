@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>UNIT-CMS-0002 identity-access-ui — mockup</title>
+<style>
+  :root[data-theme="light"] {
+    --bg: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-raised: #FFFFFF;
+    --border: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-disabled: #94A3B8;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #E2E8F0;
+    --danger: #A81A35;
+    --danger-surface: #FEF2F3;
+    --notice-surface: #F1F5F9;
+  }
+  :root[data-theme="dark"] {
+    --bg: #020617;
+    --surface: #1E293B;
+    --surface-raised: #0F172A;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-disabled: #64748B;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #334155;
+    --danger: #F7A3AB;
+    --danger-surface: #3A1620;
+    --notice-surface: #1E293B;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
+  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
+  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
+  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
+  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
+  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+
+  /* --- switcher chrome (scaffolding, not a specified screen) --- */
+  .chrome {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding: 12px 16px;
+    background: #EEE;
+    border-bottom: 2px dashed #999;
+  }
+  .chrome label { font-size: 12px; margin-right: 4px; color: #333; }
+  .chrome select, .chrome button.chrome-btn {
+    font-size: 13px;
+    padding: 4px 8px;
+  }
+  .chrome button.chrome-btn.active { outline: 2px solid #333; }
+
+  /* --- canvas --- */
+  .canvas-outer { display: flex; justify-content: center; padding: 32px 0; background: var(--bg); }
+  .canvas {
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .canvas[data-width="mobile"]  { width: 360px;  padding: 0 16px; }
+  .canvas[data-width="tablet"]  { width: 768px;  padding: 0 24px; }
+  .canvas[data-width="desktop"] { width: 1440px; padding: 0 32px; }
+
+  .app-header {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 8px;
+  }
+  .app-header .brand { display: flex; align-items: center; gap: 8px; }
+  .app-header .role-area { display: flex; align-items: center; gap: 12px; }
+  .role-badge {
+    font-size: 12px;
+    line-height: 16px;
+    padding: 2px 8px;
+    border-radius: 11px;
+    background: var(--notice-surface);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+
+  .frame-content { margin-top: 24px; padding-bottom: 32px; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-group label {
+    display: block;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .field-group input {
+    height: 36px;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 6px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 14px;
+    padding: 0 10px;
+    font-family: inherit;
+  }
+  .field-group input:disabled {
+    color: var(--text-disabled);
+    background: var(--surface);
+  }
+  .field-group.has-error input {
+    border-color: var(--danger);
+  }
+  .field-error {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--danger);
+  }
+
+  .btn {
+    height: 36px;
+    border-radius: 6px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .btn-primary { background: var(--primary); color: var(--primary-text); }
+  .btn-secondary {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-weight: 400;
+  }
+  .btn-disabled {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-disabled);
+    font-weight: 400;
+    cursor: not-allowed;
+  }
+  .btn-caption {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+  }
+
+  .error-block {
+    background: var(--danger-surface);
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    max-width: 420px;
+  }
+  .error-block .title { font-size: 14px; font-weight: 600; line-height: 20px; color: var(--danger); margin: 0 0 8px 0; }
+  .error-block .body { font-size: 14px; font-weight: 400; line-height: 20px; color: var(--text-primary); margin: 0 0 12px 0; }
+
+  .notice {
+    background: var(--notice-surface);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    max-width: 420px;
+  }
+
+  .alertdialog {
+    border: 1px solid var(--border-strong);
+    background: var(--surface-raised);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 480px;
+  }
+  .alertdialog h3 { margin: 0 0 8px 0; }
+  .alertdialog p { margin: 0 0 16px 0; }
+
+  .control-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-raised);
+  }
+  .control-row .label { flex: 1; }
+
+  footer.frame-label {
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--text-secondary);
+    margin-top: 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  [data-frame] { display: none; }
+  [data-frame].is-active { display: block; }
+</style>
+</head>
+<body>
+
+  <!-- Switcher chrome — scaffolding, not part of the design -->
+  <div class="chrome">
+    <div>
+      <label for="frame-select">Frame</label>
+      <select id="frame-select">
+        <option value="sign-in-idle">sign-in-idle</option>
+        <option value="sign-in-submitting">sign-in-submitting</option>
+        <option value="sign-in-error-credentials">sign-in-error-credentials</option>
+        <option value="sign-in-error-retry">sign-in-error-retry</option>
+        <option value="sign-in-offline-on-load">sign-in-offline-on-load</option>
+        <option value="shell-viewer">shell-viewer</option>
+        <option value="shell-editor">shell-editor</option>
+        <option value="shell-administrator">shell-administrator</option>
+        <option value="shell-disabled-control">shell-disabled-control</option>
+        <option value="shell-session-expired-midflow">shell-session-expired-midflow</option>
+        <option value="change-password-idle">change-password-idle</option>
+        <option value="change-password-submitting">change-password-submitting</option>
+        <option value="change-password-error-old">change-password-error-old</option>
+        <option value="change-password-error-new">change-password-error-new</option>
+        <option value="change-password-error-retry">change-password-error-retry</option>
+        <option value="change-password-offline-on-submit">change-password-offline-on-submit</option>
+        <option value="change-password-success">change-password-success</option>
+      </select>
+    </div>
+    <div>
+      <label>Theme</label>
+      <button type="button" class="chrome-btn active" data-theme-btn="light">light</button>
+      <button type="button" class="chrome-btn" data-theme-btn="dark">dark</button>
+    </div>
+    <div>
+      <label>Width</label>
+      <button type="button" class="chrome-btn" data-width-btn="mobile">360</button>
+      <button type="button" class="chrome-btn" data-width-btn="tablet">768</button>
+      <button type="button" class="chrome-btn active" data-width-btn="desktop">1440</button>
+    </div>
+  </div>
+
+  <div class="canvas-outer">
+    <div class="canvas" id="canvas" data-width="desktop">
+
+      <div class="app-header">
+        <div class="brand text-h2">Identity Access UI</div>
+      </div>
+
+      <div class="frame-content">
+
+        <!-- 1: sign-in-idle -->
+        <section data-frame="sign-in-idle" class="is-active">
+          <h1 class="text-h1">Sign in</h1>
+          <form style="margin-top:16px;">
+            <div class="field-group">
+              <label for="si-username-1">Username</label>
+              <input id="si-username-1" type="text" value="">
+            </div>
+            <div class="field-group">
+              <label for="si-password-1">Password</label>
+              <input id="si-password-1" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-primary">Sign in</button>
+          </form>
+        </section>
+
+        <!-- 2: sign-in-submitting -->
+        <section data-frame="sign-in-submitting">
+          <h1 class="text-h1">Sign in</h1>
+          <form style="margin-top:16px;">
+            <div class="field-group">
+              <label for="si-username-2">Username</label>
+              <input id="si-username-2" type="text" value="jsmith" disabled>
+            </div>
+            <div class="field-group">
+              <label for="si-password-2">Password</label>
+              <input id="si-password-2" type="password" value="••••••••" disabled>
+            </div>
+            <button type="button" class="btn btn-disabled" disabled>Signing in…</button>
+          </form>
+        </section>
+
+        <!-- 3: sign-in-error-credentials -->
+        <section data-frame="sign-in-error-credentials">
+          <h1 class="text-h1">Sign in</h1>
+          <div class="error-block" style="margin-top:16px;" role="alert">
+            <p class="body" style="margin:0;">Username or password is incorrect.</p>
+          </div>
+          <form>
+            <div class="field-group">
+              <label for="si-username-3">Username</label>
+              <input id="si-username-3" type="text" value="jsmith">
+            </div>
+            <div class="field-group">
+              <label for="si-password-3">Password</label>
+              <input id="si-password-3" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-primary">Sign in</button>
+          </form>
+        </section>
+
+        <!-- 4: sign-in-error-retry -->
+        <section data-frame="sign-in-error-retry">
+          <h1 class="text-h1">Sign in</h1>
+          <div class="error-block" style="margin-top:16px;" role="alert">
+            <p class="title">Connection problem</p>
+            <p class="body">Something went wrong reaching the sign-in service. Check your connection and try again.</p>
+            <button type="button" class="btn btn-secondary">Retry</button>
+          </div>
+          <form>
+            <div class="field-group">
+              <label for="si-username-4">Username</label>
+              <input id="si-username-4" type="text" value="jsmith">
+            </div>
+            <div class="field-group">
+              <label for="si-password-4">Password</label>
+              <input id="si-password-4" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-primary">Sign in</button>
+          </form>
+        </section>
+
+        <!-- 5: sign-in-offline-on-load -->
+        <section data-frame="sign-in-offline-on-load">
+          <h1 class="text-h1">Sign in</h1>
+          <div class="notice" style="margin-top:16px;" role="status">
+            You appear to be offline. Sign-in requires a connection.
+          </div>
+          <form>
+            <div class="field-group">
+              <label for="si-username-5">Username</label>
+              <input id="si-username-5" type="text" value="">
+            </div>
+            <div class="field-group">
+              <label for="si-password-5">Password</label>
+              <input id="si-password-5" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-disabled" disabled>Sign in</button>
+            <div class="btn-caption">Requires a network connection</div>
+          </form>
+        </section>
+
+        <!-- 6: shell-viewer -->
+        <section data-frame="shell-viewer">
+          <div class="app-header" style="margin: -24px -0 16px 0;">
+            <div class="brand text-h2">Partner Directory</div>
+            <div class="role-area">
+              <span class="role-badge">Signed in as Dana Smith · Viewer</span>
+              <button type="button" class="btn btn-secondary">Sign out</button>
+            </div>
+          </div>
+          <p class="text-body" style="color:var(--text-secondary)">Viewer role — search and view-only access.</p>
+          <div class="control-list">
+            <div class="control-row"><span class="label text-body">Search partners</span></div>
+            <div class="control-row"><span class="label text-body">View brokerage / agency / CGA detail</span></div>
+          </div>
+        </section>
+
+        <!-- 7: shell-editor -->
+        <section data-frame="shell-editor">
+          <div class="app-header" style="margin: -24px -0 16px 0;">
+            <div class="brand text-h2">Partner Directory</div>
+            <div class="role-area">
+              <span class="role-badge">Signed in as Dana Smith · Editor</span>
+              <button type="button" class="btn btn-secondary">Sign out</button>
+            </div>
+          </div>
+          <p class="text-body" style="color:var(--text-secondary)">Editor role — create and edit access.</p>
+          <div class="control-list">
+            <div class="control-row"><span class="label text-body">Search partners</span></div>
+            <div class="control-row"><span class="label text-body">View brokerage / agency / CGA detail</span></div>
+            <div class="control-row"><span class="label text-body">Create / edit brokerage, agency, broker, agent, CGA</span> <button type="button" class="btn btn-secondary">Edit</button></div>
+            <div class="control-row"><span class="label text-body">Create / edit / delete contact activity</span> <button type="button" class="btn btn-secondary">Edit</button></div>
+          </div>
+        </section>
+
+        <!-- 8: shell-administrator -->
+        <section data-frame="shell-administrator">
+          <div class="app-header" style="margin: -24px -0 16px 0;">
+            <div class="brand text-h2">Partner Directory</div>
+            <div class="role-area">
+              <span class="role-badge">Signed in as Dana Smith · Administrator</span>
+              <button type="button" class="btn btn-secondary">Sign out</button>
+            </div>
+          </div>
+          <p class="text-body" style="color:var(--text-secondary)">Administrator role — full access plus reference data and user role management.</p>
+          <div class="control-list">
+            <div class="control-row"><span class="label text-body">Search partners</span></div>
+            <div class="control-row"><span class="label text-body">Create / edit brokerage, agency, broker, agent, CGA</span> <button type="button" class="btn btn-secondary">Edit</button></div>
+            <div class="control-row"><span class="label text-body">Manage reference lookups</span> <button type="button" class="btn btn-secondary">Open</button></div>
+            <div class="control-row"><span class="label text-body">Manage user role assignments</span> <button type="button" class="btn btn-secondary">Open</button></div>
+          </div>
+        </section>
+
+        <!-- 9: shell-disabled-control -->
+        <section data-frame="shell-disabled-control">
+          <div class="app-header" style="margin: -24px -0 16px 0;">
+            <div class="brand text-h2">Partner Directory</div>
+            <div class="role-area">
+              <span class="role-badge">Signed in as Dana Smith · Editor</span>
+              <button type="button" class="btn btn-secondary">Sign out</button>
+            </div>
+          </div>
+          <div class="control-list">
+            <div class="control-row">
+              <span class="label text-body">Manage reference lookups</span>
+              <div>
+                <button type="button" class="btn btn-disabled" disabled aria-disabled="true">Open</button>
+                <div class="btn-caption">Requires Administrator role</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10: shell-session-expired-midflow -->
+        <section data-frame="shell-session-expired-midflow">
+          <div class="app-header" style="margin: -24px -0 16px 0;">
+            <div class="brand text-h2">Partner Directory</div>
+            <div class="role-area">
+              <span class="role-badge">Signed in as Dana Smith · Editor</span>
+            </div>
+          </div>
+          <div class="alertdialog" role="alertdialog" style="margin-top:16px;">
+            <h3 class="text-h3">Your session has ended</h3>
+            <p class="text-body">Any unsaved work on this screen may be lost.</p>
+            <button type="button" class="btn btn-primary">Sign in again</button>
+          </div>
+        </section>
+
+        <!-- 11: change-password-idle -->
+        <section data-frame="change-password-idle">
+          <h1 class="text-h1">Change password</h1>
+          <form style="margin-top:16px;">
+            <div class="field-group">
+              <label for="cp-old-1">Current password</label>
+              <input id="cp-old-1" type="password" value="">
+            </div>
+            <div class="field-group">
+              <label for="cp-new-1">New password</label>
+              <input id="cp-new-1" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-primary">Change password</button>
+          </form>
+        </section>
+
+        <!-- 12: change-password-submitting -->
+        <section data-frame="change-password-submitting">
+          <h1 class="text-h1">Change password</h1>
+          <form style="margin-top:16px;">
+            <div class="field-group">
+              <label for="cp-old-2">Current password</label>
+              <input id="cp-old-2" type="password" value="••••••••" disabled>
+            </div>
+            <div class="field-group">
+              <label for="cp-new-2">New password</label>
+              <input id="cp-new-2" type="password" value="••••••••••" disabled>
+            </div>
+            <button type="button" class="btn btn-disabled" disabled>Changing password…</button>
+          </form>
+        </section>
+
+        <!-- 13: change-password-error-old -->
+        <section data-frame="change-password-error-old">
+          <h1 class="text-h1">Change password</h1>
+          <form style="margin-top:16px;">
+            <div class="field-group has-error">
+              <label for="cp-old-3">Current password</label>
+              <input id="cp-old-3" type="password" value="">
+              <div class="field-error" role="alert">Current password is incorrect.</div>
+            </div>
+            <div class="field-group">
+              <label for="cp-new-3">New password</label>
+              <input id="cp-new-3" type="password" value="••••••••••">
+            </div>
+            <button type="button" class="btn btn-primary">Change password</button>
+          </form>
+        </section>
+
+        <!-- 14: change-password-error-new -->
+        <section data-frame="change-password-error-new">
+          <h1 class="text-h1">Change password</h1>
+          <form style="margin-top:16px;">
+            <div class="field-group">
+              <label for="cp-old-4">Current password</label>
+              <input id="cp-old-4" type="password" value="••••••••">
+            </div>
+            <div class="field-group has-error">
+              <label for="cp-new-4">New password</label>
+              <input id="cp-new-4" type="password" value="">
+              <div class="field-error" role="alert">New password does not meet the password requirements.</div>
+            </div>
+            <button type="button" class="btn btn-primary">Change password</button>
+          </form>
+        </section>
+
+        <!-- 15: change-password-error-retry -->
+        <section data-frame="change-password-error-retry">
+          <h1 class="text-h1">Change password</h1>
+          <div class="error-block" style="margin-top:16px;" role="alert">
+            <p class="title">Connection problem</p>
+            <p class="body">Something went wrong changing your password. Check your connection and try again.</p>
+            <button type="button" class="btn btn-secondary">Retry</button>
+          </div>
+          <form>
+            <div class="field-group">
+              <label for="cp-old-5">Current password</label>
+              <input id="cp-old-5" type="password" value="">
+            </div>
+            <div class="field-group">
+              <label for="cp-new-5">New password</label>
+              <input id="cp-new-5" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-primary">Change password</button>
+          </form>
+        </section>
+
+        <!-- 16: change-password-offline-on-submit -->
+        <section data-frame="change-password-offline-on-submit">
+          <h1 class="text-h1">Change password</h1>
+          <div class="notice" style="margin-top:16px;" role="status">
+            Connection lost while submitting. Your new password was not changed — check your connection and try again.
+          </div>
+          <form>
+            <div class="field-group">
+              <label for="cp-old-6">Current password</label>
+              <input id="cp-old-6" type="password" value="">
+            </div>
+            <div class="field-group">
+              <label for="cp-new-6">New password</label>
+              <input id="cp-new-6" type="password" value="">
+            </div>
+            <button type="button" class="btn btn-primary">Change password</button>
+          </form>
+        </section>
+
+        <!-- 17: change-password-success -->
+        <section data-frame="change-password-success">
+          <h1 class="text-h1" tabindex="-1">Your password has been changed.</h1>
+          <p class="text-body" style="color:var(--text-secondary); margin-top:8px;">You remain signed in.</p>
+        </section>
+
+      </div>
+
+      <footer class="frame-label" id="frame-label">UNIT-CMS-0002 · sign-in-idle · 1440px · light</footer>
+    </div>
+  </div>
+
+  <script>
+    // Switcher only — navigates between already-specified states.
+    // No validation, no network, no timers, no storage, no computed values.
+    var UNIT_ID = "UNIT-CMS-0002";
+    var frameSelect = document.getElementById("frame-select");
+    var canvas = document.getElementById("canvas");
+    var label = document.getElementById("frame-label");
+    var themeButtons = document.querySelectorAll("[data-theme-btn]");
+    var widthButtons = document.querySelectorAll("[data-width-btn]");
+
+    function updateLabel() {
+      var frame = frameSelect.value;
+      var width = canvas.getAttribute("data-width");
+      var widthPx = { mobile: 360, tablet: 768, desktop: 1440 }[width];
+      var theme = document.documentElement.getAttribute("data-theme");
+      label.textContent = UNIT_ID + " · " + frame + " · " + widthPx + "px · " + theme;
+    }
+
+    function showFrame() {
+      var frame = frameSelect.value;
+      var sections = document.querySelectorAll("[data-frame]");
+      for (var i = 0; i < sections.length; i++) {
+        sections[i].classList.toggle("is-active", sections[i].getAttribute("data-frame") === frame);
+      }
+      updateLabel();
+    }
+
+    frameSelect.addEventListener("change", showFrame);
+
+    for (var t = 0; t < themeButtons.length; t++) {
+      themeButtons[t].addEventListener("click", function () {
+        var theme = this.getAttribute("data-theme-btn");
+        document.documentElement.setAttribute("data-theme", theme);
+        for (var j = 0; j < themeButtons.length; j++) {
+          themeButtons[j].classList.toggle("active", themeButtons[j] === this);
+        }
+        updateLabel();
+      });
+    }
+
+    for (var w = 0; w < widthButtons.length; w++) {
+      widthButtons[w].addEventListener("click", function () {
+        var width = this.getAttribute("data-width-btn");
+        canvas.setAttribute("data-width", width);
+        for (var k = 0; k < widthButtons.length; k++) {
+          widthButtons[k].classList.toggle("active", widthButtons[k] === this);
+        }
+        updateLabel();
+      });
+    }
+
+    updateLabel();
+  </script>
+
+</body>
+</html>

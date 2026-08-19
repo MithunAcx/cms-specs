@@ -1,0 +1,47 @@
+# What UNIT-CMS-0002 (Identity Access UI) consumes, why, and how each error code maps
+# to a user-visible outcome. This unit exposes no API of its own — see design.md's
+# Contracts section — so this file, plus one local copy per depended-on unit, is the
+# whole of its interfaces/ folder.
+
+unit: UNIT-CMS-0002
+
+consumes:
+  - producer: UNIT-CMS-0001
+    contract: identity-access-api
+    local_copy: UNIT-CMS-0001.openapi.yaml
+    generated_from:
+      source: interfaces/UNIT-CMS-0001.openapi.yaml   # this local copy — see its header for provenance
+      note: >
+        PROVISIONAL: UNIT-CMS-0001 has not yet run architect-unit-interfaces, so the
+        local copy above is derived from CAP-CMS-0001/capability-design.md's Unified
+        API contract table rather than from UNIT-CMS-0001's own interfaces/openapi.yaml,
+        which does not exist yet. Re-copy from the real source the moment it exists.
+    operations_used:
+      - operationId: authLogin
+        why: R2 — sign-in form submits credentials, receives the initial token pair.
+        error_mapping:
+          "401": Generic credential-rejected message (R2 behaviour detail — never distinguishes bad username from bad password).
+          "400": Field-level validation error on the login form.
+          "429": Retry-eligible error honouring Retry-After (R17).
+          network_or_5xx_or_timeout: Retry-eligible error, distinct from the 401 case (dependency-did-not-answer, not dependency-answered-no).
+      - operationId: authRefresh
+        why: R8, R9, R10 — silent refresh of an expired access token, coalesced across concurrent callers.
+        error_mapping:
+          "401": Session ended — client-held tokens cleared, redirect to sign-in (R10).
+          "429": Retry-eligible error; refresh coordinator releases its in-flight state so a later attempt can retry.
+          network_or_5xx_or_timeout: Refresh abandoned but session NOT cleared (design.md § Silent refresh failure paths) — tokens were never confirmed invalid.
+      - operationId: authLogout
+        why: R6 — sign-out invalidates the server-side refresh-token record.
+        error_mapping:
+          any_error_or_timeout: No effect on the client-side flow — session state is cleared and the user is navigated to sign-in regardless (R6 behaviour detail).
+      - operationId: authGetCurrentUser
+        why: R3 — the only source this unit uses for username, display name, and role.
+        error_mapping:
+          "401": Treated identically to an expired access token — triggers the silent-refresh flow (R8) if not already in it.
+      - operationId: authChangePassword
+        why: R7 — self-service password change while authenticated.
+        error_mapping:
+          "401": Field-level error against the old-password field.
+          "400": Field-level error against the new-password field.
+          "429": Retry-eligible error honouring Retry-After (R17).
+          network_or_5xx_or_timeout: Retry-eligible error; form values retained except both password fields.
