@@ -1,6 +1,6 @@
 ---
 unit: UNIT-CMS-0003
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Design — Partner Search API
@@ -37,18 +37,18 @@ here.
 
 | Component | Responsibility | Satisfies |
 |---|---|---|
-| Mode validator | Confirms `mode` is one of the six closed values, and confirms the parameter shape required by that mode (`term` vs. `state`) is present before any query runs | R10, R11 |
+| Mode validator | Confirms `mode` is one of the six closed values, confirms the parameter shape required by that mode (`term` vs. `state`) is present, and confirms a supplied `cursor` matches the request's own filter set before any query runs | R10, R11, R15 |
 | Predicate resolver | Maps `mode` to the entity and match predicate: name/person/address substring match, or state equality match, per Appendix A | R1–R7 |
 | Assigned-UW filter | Applies an exact-match filter on `BAssignedUW` when `uw` is supplied on `mode=brokerage` | R9 |
 | UW lookup reader | Reads the distinct set of non-null `BAssignedUW` values currently in use | R8 |
-| Result assembler | Projects matched rows to the result columns for the active mode, attaches the detail-screen identifier, and builds the `{ items, total, page, size }` envelope | R7, R12, R13, R14, R15 |
+| Result assembler | Projects matched rows to the result columns for the active mode, attaches the detail-screen identifier, and builds the `{ items, total, next_cursor }` envelope | R7, R12, R13, R14, R15 |
 | Tenant-isolation boundary | Ensures every query above runs under UNIT-CMS-0005's row-level-security policy — no query path in this unit bypasses it | R24 |
 
 ## Flows
 
 ### GET /search — brokerage-family modes (`mode=brokerage`, `mode=state-broker`) — satisfies R1, R3, R7, R9, R10, R11, R12, R13
 
-1. Caller sends `GET /search?mode=brokerage&term=&uw=&page=&size=` (or `mode=state-broker&state=`) with a bearer token.
+1. Caller sends `GET /search?mode=brokerage&term=&uw=&limit=&cursor=` (or `mode=state-broker&state=`) with a bearer token.
 2. Mode validator confirms `mode` is a recognised value and that the mode's required
    parameter (`term` for `brokerage`, `state` for `state-broker`) is present and non-empty.
 3. Predicate resolver runs a case-insensitive substring match on brokerage name
@@ -68,8 +68,9 @@ Failure paths:
 | 2 — `mode=state-broker` with absent `state` | `400 state_required` |
 | 2 — `mode` outside the six-value enum | `400 invalid_request` |
 | 2 — `state` not a recognised code | `400 invalid_request` |
-| 3 — no matching rows | `200` with `items: []`, `total: 0` — success, not an error (R13) |
-| 4 — `uw` value has no assigned brokerage | `200` with `items: []`, `total: 0` — success, not an error |
+| 2 — `cursor` does not match this request's filter set | `400 cursor_invalid` |
+| 3 — no matching rows | `200` with `items: []`, `total: 0`, `next_cursor: null` — success, not an error (R13) |
+| 4 — `uw` value has no assigned brokerage | `200` with `items: []`, `total: 0`, `next_cursor: null` — success, not an error |
 
 ### GET /search — broker mode (`mode=broker`) — satisfies R2, R7, R10, R14
 
@@ -232,3 +233,4 @@ as fixed; this design does not reopen it.
 
 | Date | Change ID | What changed |
 |------|-----------|--------------|
+| 2026-08-19 | — | Fixed platform-floor defect: `GET /search` pagination switched from `page`/`size` (offset, forbidden by 10-platform.md) to cursor-based `limit`/`cursor` in, `items`/`total`/`next_cursor` out. Updated R12, R13, R15 in `requirements.md`; the Result assembler component and the brokerage-family flow's request shape here; and `interfaces/openapi.yaml`'s query parameters and `SearchResponse` schema. No R-ID renumbered. |
