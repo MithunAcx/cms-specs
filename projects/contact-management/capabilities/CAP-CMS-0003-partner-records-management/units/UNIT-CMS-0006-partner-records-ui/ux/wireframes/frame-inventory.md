@@ -2,9 +2,23 @@
 
 ## Source position
 
-No design file exists for this unit. This is the ordinary case: the generated HTML
-mockup at `UNIT-CMS-0006-partner-records-ui.html` (this folder) is the source of
-truth for layout, per `designer-unit-ux` output #1.
+No design file exists for this unit. The generated HTML mockup at
+`UNIT-CMS-0006-partner-records-ui.html` (this folder) is the source of truth for
+layout, per `designer-unit-ux` output #1. Its class names for the tab bar (`.tabs`),
+tables (`.tbl`/`.tbl-wrap`), dialogs (`.overlay`/`.scrim`/`.box`/`.dialog`/
+`.dialog-head`/`.dialog-body`/`.dialog-foot`) and status badges (`.badge-active`/
+`.badge-warn`/`.badge-lapsed`/`.badge-neutral`) are taken **verbatim** from the
+sponsor-provided reference,
+`requirements/contactmanagement-full-mockup.html` (Brokerage Detail ~line 285,
+Agency Detail ~line 354, CGA Management ~line 423, Add Agency/Add Brokerage/
+Accounting Address dialogs ~lines 442–510), so this unit's Brokerage Detail, Agency
+Detail, CGA grid, and the three dialogs are structurally traceable to that reference.
+Colour tokens, type scale, spacing and component geometry remain
+`design-system.md`'s own values (which are themselves aligned to the same reference's
+crimson-on-warm-slate palette per `design-system.md` §2) — the reference's Google
+Font import, gradients, box-shadows and CSS animations are not reproduced, because
+`design-system.md` §8 forbids external resources and those effects outright; this is
+a deliberate, reported deviation, not an oversight.
 
 ## Constraints every frame respects
 
@@ -15,6 +29,22 @@ truth for layout, per `designer-unit-ux` output #1.
 - Contrast, target size, zoom, and colour-is-never-sole-carrier per `a11y.md`.
 - Every literal value (colour, spacing, type, component geometry) comes from
   `design-system.md` — no improvised values.
+- Field shapes shown (brokerage/agency/broker/agent/CGA/accounting-address) match
+  `UNIT-CMS-0005`'s `interfaces/openapi.yaml` field-for-field (e.g. `address` as
+  `line1`/`line2`/`city`/`state`/`zip`, `accountCode` read-only, `disabled` as a
+  boolean flag rather than a status string). Policy fields shown on the Policies tab
+  match `UNIT-CMS-0010`'s copied `interfaces/UNIT-CMS-0010.openapi.yaml`
+  (`policyId`, `status`, `term`, `insured`, `classId`, `subclass`) — no field is drawn
+  that either real contract does not have. `deepLinkUrl` is never rendered as a
+  concrete `href`; the "Open in policy system" control is drawn disabled with no
+  destination, since the URL is server-computed and no concrete endpoint may be
+  invented here (`00-core.md`).
+- The Brokers and Agents grids show a "Load more" row when a further page may exist,
+  reflecting UNIT-CMS-0005's cursor-based `items`/`next_cursor` pagination (PR #60)
+  rather than the reference mockup's unpaginated static list. The Policies list and
+  the CGA grid are not paginated in the mockup, because neither contract
+  (`UNIT-CMS-0010`'s policy read, `UNIT-CMS-0005`'s CGA create/read surface as used
+  by this unit) exposes a cursor for them.
 
 ## Frames
 
@@ -26,7 +56,7 @@ subtype. This is noted per row below rather than drawing a separate frame for ea
 
 | # | Frame (kebab-case) | Shows | `states.md` row | Width |
 |---|---|---|---|---|
-| 1 | `brokerage-detail-populated` | Brokerage Detail: master details, Brokers grid, activity/policy tabs, accounting-address control | Brokerage Detail — populated | desktop |
+| 1 | `brokerage-detail-populated` | Brokerage Detail: `.tabs` tab bar (Details/Brokers/Activity/Policies), master details, `.tbl` Brokers grid with a cursor "Load more" row, an embedded Contact-activity placeholder (UNIT-CMS-0008), a `.tbl` Policies list with `.badge-active`/`.badge-warn` status, accounting-address control | Brokerage Detail — populated | desktop |
 | 2 | `brokerage-detail-loading` | Brokerage Detail with skeleton blocks in every region | Brokerage Detail — loading | desktop |
 | 3 | `brokerage-detail-empty-brokers` | Brokerage Detail with an empty Brokers grid | Brokerage Detail — empty | desktop |
 | 4 | `brokerage-detail-conflict` | Brokerage Detail with the conflict banner shown after a stale save; also representative of `429`/timeout/session-expiry banner variants (copy differs, layout does not) | Brokerage Detail — error-recoverable, offline — on submit, session expiry mid-flow | desktop |
@@ -35,7 +65,7 @@ subtype. This is noted per row below rather than drawing a separate frame for ea
 | 7 | `accounting-address-dialog` | The accounting-address dialog, open over Brokerage Detail | Accounting-address dialog — populated | desktop |
 | 8 | `add-brokerage-populated` | Add New Brokerage form, empty and ready | Add New Brokerage — populated | desktop |
 | 9 | `add-brokerage-validation-error` | Add New Brokerage form with per-field validation messages shown | Add New Brokerage — error-recoverable | desktop |
-| 10 | `agency-detail-populated` | Agency Detail: master details, Agents grid, activity/policy tabs, Specialty link | Agency Detail — populated | desktop |
+| 10 | `agency-detail-populated` | Agency Detail: `.tabs` tab bar (Details/Agents/Activity/Policies), master details, `.tbl` Agents grid with a cursor "Load more" row, an embedded Contact-activity placeholder (UNIT-CMS-0008), a `.tbl` Policies list, Specialty link | Agency Detail — populated | desktop |
 | 11 | `agency-detail-empty-agents` | Agency Detail with an empty Agents grid | Agency Detail — empty | desktop |
 | 12 | `add-agency-populated` | Add New Agency form, empty and ready | Add New Agency — populated | desktop |
 | 13 | `add-agency-confirm-dialog` | The two-choice confirmation dialog after a successful agency create | Two-choice confirmation dialog — populated | desktop |
@@ -72,7 +102,11 @@ only the width it was specified against.
 
 None. Every frame above is expressible from `design-system.md`'s existing
 components (App header, Tab bar, Button variants, Input field, Table, Card, Status
-badge, Dialog, Empty state, Error block, Notice, Skeleton bar).
+badge, Dialog, Empty state, Error block, Notice, Skeleton bar). The reference
+mockup's visual flourishes that `design-system.md` §8 forbids outright — the Google
+Font import, gradients, box-shadows, and CSS animations on the dialog open/close and
+toast — are not a missing component; they are excluded by that section's rule, and
+are called out above rather than silently applied.
 
 ## Open questions affecting the inventory
 
