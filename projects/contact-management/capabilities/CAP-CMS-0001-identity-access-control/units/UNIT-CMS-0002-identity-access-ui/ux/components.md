@@ -1,10 +1,39 @@
 # Components — UNIT-CMS-0002 Identity Access UI
 
-## Reused from the shared design system
+## Reused from the reference design system
 
-`design-system.md` §§ 2–5, applied as-is: colour tokens, typography classes, spacing
-scale, app header, button (primary/secondary/disabled), input field, error block,
-notice/provenance block. No modification to any of these.
+Corrected 2026-08-19: this unit originally built its own generic vocabulary
+(`--surface`, `--primary`, `text-h1`, `.field-group`, Segoe UI) instead of the
+sponsor's actual design system. It now reuses, verbatim, the colour tokens and
+component classes defined in `requirements/contactmanagement-full-mockup.html`
+(cited in `CMS-Modernization-Requirements.md` §1.4) — the same file `frame-
+inventory.md`'s Source position names:
+
+- **Tokens**: `--brand`/`--brand-dark`/`--brand-light`/`--brand-50`, `--bg`,
+  `--panel`/`--panel-2`, `--border`/`--border-strong`, `--text`/`--text-2`,
+  `--muted`/`--faint`, `--slate-100`/`--slate-200`/`--slate-400`, both the
+  reference's light and dark theme blocks.
+- **Typography**: the Inter font stack (see deviation below), `.h1` for a
+  page-level heading, plain `h2`/`h3`, `.muted`/`.faint`/`.text-2` for secondary
+  text.
+- **Components**: `.field`/`.inp`/`.inp.err`/`.help-err` (form fields and their
+  errors), `.btn`/`.btn-primary`/`.btn-secondary`/`.btn-ghost`/`.btn-sm` (buttons),
+  `.panel`/`.panel-pad` (cards), `.login-wrap`/`.login-card`/`.brandmark` (the
+  sign-in layout, matching the reference's `#view-login`), `.dialog`/
+  `.dialog-head`/`.dialog-body`/`.dialog-foot` (the session-expired alert),
+  `.badge`/`.dot` (the role indicator in the shell header), `.avatar`,
+  `.icon-btn`, `.divider`.
+
+**Deliberate deviations from the reference**, each kept as small as the
+conflicting requirement allows:
+
+| Deviation | Reason |
+|---|---|
+| No Google Fonts `<link>`; Inter falls back to `ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif` with no webfont loaded | `designer-unit-ux` requires the mockup render and switch states offline from `file://`, with no external resource of any kind |
+| No `box-shadow`, gradient, `animation` or `transition` anywhere (the reference uses all four — card shadows, a brandmark gradient, dialog/toast pop-in) | `a11y.md`'s Visual section already commits this unit to "moot here, since the design system forbids animation/transition outright" under `prefers-reduced-motion`; keeping that commitment true takes priority over matching purely decorative motion |
+| Retry-eligible / dependency errors (`sign-in-error-retry`, `change-password-error-retry`) use a new `.error-panel` built from `.panel` + the reference's own error colour (`--brand`, the same red the reference uses for `.help-err`/`.inp.err`) | The reference mockup never shows a form-level, title+body+retry error — only inline field errors — so there is no existing block to reuse. `.error-panel` is documented here rather than left as a silent addition, per `design-system.md` §10's "do not improvise silently" rule, generalised to this reference |
+| The offline banner (`.notice`) is a new class, `.panel-2` background + `.text-2` copy | Same reason — the reference has no persistent-notice component; built from tokens already in use rather than an invented colour |
+| Role display in the shell header uses `.badge.badge-off` rather than one of the reference's status badges (`.badge-active`/`.badge-off`/`.badge-warn`) | A session role is not an entity status (active/lapsed/pending); `frame-inventory.md`'s "What must NOT be drawn" already excludes a status-matrix frame for this unit. `badge-off`'s neutral grey avoids implying the role itself has a state |
 
 ## Added by this unit
 
@@ -112,3 +141,25 @@ than two components that would otherwise duplicate their layout.
 | Role-gated control | R4, R5 |
 | Session banner | R1, R6 (offline path on sign-in touches R2's failure surface), R10 |
 | App header (reused) | R3 |
+
+## Interaction addenda (2026-08-19) — mockup only, not new components
+
+Two additions were needed to make the mockup a real click-through prototype
+rather than a state switcher; neither changes a documented state or adds a
+component to the vocabulary above:
+
+- **Client-side required-field validation** on the credential form (both
+  sign-in and change-password) reuses the existing `.inp.err`/`.help-err`
+  pair with a generic "This field is required." message. This is the
+  convenience validation `design.md`'s cross-cutting section already
+  describes ("required fields, minimum password shape"); it is a micro-state
+  layered on `populated`, not a new row in `states.md`.
+- **Session diagnostics panel**, shown only inside the signed-in shell, is
+  scaffolding that simulates R8/R9/R10's silent-refresh-and-coalesce
+  behaviour (expire the access token, force a refresh failure, fire two
+  concurrent calls) since there is no real UNIT-CMS-0001 to call from a
+  static file. It is visually distinct from the design system (plain
+  monospace log, muted captions) precisely so it reads as demo tooling, not
+  a specified screen — consistent with `frame-inventory.md`'s "What must NOT
+  be drawn" list, which this panel does not violate because it draws no
+  entity screen, only a log of simulated HTTP outcomes.

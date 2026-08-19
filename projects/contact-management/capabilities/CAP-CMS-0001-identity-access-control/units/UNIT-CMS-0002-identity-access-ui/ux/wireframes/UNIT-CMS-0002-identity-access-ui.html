@@ -4,57 +4,81 @@
 <meta charset="utf-8">
 <title>UNIT-CMS-0002 identity-access-ui — mockup</title>
 <style>
+  /* ============================================================
+     Design tokens — ported verbatim from the sponsor reference
+     mockup requirements/contactmanagement-full-mockup.html
+     (cited in CMS-Modernization-Requirements.md §1.4), so this
+     unit's screens share one visual system with the rest of the
+     product rather than an invented one.
+
+     Deliberate deviations from that reference, both for this
+     mockup's offline/self-contained requirement and for the
+     accessibility contract in a11y.md — see components.md
+     "Reused from the reference design system" for the full list:
+       - no Google Fonts <link>; Inter's local/system fallback
+         stack only, so the file renders identically from file://
+         with no network access.
+       - no gradient, box-shadow, text-shadow, animation or
+         transition anywhere — a11y.md commits this unit to
+         prefers-reduced-motion with nothing to reduce, and the
+         reference's decorative shadows/gradients are not part of
+         its actual design tokens.
+     ============================================================ */
   :root[data-theme="light"] {
-    --bg: #FFFFFF;
-    --surface: #F8FAFC;
-    --surface-raised: #FFFFFF;
+    --brand: #C8213E;
+    --brand-dark: #A81A35;
+    --brand-light: #E43E54;
+    --brand-50: #FEF2F3;
+    --bg: #F8FAFC;
+    --panel: #FFFFFF;
+    --panel-2: #F8FAFC;
     --border: #E2E8F0;
     --border-strong: #CBD5E1;
-    --text-primary: #1E293B;
-    --text-secondary: #475569;
-    --text-disabled: #94A3B8;
-    --primary: #C8213E;
-    --primary-text: #FFFFFF;
-    --focus: #E43E54;
-    --skeleton: #E2E8F0;
-    --danger: #A81A35;
-    --danger-surface: #FEF2F3;
-    --notice-surface: #F1F5F9;
+    --text: #1E293B;
+    --text-2: #475569;
+    --muted: #64748B;
+    --faint: #94A3B8;
+    --slate-100: #F1F5F9;
+    --slate-200: #E2E8F0;
+    --slate-400: #94A3B8;
   }
   :root[data-theme="dark"] {
+    --brand: #C8213E;
+    --brand-dark: #A81A35;
+    --brand-light: #E43E54;
+    --brand-50: #3A1620;
     --bg: #020617;
-    --surface: #1E293B;
-    --surface-raised: #0F172A;
-    --border: #334155;
-    --border-strong: #475569;
-    --text-primary: #F1F5F9;
-    --text-secondary: #CBD5E1;
-    --text-disabled: #64748B;
-    --primary: #C8213E;
-    --primary-text: #FFFFFF;
-    --focus: #E43E54;
-    --skeleton: #334155;
-    --danger: #F7A3AB;
-    --danger-surface: #3A1620;
-    --notice-surface: #1E293B;
+    --panel: #0F172A;
+    --panel-2: #1E293B;
+    --border: #1E293B;
+    --border-strong: #334155;
+    --text: #F1F5F9;
+    --text-2: #CBD5E1;
+    --muted: #94A3B8;
+    --faint: #64748B;
+    --slate-100: #1E293B;
+    --slate-200: #334155;
+    --slate-400: #64748B;
   }
 
   * { box-sizing: border-box; }
   body {
     margin: 0;
     background: var(--bg);
-    color: var(--text-primary);
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, "Segoe UI", Arial, sans-serif;
   }
+  a { color: inherit; text-decoration: none; }
 
-  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
-  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
-  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
-  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
-  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
-  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+  /* Typography — reference's own scale, named the same */
+  .h1 { font-size: 1.6rem; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+  h2 { margin: 0; font-weight: 700; letter-spacing: -.01em; }
+  h3 { margin: 0; font-weight: 700; letter-spacing: -.01em; font-size: 1rem; }
+  .muted { color: var(--muted); }
+  .faint { color: var(--faint); }
+  .text-2 { color: var(--text-2); }
 
-  /* --- switcher chrome (scaffolding, not a specified screen) --- */
+  /* --- switcher / scenario chrome (scaffolding, not a specified screen) --- */
   .chrome {
     display: flex;
     flex-wrap: wrap;
@@ -63,7 +87,9 @@
     padding: 12px 16px;
     background: #EEE;
     border-bottom: 2px dashed #999;
+    font-family: system-ui, sans-serif;
   }
+  .chrome.scenario { background: #E8F0EE; border-bottom: 2px dashed #6b9c8f; }
   .chrome label { font-size: 12px; margin-right: 4px; color: #333; }
   .chrome select, .chrome button.chrome-btn {
     font-size: 13px;
@@ -81,154 +107,166 @@
   .canvas[data-width="tablet"]  { width: 768px;  padding: 0 24px; }
   .canvas[data-width="desktop"] { width: 1440px; padding: 0 32px; }
 
+  /* ============ App header — reference's .header/.header-in ============ */
   .app-header {
     height: 56px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    background: var(--surface);
+    gap: 12px;
+    background: var(--panel);
     border-bottom: 1px solid var(--border);
     padding: 0 8px;
   }
-  .app-header .brand { display: flex; align-items: center; gap: 8px; }
-  .app-header .role-area { display: flex; align-items: center; gap: 12px; }
-  .role-badge {
-    font-size: 12px;
-    line-height: 16px;
-    padding: 2px 8px;
-    border-radius: 11px;
-    background: var(--notice-surface);
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
+  .brandmark {
+    display: grid; place-items: center;
+    height: 36px; width: 36px;
+    border-radius: 12px;
+    background: var(--brand);
+    color: #fff;
+    flex: none;
   }
+  .brandmark svg { height: 18px; width: 18px; }
+  .brand-title { font-size: 15px; font-weight: 700; line-height: 1.2; }
+  .brand-sub { font-size: 12px; color: var(--faint); }
+  .spacer { margin-left: auto; }
+  .row { display: flex; align-items: center; }
+  .row.wrap { flex-wrap: wrap; }
 
-  .frame-content { margin-top: 24px; padding-bottom: 32px; }
-
-  .field-group { margin-bottom: 16px; }
-  .field-group label {
-    display: block;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-  }
-  .field-group input {
-    height: 36px;
-    width: 100%;
-    max-width: 360px;
-    border-radius: 6px;
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-size: 14px;
-    padding: 0 10px;
-    font-family: inherit;
-  }
-  .field-group input:disabled {
-    color: var(--text-disabled);
-    background: var(--surface);
-  }
-  .field-group.has-error input {
-    border-color: var(--danger);
-  }
-  .field-error {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--danger);
-  }
-
+  /* ============ Buttons — reference's .btn family ============ */
   .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     height: 36px;
-    border-radius: 6px;
+    border-radius: 8px;
     padding: 0 16px;
     font-size: 14px;
     font-weight: 600;
-    border: none;
+    border: 1px solid transparent;
     cursor: pointer;
+    background: transparent;
+    color: var(--text);
     font-family: inherit;
   }
-  .btn-primary { background: var(--primary); color: var(--primary-text); }
-  .btn-secondary {
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    color: var(--text-primary);
-    font-weight: 400;
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-secondary { border-color: var(--border-strong); background: var(--panel); color: var(--text-2); font-weight: 600; }
+  .btn-ghost { color: var(--muted); font-weight: 600; }
+  .btn-sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .btn[disabled], .btn[aria-disabled="true"] {
+    background: var(--panel); border-color: var(--border); color: var(--faint); cursor: not-allowed;
   }
-  .btn-disabled {
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    color: var(--text-disabled);
-    font-weight: 400;
-    cursor: not-allowed;
+  .btn:focus-visible, .inp:focus-visible, a:focus-visible {
+    outline: 2px solid var(--brand-light);
+    outline-offset: 2px;
   }
-  .btn-caption {
-    margin-top: 4px;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--text-secondary);
-  }
-
-  .error-block {
-    background: var(--danger-surface);
-    border: 1px solid var(--danger);
+  .icon-btn {
+    display: grid; place-items: center;
+    height: 36px; width: 36px;
     border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 16px;
-    max-width: 420px;
-  }
-  .error-block .title { font-size: 14px; font-weight: 600; line-height: 20px; color: var(--danger); margin: 0 0 8px 0; }
-  .error-block .body { font-size: 14px; font-weight: 400; line-height: 20px; color: var(--text-primary); margin: 0 0 12px 0; }
-
-  .notice {
-    background: var(--notice-surface);
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-    max-width: 420px;
-  }
-
-  .alertdialog {
     border: 1px solid var(--border-strong);
-    background: var(--surface-raised);
-    border-radius: 12px;
-    padding: 24px;
-    max-width: 480px;
+    background: var(--panel);
+    color: var(--text-2);
   }
-  .alertdialog h3 { margin: 0 0 8px 0; }
-  .alertdialog p { margin: 0 0 16px 0; }
+  .avatar {
+    display: grid; place-items: center;
+    height: 36px; width: 36px;
+    border-radius: 9999px;
+    background: var(--slate-200);
+    color: var(--text-2);
+    font-size: 13px; font-weight: 700;
+  }
+
+  /* ============ Fields — reference's .field / .inp ============ */
+  .field { display: block; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .inp {
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--panel);
+    color: var(--text);
+    padding: 0 12px;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  .inp:disabled { color: var(--faint); background: var(--panel-2); }
+  .inp.err { border-color: var(--brand); }
+  .help-err { margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--brand); }
+
+  /* ============ Panels — reference's .panel / .panel-pad ============ */
+  .panel { border: 1px solid var(--border); background: var(--panel); border-radius: 16px; }
+  .panel-pad { padding: 20px; }
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+  /* ============ Badge — reused for role display ============ */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 9999px; padding: 2px 10px;
+    font-size: 12px; font-weight: 600;
+  }
+  .badge-off { background: var(--slate-100); color: var(--text-2); }
+  .badge .dot { height: 6px; width: 6px; border-radius: 9999px; background: var(--slate-400); }
+
+  /* ============ Login — reference's #view-login ============ */
+  .login-wrap { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+  .login-card { width: 100%; max-width: 384px; }
+
+  /* ============ Retry-eligible / dependency error — built from
+     .panel + .help-err vocabulary, since the reference has no
+     form-level error block of its own to reuse ============ */
+  .error-panel { border-color: var(--brand); }
+  .error-panel .title { font-size: 14px; font-weight: 700; color: var(--brand); margin: 0 0 8px 0; }
+  .error-panel .body { font-size: 14px; color: var(--text); margin: 0 0 12px 0; }
+
+  /* ============ Notice — offline banner, built the same way ============ */
+  .notice { background: var(--panel-2); border-radius: 8px; padding: 16px; font-size: 13px; color: var(--text-2); }
+
+  /* ============ Dialog — reference's .dialog structure, static
+     (no overlay/animation — this mockup renders it in place) ============ */
+  .dialog { border: 1px solid var(--border-strong); background: var(--panel); border-radius: 16px; }
+  .dialog-head { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .dialog-body { padding: 20px; }
+  .dialog-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--border); }
 
   .control-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
   .control-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--surface-raised);
+    border-radius: 12px;
+    background: var(--panel);
   }
-  .control-row .label { flex: 1; }
+  .control-row .label { flex: 1; font-size: 14px; }
+  .control-row .caption { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
+  .frame-content { margin-top: 24px; padding-bottom: 32px; }
   footer.frame-label {
     font-size: 12px;
-    line-height: 16px;
-    color: var(--text-secondary);
+    color: var(--text-2);
     margin-top: 24px;
     padding-top: 12px;
     border-top: 1px solid var(--border);
   }
 
-  [data-frame] { display: none; }
-  [data-frame].is-active { display: block; }
+  /* Live views driven by real interaction/state, not static per-frame markup.
+     Only one is visible at a time — see the script's render* functions. */
+  .view { display: none; }
+  .view.is-active { display: block; }
+
+  /* Demo-only scaffolding (session diagnostics, quick-fill, log) — never
+     part of the spec's own component vocabulary; kept visually distinct
+     (plain <pre> log, muted captions) so it reads as tooling, not design. */
+  .demo-log {
+    white-space: pre-wrap; font-size: 11px; font-family: ui-monospace, Consolas, monospace;
+    background: var(--panel-2); border-radius: 8px; padding: 10px; margin: 0;
+    max-height: 140px; overflow: auto; color: var(--text-2);
+  }
 </style>
 </head>
 <body>
 
-  <!-- Switcher chrome — scaffolding, not part of the design -->
+  <!-- Switcher chrome — scaffolding, not part of the design. Selecting a
+       frame here jumps straight to that documented state (states.md /
+       frame-inventory.md), exactly as before. -->
   <div class="chrome">
     <div>
       <label for="frame-select">Frame</label>
@@ -265,305 +303,40 @@
     </div>
   </div>
 
+  <!-- Scenario controls — demo-only triggers for the dependency classes
+       (`10-platform.md`/`30-nfr-floor.md`) that a static file cannot
+       exercise against a real backend: offline, and a 5xx/timeout/429
+       dependency failure. Sign-in and change-password both read these. -->
+  <div class="chrome scenario">
+    <div>
+      <label style="margin-right:8px;"><input type="checkbox" id="scn-offline"> Simulate offline</label>
+    </div>
+    <div>
+      <label style="margin-right:8px;"><input type="checkbox" id="scn-servererror"> Force next submit to fail (5xx / timeout / 429)</label>
+    </div>
+    <div class="faint" style="font-size:11px;">Scenario controls — demo only, not part of the design</div>
+  </div>
+
   <div class="canvas-outer">
     <div class="canvas" id="canvas" data-width="desktop">
 
-      <div class="app-header">
-        <div class="brand text-h2">Identity Access UI</div>
-      </div>
-
       <div class="frame-content">
 
-        <!-- 1: sign-in-idle -->
-        <section data-frame="sign-in-idle" class="is-active">
-          <h1 class="text-h1">Sign in</h1>
-          <form style="margin-top:16px;">
-            <div class="field-group">
-              <label for="si-username-1">Username</label>
-              <input id="si-username-1" type="text" value="">
-            </div>
-            <div class="field-group">
-              <label for="si-password-1">Password</label>
-              <input id="si-password-1" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-primary">Sign in</button>
-          </form>
-        </section>
+        <!-- Sign-in — real form, real validation, real (simulated) auth flow.
+             Sub-states: idle | submitting | error-credentials | error-retry |
+             offline-on-load — see states.md § Sign-in. -->
+        <div class="view is-active" id="view-signin"></div>
 
-        <!-- 2: sign-in-submitting -->
-        <section data-frame="sign-in-submitting">
-          <h1 class="text-h1">Sign in</h1>
-          <form style="margin-top:16px;">
-            <div class="field-group">
-              <label for="si-username-2">Username</label>
-              <input id="si-username-2" type="text" value="jsmith" disabled>
-            </div>
-            <div class="field-group">
-              <label for="si-password-2">Password</label>
-              <input id="si-password-2" type="password" value="••••••••" disabled>
-            </div>
-            <button type="button" class="btn btn-disabled" disabled>Signing in…</button>
-          </form>
-        </section>
+        <!-- Shell — role-gated rendering. Sub-states: default (viewer/editor/
+             administrator, derived from the signed-in demo user's role) |
+             session-expired — see states.md § Shell. -->
+        <div class="view" id="view-shell"></div>
 
-        <!-- 3: sign-in-error-credentials -->
-        <section data-frame="sign-in-error-credentials">
-          <h1 class="text-h1">Sign in</h1>
-          <div class="error-block" style="margin-top:16px;" role="alert">
-            <p class="body" style="margin:0;">Username or password is incorrect.</p>
-          </div>
-          <form>
-            <div class="field-group">
-              <label for="si-username-3">Username</label>
-              <input id="si-username-3" type="text" value="jsmith">
-            </div>
-            <div class="field-group">
-              <label for="si-password-3">Password</label>
-              <input id="si-password-3" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-primary">Sign in</button>
-          </form>
-        </section>
-
-        <!-- 4: sign-in-error-retry -->
-        <section data-frame="sign-in-error-retry">
-          <h1 class="text-h1">Sign in</h1>
-          <div class="error-block" style="margin-top:16px;" role="alert">
-            <p class="title">Connection problem</p>
-            <p class="body">Something went wrong reaching the sign-in service. Check your connection and try again.</p>
-            <button type="button" class="btn btn-secondary">Retry</button>
-          </div>
-          <form>
-            <div class="field-group">
-              <label for="si-username-4">Username</label>
-              <input id="si-username-4" type="text" value="jsmith">
-            </div>
-            <div class="field-group">
-              <label for="si-password-4">Password</label>
-              <input id="si-password-4" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-primary">Sign in</button>
-          </form>
-        </section>
-
-        <!-- 5: sign-in-offline-on-load -->
-        <section data-frame="sign-in-offline-on-load">
-          <h1 class="text-h1">Sign in</h1>
-          <div class="notice" style="margin-top:16px;" role="status">
-            You appear to be offline. Sign-in requires a connection.
-          </div>
-          <form>
-            <div class="field-group">
-              <label for="si-username-5">Username</label>
-              <input id="si-username-5" type="text" value="">
-            </div>
-            <div class="field-group">
-              <label for="si-password-5">Password</label>
-              <input id="si-password-5" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-disabled" disabled>Sign in</button>
-            <div class="btn-caption">Requires a network connection</div>
-          </form>
-        </section>
-
-        <!-- 6: shell-viewer -->
-        <section data-frame="shell-viewer">
-          <div class="app-header" style="margin: -24px -0 16px 0;">
-            <div class="brand text-h2">Partner Directory</div>
-            <div class="role-area">
-              <span class="role-badge">Signed in as Dana Smith · Viewer</span>
-              <button type="button" class="btn btn-secondary">Sign out</button>
-            </div>
-          </div>
-          <p class="text-body" style="color:var(--text-secondary)">Viewer role — search and view-only access.</p>
-          <div class="control-list">
-            <div class="control-row"><span class="label text-body">Search partners</span></div>
-            <div class="control-row"><span class="label text-body">View brokerage / agency / CGA detail</span></div>
-          </div>
-        </section>
-
-        <!-- 7: shell-editor -->
-        <section data-frame="shell-editor">
-          <div class="app-header" style="margin: -24px -0 16px 0;">
-            <div class="brand text-h2">Partner Directory</div>
-            <div class="role-area">
-              <span class="role-badge">Signed in as Dana Smith · Editor</span>
-              <button type="button" class="btn btn-secondary">Sign out</button>
-            </div>
-          </div>
-          <p class="text-body" style="color:var(--text-secondary)">Editor role — create and edit access.</p>
-          <div class="control-list">
-            <div class="control-row"><span class="label text-body">Search partners</span></div>
-            <div class="control-row"><span class="label text-body">View brokerage / agency / CGA detail</span></div>
-            <div class="control-row"><span class="label text-body">Create / edit brokerage, agency, broker, agent, CGA</span> <button type="button" class="btn btn-secondary">Edit</button></div>
-            <div class="control-row"><span class="label text-body">Create / edit / delete contact activity</span> <button type="button" class="btn btn-secondary">Edit</button></div>
-          </div>
-        </section>
-
-        <!-- 8: shell-administrator -->
-        <section data-frame="shell-administrator">
-          <div class="app-header" style="margin: -24px -0 16px 0;">
-            <div class="brand text-h2">Partner Directory</div>
-            <div class="role-area">
-              <span class="role-badge">Signed in as Dana Smith · Administrator</span>
-              <button type="button" class="btn btn-secondary">Sign out</button>
-            </div>
-          </div>
-          <p class="text-body" style="color:var(--text-secondary)">Administrator role — full access plus reference data and user role management.</p>
-          <div class="control-list">
-            <div class="control-row"><span class="label text-body">Search partners</span></div>
-            <div class="control-row"><span class="label text-body">Create / edit brokerage, agency, broker, agent, CGA</span> <button type="button" class="btn btn-secondary">Edit</button></div>
-            <div class="control-row"><span class="label text-body">Manage reference lookups</span> <button type="button" class="btn btn-secondary">Open</button></div>
-            <div class="control-row"><span class="label text-body">Manage user role assignments</span> <button type="button" class="btn btn-secondary">Open</button></div>
-          </div>
-        </section>
-
-        <!-- 9: shell-disabled-control -->
-        <section data-frame="shell-disabled-control">
-          <div class="app-header" style="margin: -24px -0 16px 0;">
-            <div class="brand text-h2">Partner Directory</div>
-            <div class="role-area">
-              <span class="role-badge">Signed in as Dana Smith · Editor</span>
-              <button type="button" class="btn btn-secondary">Sign out</button>
-            </div>
-          </div>
-          <div class="control-list">
-            <div class="control-row">
-              <span class="label text-body">Manage reference lookups</span>
-              <div>
-                <button type="button" class="btn btn-disabled" disabled aria-disabled="true">Open</button>
-                <div class="btn-caption">Requires Administrator role</div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 10: shell-session-expired-midflow -->
-        <section data-frame="shell-session-expired-midflow">
-          <div class="app-header" style="margin: -24px -0 16px 0;">
-            <div class="brand text-h2">Partner Directory</div>
-            <div class="role-area">
-              <span class="role-badge">Signed in as Dana Smith · Editor</span>
-            </div>
-          </div>
-          <div class="alertdialog" role="alertdialog" style="margin-top:16px;">
-            <h3 class="text-h3">Your session has ended</h3>
-            <p class="text-body">Any unsaved work on this screen may be lost.</p>
-            <button type="button" class="btn btn-primary">Sign in again</button>
-          </div>
-        </section>
-
-        <!-- 11: change-password-idle -->
-        <section data-frame="change-password-idle">
-          <h1 class="text-h1">Change password</h1>
-          <form style="margin-top:16px;">
-            <div class="field-group">
-              <label for="cp-old-1">Current password</label>
-              <input id="cp-old-1" type="password" value="">
-            </div>
-            <div class="field-group">
-              <label for="cp-new-1">New password</label>
-              <input id="cp-new-1" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-primary">Change password</button>
-          </form>
-        </section>
-
-        <!-- 12: change-password-submitting -->
-        <section data-frame="change-password-submitting">
-          <h1 class="text-h1">Change password</h1>
-          <form style="margin-top:16px;">
-            <div class="field-group">
-              <label for="cp-old-2">Current password</label>
-              <input id="cp-old-2" type="password" value="••••••••" disabled>
-            </div>
-            <div class="field-group">
-              <label for="cp-new-2">New password</label>
-              <input id="cp-new-2" type="password" value="••••••••••" disabled>
-            </div>
-            <button type="button" class="btn btn-disabled" disabled>Changing password…</button>
-          </form>
-        </section>
-
-        <!-- 13: change-password-error-old -->
-        <section data-frame="change-password-error-old">
-          <h1 class="text-h1">Change password</h1>
-          <form style="margin-top:16px;">
-            <div class="field-group has-error">
-              <label for="cp-old-3">Current password</label>
-              <input id="cp-old-3" type="password" value="">
-              <div class="field-error" role="alert">Current password is incorrect.</div>
-            </div>
-            <div class="field-group">
-              <label for="cp-new-3">New password</label>
-              <input id="cp-new-3" type="password" value="••••••••••">
-            </div>
-            <button type="button" class="btn btn-primary">Change password</button>
-          </form>
-        </section>
-
-        <!-- 14: change-password-error-new -->
-        <section data-frame="change-password-error-new">
-          <h1 class="text-h1">Change password</h1>
-          <form style="margin-top:16px;">
-            <div class="field-group">
-              <label for="cp-old-4">Current password</label>
-              <input id="cp-old-4" type="password" value="••••••••">
-            </div>
-            <div class="field-group has-error">
-              <label for="cp-new-4">New password</label>
-              <input id="cp-new-4" type="password" value="">
-              <div class="field-error" role="alert">New password does not meet the password requirements.</div>
-            </div>
-            <button type="button" class="btn btn-primary">Change password</button>
-          </form>
-        </section>
-
-        <!-- 15: change-password-error-retry -->
-        <section data-frame="change-password-error-retry">
-          <h1 class="text-h1">Change password</h1>
-          <div class="error-block" style="margin-top:16px;" role="alert">
-            <p class="title">Connection problem</p>
-            <p class="body">Something went wrong changing your password. Check your connection and try again.</p>
-            <button type="button" class="btn btn-secondary">Retry</button>
-          </div>
-          <form>
-            <div class="field-group">
-              <label for="cp-old-5">Current password</label>
-              <input id="cp-old-5" type="password" value="">
-            </div>
-            <div class="field-group">
-              <label for="cp-new-5">New password</label>
-              <input id="cp-new-5" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-primary">Change password</button>
-          </form>
-        </section>
-
-        <!-- 16: change-password-offline-on-submit -->
-        <section data-frame="change-password-offline-on-submit">
-          <h1 class="text-h1">Change password</h1>
-          <div class="notice" style="margin-top:16px;" role="status">
-            Connection lost while submitting. Your new password was not changed — check your connection and try again.
-          </div>
-          <form>
-            <div class="field-group">
-              <label for="cp-old-6">Current password</label>
-              <input id="cp-old-6" type="password" value="">
-            </div>
-            <div class="field-group">
-              <label for="cp-new-6">New password</label>
-              <input id="cp-new-6" type="password" value="">
-            </div>
-            <button type="button" class="btn btn-primary">Change password</button>
-          </form>
-        </section>
-
-        <!-- 17: change-password-success -->
-        <section data-frame="change-password-success">
-          <h1 class="text-h1" tabindex="-1">Your password has been changed.</h1>
-          <p class="text-body" style="color:var(--text-secondary); margin-top:8px;">You remain signed in.</p>
-        </section>
+        <!-- Change password — reachable from the shell's diagnostics panel.
+             Sub-states: idle | submitting | error-old | error-new |
+             error-retry | offline-on-submit | success — see states.md
+             § Change password. -->
+        <div class="view" id="view-changepw"></div>
 
       </div>
 
@@ -572,57 +345,768 @@
   </div>
 
   <script>
-    // Switcher only — navigates between already-specified states.
-    // No validation, no network, no timers, no storage, no computed values.
-    var UNIT_ID = "UNIT-CMS-0002";
-    var frameSelect = document.getElementById("frame-select");
-    var canvas = document.getElementById("canvas");
-    var label = document.getElementById("frame-label");
-    var themeButtons = document.querySelectorAll("[data-theme-btn]");
-    var widthButtons = document.querySelectorAll("[data-width-btn]");
+  /* ============================================================
+     REAL INTERACTIVE PROTOTYPE — vanilla JS, in-memory only, no
+     framework, no build step, no external call. Implements actual
+     sign-in / session / silent-refresh / change-password logic
+     against in-memory demo seed data, standing in for
+     UNIT-CMS-0001's five auth endpoints (XD-0001), per this unit's
+     requirements.md (R1-R10) and design.md (Flows, State machine,
+     Idempotency walk).
 
-    function updateLabel() {
-      var frame = frameSelect.value;
-      var width = canvas.getAttribute("data-width");
-      var widthPx = { mobile: 360, tablet: 768, desktop: 1440 }[width];
-      var theme = document.documentElement.getAttribute("data-theme");
-      label.textContent = UNIT_ID + " · " + frame + " · " + widthPx + "px · " + theme;
+     The frame dropdown above still jumps straight to any of the 17
+     documented frames (states.md / frame-inventory.md) — selecting
+     one calls the same render functions a real interaction would,
+     so every documented state is reachable both ways. The PRIMARY
+     path is now typing credentials and submitting.
+
+     No MFA / account-lock / rate-limit *state* is implemented,
+     because none is named anywhere in requirements.md or
+     states.md — inventing one would violate this repo's "never
+     invent a fact" rule. A 429 is folded into the existing
+     retry-eligible state per R17, exactly as requirements.md says.
+     ============================================================ */
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return (s == null ? '' : String(s)).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  };
+
+  /* ---- demo seed data — stands in for UNIT-CMS-0001's user store ---- */
+  var DEMO_USERS = [
+    { username: 'vchen',  password: 'Viewer#26', display: 'Vic Chen',   role: 'viewer' },
+    { username: 'dsmith', password: 'Editor#26', display: 'Dana Smith', role: 'editor' },
+    { username: 'aowusu', password: 'Admin#26',  display: 'Ama Owusu',  role: 'administrator' }
+  ];
+
+  /* ---- copy — verbatim from states.md's copy tables ---- */
+  var COPY = {
+    signin: {
+      title: 'Sign in',
+      username: 'Username',
+      password: 'Password',
+      submit: 'Sign in',
+      submitPending: 'Signing in…',
+      errCredentials: 'Username or password is incorrect.',
+      errRetry: 'Something went wrong reaching the sign-in service. Check your connection and try again.',
+      retryAction: 'Retry',
+      offlineBanner: 'You appear to be offline. Sign-in requires a connection.'
+    },
+    shell: {
+      roleLabel: { viewer: 'Viewer', editor: 'Editor', administrator: 'Administrator' },
+      signout: 'Sign out',
+      disabledCaption: 'Requires Administrator role',
+      sessionExpiredHeading: 'Your session has ended',
+      sessionExpiredBody: 'Any unsaved work on this screen may be lost.',
+      sessionExpiredAction: 'Sign in again'
+    },
+    changepw: {
+      title: 'Change password',
+      old: 'Current password',
+      new: 'New password',
+      submit: 'Change password',
+      submitPending: 'Changing password…',
+      success: 'Your password has been changed.',
+      errOld: 'Current password is incorrect.',
+      errNew: 'New password does not meet the password requirements.',
+      errRetry: 'Something went wrong changing your password. Check your connection and try again.',
+      retryAction: 'Retry',
+      offlineOnSubmit: 'Connection lost while submitting. Your new password was not changed — check your connection and try again.'
+    },
+    required: 'This field is required.'
+  };
+
+  /* ---- live state — the in-memory "session holder" design.md describes.
+     Cleared on logout / refresh failure; never written to any persistent
+     store (ADR-0001). ---- */
+  var session = null; /* null = signed-out; else {username, display, role, accessTokenExp, tokenId} */
+  var refreshInFlight = null; /* the shared in-flight-refresh reference, R9 */
+  var ACCESS_TTL_MS = 45000; /* demo-only TTL so expiry is observable without waiting real minutes */
+
+  var lastSigninAttempt = null;
+  var lastChangepwAttempt = null;
+
+  var ui = {
+    view: 'signin',       /* signin | shell | changepw */
+    signinSub: 'idle',    /* idle | submitting | error-credentials | error-retry | offline-on-load */
+    signinUsername: '',
+    signinReqUserErr: false,
+    signinReqPassErr: false,
+    shellSub: 'default',  /* default | session-expired */
+    changepwSub: 'idle',  /* idle | submitting | error-old | error-new | error-retry | offline-on-submit | success */
+    cpReqOldErr: false,
+    cpReqNewErr: false
+  };
+
+  var scenario = { offline: false, serverError: false, refreshWillFail: false };
+
+  var eventLog = [];
+  function logEvent(msg) {
+    eventLog.unshift('[' + new Date().toLocaleTimeString() + '] ' + msg);
+    if (eventLog.length > 12) eventLog.length = 12;
+    var el = $('demo-log');
+    if (el) el.textContent = eventLog.join('\n');
+  }
+
+  function activateView(name) {
+    ['signin', 'shell', 'changepw'].forEach(function (v) {
+      $('view-' + v).classList.toggle('is-active', v === name);
+    });
+    ui.view = name;
+  }
+
+  /* ============================================================
+     Sign-in
+     ============================================================ */
+  function renderSignin() {
+    var sub = ui.signinSub;
+    var usernameVal = esc(ui.signinUsername || '');
+    var bannerHtml = '';
+    var errorHtml = '';
+    var usernameAttrs = '';
+    var passwordAttrs = '';
+    var submitDisabled = false;
+    var submitLabel = COPY.signin.submit;
+
+    if (sub === 'offline-on-load') {
+      bannerHtml = '<div class="notice" role="status" style="margin-bottom:16px;">' + esc(COPY.signin.offlineBanner) + '</div>';
+      submitDisabled = true;
     }
+    if (sub === 'submitting') {
+      usernameAttrs = ' disabled';
+      passwordAttrs = ' disabled';
+      submitDisabled = true;
+      submitLabel = COPY.signin.submitPending;
+    }
+    if (sub === 'error-credentials') {
+      errorHtml = '<div class="help-err" id="si-pw-err" role="alert">' + esc(COPY.signin.errCredentials) + '</div>';
+    }
+    if (sub === 'error-retry') {
+      bannerHtml = '<div class="panel error-panel panel-pad" role="alert" style="margin-bottom:16px;">' +
+        '<p class="title">Connection problem</p>' +
+        '<p class="body">' + esc(COPY.signin.errRetry) + '</p>' +
+        '<button type="button" class="btn btn-secondary" id="si-retry-btn" onclick="retrySignin()">' + esc(COPY.signin.retryAction) + '</button>' +
+        '</div>';
+    }
+    var reqUserErr = ui.signinReqUserErr ? '<div class="help-err" role="alert">' + esc(COPY.required) + '</div>' : '';
+    var reqPassErr = ui.signinReqPassErr ? '<div class="help-err" role="alert">' + esc(COPY.required) + '</div>' : '';
 
-    function showFrame() {
-      var frame = frameSelect.value;
-      var sections = document.querySelectorAll("[data-frame]");
-      for (var i = 0; i < sections.length; i++) {
-        sections[i].classList.toggle("is-active", sections[i].getAttribute("data-frame") === frame);
+    var html =
+      '<div class="login-wrap">' +
+        '<div class="login-card panel panel-pad">' +
+          '<h1 class="h1" style="text-align:center;margin-bottom:20px;">' + esc(COPY.signin.title) + '</h1>' +
+          bannerHtml +
+          '<form id="signin-form" aria-label="Sign in" novalidate>' +
+            '<div class="field" style="margin-bottom:16px;">' +
+              '<label for="si-username">' + esc(COPY.signin.username) + '</label>' +
+              '<input id="si-username" class="inp' + (ui.signinReqUserErr ? ' err' : '') + '" type="text" value="' + usernameVal + '"' + usernameAttrs + '>' +
+              reqUserErr +
+            '</div>' +
+            '<div class="field" style="margin-bottom:8px;">' +
+              '<label for="si-password">' + esc(COPY.signin.password) + '</label>' +
+              '<input id="si-password" class="inp' + ((sub === 'error-credentials' || ui.signinReqPassErr) ? ' err' : '') + '" type="password" value=""' + passwordAttrs + (sub === 'error-credentials' ? ' aria-describedby="si-pw-err"' : '') + '>' +
+              errorHtml + reqPassErr +
+            '</div>' +
+            '<button type="submit" class="btn btn-primary" id="si-submit" style="width:100%;margin-top:12px;"' + (submitDisabled ? ' disabled aria-disabled="true"' : '') + '>' + esc(submitLabel) + '</button>' +
+            (sub === 'offline-on-load' ? '<div class="help-err" style="color:var(--muted);margin-top:8px;">Requires a network connection</div>' : '') +
+          '</form>' +
+          '<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">' +
+            '<p class="muted" style="font-size:.72rem;font-weight:600;margin:0 0 8px;">Demo accounts (this prototype only — not real credentials)</p>' +
+            demoAccountRows() +
+          '</div>' +
+        '</div>' +
+      '</div>';
+
+    $('view-signin').innerHTML = html;
+    $('signin-form').addEventListener('submit', onSigninSubmit);
+    syncFrameChrome();
+  }
+
+  function demoAccountRows() {
+    return DEMO_USERS.map(function (u) {
+      return '<button type="button" class="btn btn-secondary btn-sm" style="width:100%;justify-content:space-between;margin-bottom:6px;" onclick="quickFill(\'' + u.username + '\')">' +
+        '<span>' + esc(u.display) + ' — ' + esc(COPY.shell.roleLabel[u.role]) + '</span><span class="faint">fill</span></button>';
+    }).join('');
+  }
+
+  function quickFill(username) {
+    var u = DEMO_USERS.filter(function (x) { return x.username === username; })[0];
+    if (!u) return;
+    ui.signinReqUserErr = false;
+    ui.signinReqPassErr = false;
+    ui.signinSub = 'idle';
+    ui.signinUsername = u.username;
+    renderSignin();
+    $('si-password').value = u.password;
+    $('si-username').focus();
+  }
+
+  function onSigninSubmit(e) {
+    e.preventDefault();
+    var username = $('si-username').value.trim();
+    var password = $('si-password').value;
+    ui.signinUsername = username;
+    ui.signinReqUserErr = !username;
+    ui.signinReqPassErr = !password;
+    if (ui.signinReqUserErr || ui.signinReqPassErr) {
+      renderSignin();
+      (ui.signinReqUserErr ? $('si-username') : $('si-password')).focus();
+      return;
+    }
+    lastSigninAttempt = { username: username, password: password };
+    if (scenario.offline) {
+      logEvent('POST /auth/login — network unavailable (simulated offline on submit)');
+      ui.signinSub = 'error-retry';
+      renderSignin();
+      $('si-retry-btn').focus();
+      return;
+    }
+    attemptSignin();
+  }
+
+  function attemptSignin() {
+    ui.signinSub = 'submitting';
+    renderSignin();
+    setTimeout(resolveSignin, 700);
+  }
+
+  function retrySignin() {
+    if (!lastSigninAttempt) return;
+    attemptSignin();
+  }
+
+  function resolveSignin() {
+    if (scenario.serverError) {
+      logEvent('POST /auth/login — 503 (simulated dependency error)');
+      ui.signinSub = 'error-retry';
+      renderSignin();
+      $('si-retry-btn').focus();
+      return;
+    }
+    var username = lastSigninAttempt.username, password = lastSigninAttempt.password;
+    var match = DEMO_USERS.filter(function (u) { return u.username === username; })[0];
+    if (!match || match.password !== password) {
+      logEvent('POST /auth/login — 401 (credential rejected)');
+      ui.signinSub = 'error-credentials';
+      renderSignin();
+      $('si-password').focus();
+      return;
+    }
+    logEvent('POST /auth/login — 200 (session established for ' + match.display + ', role=' + match.role + ')');
+    session = {
+      username: match.username,
+      display: match.display,
+      role: match.role,
+      accessTokenExp: Date.now() + ACCESS_TTL_MS,
+      tokenId: 'tok-' + Math.random().toString(36).slice(2, 8)
+    };
+    lastSigninAttempt = null;
+    ui.shellSub = 'default';
+    activateView('shell');
+    renderShell();
+  }
+
+  /* ============================================================
+     Shell — role-gated rendering (R1, R4, R5) + session diagnostics
+     (R8/R9/R10 demo)
+     ============================================================ */
+  function initialsOf(name) {
+    return name.split(' ').map(function (p) { return p[0]; }).join('').toUpperCase();
+  }
+
+  function shellControlRows(role) {
+    var rows = '<div class="control-row"><span class="label">Search partners</span></div>' +
+               '<div class="control-row"><span class="label">View brokerage / agency / CGA detail</span></div>';
+    if (role === 'editor' || role === 'administrator') {
+      rows += '<div class="control-row"><span class="label">Create / edit brokerage, agency, broker, agent, CGA</span><button type="button" class="btn btn-secondary btn-sm">Edit</button></div>';
+      rows += '<div class="control-row"><span class="label">Create / edit / delete contact activity</span><button type="button" class="btn btn-secondary btn-sm">Edit</button></div>';
+    }
+    if (role === 'administrator') {
+      rows += '<div class="control-row"><span class="label">Manage reference lookups</span><button type="button" class="btn btn-secondary btn-sm">Open</button></div>';
+      rows += '<div class="control-row"><span class="label">Manage user role assignments</span><button type="button" class="btn btn-secondary btn-sm">Open</button></div>';
+    } else if (role === 'editor') {
+      /* Administrator-only entry point, advertised to Editor as visible-
+         and-disabled (states.md's shell-disabled-control row). Note: no
+         native `disabled` attribute — a11y.md requires this control stay
+         reachable by Tab so its caption can be discovered; aria-disabled
+         plus a no-op keeps it inert without removing it from tab order. */
+      rows += '<div class="control-row" id="rl-row">' +
+        '<div style="flex:1;"><span class="label">Manage reference lookups</span>' +
+        '<div class="caption" id="rl-caption">' + esc(COPY.shell.disabledCaption) + '</div></div>' +
+        '<button type="button" class="btn" aria-disabled="true" aria-describedby="rl-caption" onclick="return false;">Open</button>' +
+        '</div>';
+    }
+    return rows;
+  }
+
+  function demoDiagnosticsPanel() {
+    var secondsLeft = Math.max(0, Math.round((session.accessTokenExp - Date.now()) / 1000));
+    return '<div class="panel panel-pad" style="margin-top:24px;">' +
+      '<h3 style="margin-bottom:8px;">Session diagnostics (demo — not part of the design)</h3>' +
+      '<p class="muted" style="font-size:.8rem;margin:0 0 12px;">Simulates R8/R9/R10\'s silent-refresh-and-coalesce behaviour, since there is no real UNIT-CMS-0001 to call. Access token expires in ~<span id="token-countdown">' + secondsLeft + 's</span> (demo TTL); a refresh is only ever triggered by a simulated 401, never by this countdown alone, per design.md\'s Flows.</p>' +
+      '<div class="row wrap" style="gap:8px;margin-bottom:12px;">' +
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="openChangePassword()">Change password</button>' +
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="expireAccessTokenNow()">Expire access token now</button>' +
+        '<button type="button" class="btn btn-secondary btn-sm" onclick="simulateConcurrentCalls()">Simulate 2 concurrent API calls</button>' +
+        '<label class="row" style="gap:6px;font-size:.8rem;"><input type="checkbox" id="force-refresh-fail"' + (scenario.refreshWillFail ? ' checked' : '') + ' onchange="scenario.refreshWillFail=this.checked;logEvent(\'Force-next-refresh-to-fail set to \'+this.checked)"> Force next refresh to fail</label>' +
+      '</div>' +
+      '<pre id="demo-log" class="demo-log">' + esc(eventLog.join('\n')) + '</pre>' +
+    '</div>';
+  }
+
+  function renderShell() {
+    if (!session) { activateView('signin'); renderSignin(); return; }
+    if (ui.shellSub === 'session-expired') { renderShellSessionExpired(); return; }
+
+    var role = session.role;
+    var html =
+      '<div class="app-header" style="margin:-24px -32px 16px;padding:0 32px;">' +
+        '<div class="brand-title">Partner Directory</div>' +
+        '<div class="spacer row" style="gap:12px;">' +
+          '<span class="badge badge-off"><span class="dot"></span>' + esc(COPY.shell.roleLabel[role]) + '</span>' +
+          '<div class="avatar" aria-hidden="true">' + esc(initialsOf(session.display)) + '</div>' +
+          '<button type="button" class="btn btn-ghost btn-sm" id="shell-signout" onclick="onSignout()">' + esc(COPY.shell.signout) + '</button>' +
+        '</div>' +
+      '</div>' +
+      '<p class="text-2" style="margin:0 0 8px;">Signed in as ' + esc(session.display) + '. ' + esc(COPY.shell.roleLabel[role]) + ' role.</p>' +
+      '<div class="control-list">' + shellControlRows(role) + '</div>' +
+      demoDiagnosticsPanel();
+
+    $('view-shell').innerHTML = html;
+    syncFrameChrome();
+  }
+
+  function renderShellSessionExpired() {
+    var role = session ? session.role : 'editor';
+    var html =
+      '<div class="app-header" style="margin:-24px -32px 16px;padding:0 32px;">' +
+        '<div class="brand-title">Partner Directory</div>' +
+        '<div class="spacer row" style="gap:12px;">' +
+          '<span class="badge badge-off"><span class="dot"></span>' + esc(COPY.shell.roleLabel[role]) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="dialog" role="alertdialog" aria-labelledby="se-heading" style="max-width:420px;margin-top:16px;">' +
+        '<div class="dialog-head"><h3 id="se-heading" tabindex="-1">' + esc(COPY.shell.sessionExpiredHeading) + '</h3></div>' +
+        '<div class="dialog-body"><p style="margin:0;">' + esc(COPY.shell.sessionExpiredBody) + '</p></div>' +
+        '<div class="dialog-foot"><button type="button" class="btn btn-primary" id="se-action" onclick="acknowledgeSessionExpired()">' + esc(COPY.shell.sessionExpiredAction) + '</button></div>' +
+      '</div>';
+    $('view-shell').innerHTML = html;
+    $('se-heading').focus();
+    syncFrameChrome();
+  }
+
+  function acknowledgeSessionExpired() {
+    logEvent('Session-expired banner acknowledged — navigating to sign-in');
+    session = null;
+    ui.shellSub = 'default';
+    ui.signinSub = 'idle';
+    ui.signinUsername = '';
+    activateView('signin');
+    renderSignin();
+    $('si-username').focus();
+  }
+
+  /* Simple two-element focus trap while the session-expired alertdialog
+     is up — a11y.md: "captures focus until acknowledged". */
+  document.addEventListener('keydown', function (e) {
+    if (ui.view === 'shell' && ui.shellSub === 'session-expired' && e.key === 'Tab') {
+      e.preventDefault();
+      var heading = $('se-heading'), action = $('se-action');
+      if (!heading || !action) return;
+      if (document.activeElement === action) heading.focus(); else action.focus();
+    }
+  });
+
+  function onSignout() {
+    var timedOut = Math.random() < 0.15;
+    logEvent('POST /auth/logout — simulated ' + (timedOut ? 'timeout (client session still cleared, R6)' : '200 OK'));
+    session = null;
+    refreshInFlight = null;
+    ui.shellSub = 'default';
+    ui.signinSub = 'idle';
+    ui.signinUsername = '';
+    activateView('signin');
+    renderSignin();
+    $('si-username').focus();
+  }
+
+  function expireAccessTokenNow() {
+    if (!session) return;
+    session.accessTokenExp = Date.now() - 1;
+    logEvent('Access token marked expired (demo)');
+    var el = $('token-countdown');
+    if (el) el.textContent = '0s';
+  }
+
+  function performRefresh(cb) {
+    if (refreshInFlight) { refreshInFlight.push(cb); return; }
+    refreshInFlight = [cb];
+    logEvent('POST /auth/refresh — starting (registers as the in-flight refresh, R9)');
+    setTimeout(function () {
+      var ok = !scenario.refreshWillFail;
+      var callbacks = refreshInFlight;
+      refreshInFlight = null;
+      if (ok) {
+        session.accessTokenExp = Date.now() + ACCESS_TTL_MS;
+        session.tokenId = 'tok-' + Math.random().toString(36).slice(2, 8);
+        logEvent('POST /auth/refresh — 200 (new token pair stored)');
+      } else {
+        logEvent('POST /auth/refresh — 401 (refresh token invalid/expired/revoked) — clearing session (R10)');
+        onSessionExpiredMidflow();
       }
-      updateLabel();
+      callbacks.forEach(function (fn) { fn(ok); });
+    }, 500);
+  }
+
+  function onSessionExpiredMidflow() {
+    ui.shellSub = 'session-expired';
+    if (ui.view === 'shell') renderShell();
+  }
+
+  function simulateConcurrentCalls() {
+    if (!session) return;
+    logEvent('Call A: attaching access token, sending…');
+    logEvent('Call B: attaching access token, sending…');
+    var expired = Date.now() >= session.accessTokenExp;
+    if (!expired) {
+      logEvent('Call A: 200 OK');
+      logEvent('Call B: 200 OK');
+      renderShell();
+      return;
+    }
+    logEvent('Call A: 401 — no in-flight refresh yet, starting one');
+    logEvent('Call B: 401 — refresh already in flight, joining it instead of starting a second one (R9)');
+    performRefresh(function () { /* Call A's own callback */ });
+    performRefresh(function () {
+      /* Call B's callback — fires after the same shared refresh resolves */
+      if (session) {
+        logEvent('Call A retried once with the new token → 200');
+        logEvent('Call B retried once with the same new token → 200');
+      } else {
+        logEvent('Call A and Call B both abandon their retry (R10)');
+      }
+      if (ui.view === 'shell') renderShell();
+    });
+  }
+
+  /* Demo-only countdown so the "expires in Ns" text stays live without a
+     full re-render (which would otherwise steal focus from whatever the
+     reviewer is doing in the shell). */
+  setInterval(function () {
+    if (ui.view !== 'shell' || !session || ui.shellSub === 'session-expired') return;
+    var el = $('token-countdown');
+    if (!el) return;
+    var secs = Math.max(0, Math.round((session.accessTokenExp - Date.now()) / 1000));
+    el.textContent = secs + 's';
+  }, 1000);
+
+  /* ============================================================
+     Change password (R7)
+     ============================================================ */
+  function openChangePassword() {
+    ui.changepwSub = 'idle';
+    ui.cpReqOldErr = false;
+    ui.cpReqNewErr = false;
+    activateView('changepw');
+    renderChangepw();
+    $('cp-old').focus();
+  }
+
+  function backToShell() {
+    activateView('shell');
+    renderShell();
+  }
+
+  function renderChangepw() {
+    if (!session) { activateView('signin'); renderSignin(); return; }
+    var sub = ui.changepwSub;
+
+    if (sub === 'success') {
+      $('view-changepw').innerHTML =
+        '<div class="panel panel-pad" style="max-width:384px;">' +
+          '<h1 class="h1" id="cp-success-heading" tabindex="-1" style="font-size:1.25rem;">' + esc(COPY.changepw.success) + '</h1>' +
+          '<p class="text-2" style="margin:8px 0 0;">You remain signed in.</p>' +
+          '<button type="button" class="btn btn-secondary btn-sm" style="margin-top:16px;" onclick="backToShell()">Back to app</button>' +
+        '</div>';
+      $('cp-success-heading').focus();
+      syncFrameChrome();
+      return;
     }
 
-    frameSelect.addEventListener("change", showFrame);
+    var bannerHtml = '', oldErr = '', newErr = '', oldAttrs = '', newAttrs = '', submitDisabled = false;
+    var submitLabel = COPY.changepw.submit;
 
-    for (var t = 0; t < themeButtons.length; t++) {
-      themeButtons[t].addEventListener("click", function () {
-        var theme = this.getAttribute("data-theme-btn");
-        document.documentElement.setAttribute("data-theme", theme);
-        for (var j = 0; j < themeButtons.length; j++) {
-          themeButtons[j].classList.toggle("active", themeButtons[j] === this);
-        }
-        updateLabel();
-      });
+    if (sub === 'submitting') { oldAttrs = ' disabled'; newAttrs = ' disabled'; submitDisabled = true; submitLabel = COPY.changepw.submitPending; }
+    if (sub === 'error-retry') {
+      bannerHtml = '<div class="panel error-panel panel-pad" role="alert" style="max-width:384px;margin-bottom:16px;">' +
+        '<p class="title">Connection problem</p><p class="body">' + esc(COPY.changepw.errRetry) + '</p>' +
+        '<button type="button" class="btn btn-secondary" id="cp-retry-btn" onclick="retryChangepw()">' + esc(COPY.changepw.retryAction) + '</button></div>';
     }
-
-    for (var w = 0; w < widthButtons.length; w++) {
-      widthButtons[w].addEventListener("click", function () {
-        var width = this.getAttribute("data-width-btn");
-        canvas.setAttribute("data-width", width);
-        for (var k = 0; k < widthButtons.length; k++) {
-          widthButtons[k].classList.toggle("active", widthButtons[k] === this);
-        }
-        updateLabel();
-      });
+    if (sub === 'offline-on-submit') {
+      bannerHtml = '<div class="notice" role="status" style="max-width:384px;margin-bottom:16px;">' + esc(COPY.changepw.offlineOnSubmit) + '</div>';
     }
+    if (sub === 'error-old') { oldErr = '<div class="help-err" id="cp-old-err" role="alert">' + esc(COPY.changepw.errOld) + '</div>'; }
+    if (sub === 'error-new') { newErr = '<div class="help-err" id="cp-new-err" role="alert">' + esc(COPY.changepw.errNew) + '</div>'; }
+    var reqOldErr = ui.cpReqOldErr ? '<div class="help-err" role="alert">' + esc(COPY.required) + '</div>' : '';
+    var reqNewErr = ui.cpReqNewErr ? '<div class="help-err" role="alert">' + esc(COPY.required) + '</div>' : '';
 
-    updateLabel();
+    var html =
+      '<h1 class="h1" style="margin-bottom:20px;">' + esc(COPY.changepw.title) + '</h1>' +
+      bannerHtml +
+      '<div class="panel panel-pad" style="max-width:384px;">' +
+        '<form id="cp-form" aria-label="Change password" novalidate>' +
+          '<div class="field" style="margin-bottom:8px;">' +
+            '<label for="cp-old">' + esc(COPY.changepw.old) + '</label>' +
+            '<input id="cp-old" class="inp' + ((sub === 'error-old' || ui.cpReqOldErr) ? ' err' : '') + '" type="password" value=""' + oldAttrs + (sub === 'error-old' ? ' aria-describedby="cp-old-err"' : '') + '>' +
+            oldErr + reqOldErr +
+          '</div>' +
+          '<div class="field" style="margin:16px 0 8px;">' +
+            '<label for="cp-new">' + esc(COPY.changepw.new) + '</label>' +
+            '<input id="cp-new" class="inp' + ((sub === 'error-new' || ui.cpReqNewErr) ? ' err' : '') + '" type="password" value=""' + newAttrs + (sub === 'error-new' ? ' aria-describedby="cp-new-err"' : '') + '>' +
+            newErr + reqNewErr +
+          '</div>' +
+          '<button type="submit" class="btn btn-primary" id="cp-submit" style="width:100%;margin-top:12px;"' + (submitDisabled ? ' disabled aria-disabled="true"' : '') + '>' + esc(submitLabel) + '</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px;" onclick="backToShell()">Cancel</button>' +
+        '</form>' +
+      '</div>';
+
+    $('view-changepw').innerHTML = html;
+    $('cp-form').addEventListener('submit', onChangepwSubmit);
+    syncFrameChrome();
+  }
+
+  function onChangepwSubmit(e) {
+    e.preventDefault();
+    var oldPw = $('cp-old').value;
+    var newPw = $('cp-new').value;
+    ui.cpReqOldErr = !oldPw;
+    ui.cpReqNewErr = !newPw;
+    if (ui.cpReqOldErr || ui.cpReqNewErr) {
+      renderChangepw();
+      (ui.cpReqOldErr ? $('cp-old') : $('cp-new')).focus();
+      return;
+    }
+    lastChangepwAttempt = { oldPw: oldPw, newPw: newPw };
+    if (scenario.offline) {
+      logEvent('POST /auth/change-password — network unavailable (simulated offline)');
+      ui.changepwSub = 'offline-on-submit';
+      renderChangepw();
+      $('cp-old').focus();
+      return;
+    }
+    ui.changepwSub = 'submitting';
+    renderChangepw();
+    setTimeout(resolveChangepw, 700);
+  }
+
+  function retryChangepw() {
+    if (!lastChangepwAttempt) return;
+    ui.changepwSub = 'submitting';
+    renderChangepw();
+    setTimeout(resolveChangepw, 700);
+  }
+
+  function resolveChangepw() {
+    if (scenario.serverError) {
+      logEvent('POST /auth/change-password — 503 (simulated dependency error)');
+      ui.changepwSub = 'error-retry';
+      renderChangepw();
+      $('cp-retry-btn').focus();
+      return;
+    }
+    var oldPw = lastChangepwAttempt.oldPw, newPw = lastChangepwAttempt.newPw;
+    var demoUser = DEMO_USERS.filter(function (u) { return u.username === session.username; })[0];
+    if (!demoUser || oldPw !== demoUser.password) {
+      logEvent('POST /auth/change-password — 401 (current password incorrect)');
+      ui.changepwSub = 'error-old';
+      renderChangepw();
+      $('cp-old').focus();
+      return;
+    }
+    /* Minimum password shape — a client-side convenience only
+       (design.md's cross-cutting § validation); the server's own
+       response is always authoritative. 8 characters is this
+       mockup's stated assumption, not a requirement. */
+    if (newPw.length < 8) {
+      logEvent('POST /auth/change-password — 400 (new password too weak)');
+      ui.changepwSub = 'error-new';
+      renderChangepw();
+      $('cp-new').focus();
+      return;
+    }
+    demoUser.password = newPw;
+    logEvent('POST /auth/change-password — 204 (password updated)');
+    lastChangepwAttempt = null;
+    ui.changepwSub = 'success';
+    renderChangepw();
+  }
+
+  /* ============================================================
+     Frame dropdown — jump straight to any documented frame. Sets
+     up the minimal state each frame needs and calls the same
+     render functions real interaction uses.
+     ============================================================ */
+  function mountShellAs(role, skipRender) {
+    var u = DEMO_USERS.filter(function (x) { return x.role === role; })[0];
+    session = {
+      username: u.username, display: u.display, role: role,
+      accessTokenExp: Date.now() + ACCESS_TTL_MS, tokenId: 'tok-demo'
+    };
+    ui.shellSub = 'default';
+    activateView('shell');
+    if (!skipRender) renderShell();
+  }
+
+  function presetChangepw(sub) {
+    mountShellAs('editor', true);
+    ui.changepwSub = sub;
+    lastChangepwAttempt = { oldPw: 'Editor#26', newPw: 'NewPass#27' };
+    activateView('changepw');
+    renderChangepw();
+  }
+
+  var FRAME_JUMPS = {
+    'sign-in-idle': function () {
+      session = null; lastSigninAttempt = null;
+      ui.signinSub = 'idle'; ui.signinUsername = '';
+      ui.signinReqUserErr = false; ui.signinReqPassErr = false;
+      activateView('signin'); renderSignin(); $('si-username').focus();
+    },
+    'sign-in-submitting': function () {
+      session = null;
+      ui.signinUsername = 'dsmith'; lastSigninAttempt = { username: 'dsmith', password: 'Editor#26' };
+      ui.signinSub = 'submitting';
+      activateView('signin'); renderSignin();
+    },
+    'sign-in-error-credentials': function () {
+      session = null; ui.signinUsername = 'dsmith'; ui.signinSub = 'error-credentials';
+      activateView('signin'); renderSignin(); $('si-password').focus();
+    },
+    'sign-in-error-retry': function () {
+      session = null;
+      ui.signinUsername = 'dsmith'; lastSigninAttempt = { username: 'dsmith', password: 'Editor#26' };
+      ui.signinSub = 'error-retry';
+      activateView('signin'); renderSignin(); $('si-retry-btn').focus();
+    },
+    'sign-in-offline-on-load': function () {
+      session = null; ui.signinUsername = ''; ui.signinSub = 'offline-on-load';
+      activateView('signin'); renderSignin();
+    },
+    'shell-viewer': function () { mountShellAs('viewer'); },
+    'shell-editor': function () { mountShellAs('editor'); },
+    'shell-administrator': function () { mountShellAs('administrator'); },
+    'shell-disabled-control': function () {
+      mountShellAs('editor');
+      var row = $('rl-row');
+      if (row && row.scrollIntoView) row.scrollIntoView({ block: 'center' });
+    },
+    'shell-session-expired-midflow': function () {
+      mountShellAs('editor', true);
+      ui.shellSub = 'session-expired';
+      renderShell();
+    },
+    'change-password-idle': function () { presetChangepw('idle'); $('cp-old').focus(); },
+    'change-password-submitting': function () { presetChangepw('submitting'); },
+    'change-password-error-old': function () { presetChangepw('error-old'); },
+    'change-password-error-new': function () { presetChangepw('error-new'); },
+    'change-password-error-retry': function () { presetChangepw('error-retry'); },
+    'change-password-offline-on-submit': function () { presetChangepw('offline-on-submit'); },
+    'change-password-success': function () { presetChangepw('success'); }
+  };
+
+  function jumpToFrame(name) {
+    var fn = FRAME_JUMPS[name];
+    if (fn) fn();
+  }
+
+  /* ---- frame label / dropdown stay in sync with real state, whichever
+     way the current view was reached ---- */
+  var SIGNIN_FRAME = {
+    idle: 'sign-in-idle', submitting: 'sign-in-submitting',
+    'error-credentials': 'sign-in-error-credentials', 'error-retry': 'sign-in-error-retry',
+    'offline-on-load': 'sign-in-offline-on-load'
+  };
+  var CHANGEPW_FRAME = {
+    idle: 'change-password-idle', submitting: 'change-password-submitting',
+    'error-old': 'change-password-error-old', 'error-new': 'change-password-error-new',
+    'error-retry': 'change-password-error-retry', 'offline-on-submit': 'change-password-offline-on-submit',
+    success: 'change-password-success'
+  };
+
+  function currentFrameName() {
+    if (ui.view === 'signin') return SIGNIN_FRAME[ui.signinSub] || 'sign-in-idle';
+    if (ui.view === 'changepw') return CHANGEPW_FRAME[ui.changepwSub] || 'change-password-idle';
+    if (ui.view === 'shell') {
+      if (ui.shellSub === 'session-expired') return 'shell-session-expired-midflow';
+      if (session && session.role === 'administrator') return 'shell-administrator';
+      if (session && session.role === 'editor') return 'shell-editor';
+      return 'shell-viewer';
+    }
+    return 'sign-in-idle';
+  }
+
+  function syncFrameChrome() {
+    var name = currentFrameName();
+    var sel = $('frame-select');
+    if (sel && sel.value !== name) sel.value = name;
+    updateFrameLabel(name);
+  }
+
+  function updateFrameLabel(name) {
+    var width = $('canvas').getAttribute('data-width');
+    var widthPx = { mobile: 360, tablet: 768, desktop: 1440 }[width];
+    var theme = document.documentElement.getAttribute('data-theme');
+    $('frame-label').textContent = 'UNIT-CMS-0002 · ' + name + ' · ' + widthPx + 'px · ' + theme;
+  }
+
+  /* ============================================================
+     Chrome wiring — frame dropdown, theme, width, scenario toggles
+     ============================================================ */
+  $('frame-select').addEventListener('change', function () { jumpToFrame(this.value); });
+
+  var themeButtons = document.querySelectorAll('[data-theme-btn]');
+  for (var t = 0; t < themeButtons.length; t++) {
+    themeButtons[t].addEventListener('click', function () {
+      var theme = this.getAttribute('data-theme-btn');
+      document.documentElement.setAttribute('data-theme', theme);
+      for (var j = 0; j < themeButtons.length; j++) themeButtons[j].classList.toggle('active', themeButtons[j] === this);
+      updateFrameLabel(currentFrameName());
+    });
+  }
+
+  var widthButtons = document.querySelectorAll('[data-width-btn]');
+  for (var w = 0; w < widthButtons.length; w++) {
+    widthButtons[w].addEventListener('click', function () {
+      var width = this.getAttribute('data-width-btn');
+      $('canvas').setAttribute('data-width', width);
+      for (var k = 0; k < widthButtons.length; k++) widthButtons[k].classList.toggle('active', widthButtons[k] === this);
+      updateFrameLabel(currentFrameName());
+    });
+  }
+
+  $('scn-offline').addEventListener('change', function () {
+    scenario.offline = this.checked;
+    logEvent('Scenario: simulate-offline set to ' + this.checked);
+    if (scenario.offline && ui.view === 'signin' && ui.signinSub === 'idle') {
+      ui.signinSub = 'offline-on-load';
+      renderSignin();
+    } else if (!scenario.offline && ui.view === 'signin' && ui.signinSub === 'offline-on-load') {
+      ui.signinSub = 'idle';
+      renderSignin();
+      $('si-username').focus();
+    }
+  });
+  $('scn-servererror').addEventListener('change', function () {
+    scenario.serverError = this.checked;
+    logEvent('Scenario: force-next-submit-to-fail set to ' + this.checked);
+  });
+
+  /* ---- initial mount ---- */
+  activateView('signin');
+  renderSignin();
+  $('si-username').focus();
   </script>
 
 </body>
