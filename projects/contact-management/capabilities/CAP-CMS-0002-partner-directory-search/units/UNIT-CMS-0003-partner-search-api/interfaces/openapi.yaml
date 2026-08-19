@@ -1,0 +1,447 @@
+openapi: 3.1.0
+info:
+  title: Partner Search API
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0003 — the six-mode partner search contract (XD-0001 of
+    CAP-CMS-0002's capability-design) plus the assigned-underwriter lookup.
+    Read-only against UNIT-CMS-0005's brokerage/broker/agency/agent/CGA data;
+    this unit owns no persistent entity of its own. See
+    projects/contact-management/capabilities/CAP-CMS-0002-partner-directory-search/units/UNIT-CMS-0003-partner-search-api/requirements.md
+    and design.md.
+
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/search:
+    get:
+      operationId: searchPartners
+      summary: Search brokerages, brokers, agencies, agents, or CGAs by mode
+      description: >
+        One endpoint, six mode-selected predicates (XD-0001). Satisfies R1, R2,
+        R3, R4, R5, R6, R7, R9, R10, R11, R12, R13, R14, R15.
+      security:
+        - bearerAuth: [ "cms:partners.search" ]
+      parameters:
+        - name: mode
+          in: query
+          required: true
+          description: Satisfies R1-R6, R10, R11. Closed six-value enum.
+          schema:
+            $ref: '#/components/schemas/SearchMode'
+        - name: term
+          in: query
+          required: false
+          description: >
+            Required for mode=brokerage, broker, agency, cga (R10); ignored for
+            mode=state-broker, state-agent (R11). Case-insensitive substring match.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: state
+          in: query
+          required: false
+          description: >
+            Required for mode=state-broker, state-agent (R11); ignored otherwise.
+            Two-letter US state/territory code.
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+        - name: uw
+          in: query
+          required: false
+          description: >
+            Optional exact-match filter on the assigned underwriter, applicable to
+            mode=brokerage only (R9). Value must match one returned by
+            GET /api/v1/lookups/assigned-uws.
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - name: page
+          in: query
+          required: false
+          description: 1-based page number (capability-design Shared conventions — page/size, API-1).
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          required: false
+          description: Page size. Default 25, maximum 100 (10-platform.md pagination floor).
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 25
+      responses:
+        '200':
+          description: >
+            Search executed successfully (satisfies R1-R7, R12, R13). An empty
+            match set is a valid, successful answer with items:[] and total:0.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+              examples:
+                brokerageMatches:
+                  summary: mode=brokerage with matches
+                  value:
+                    items:
+                      - kind: brokerage
+                        id: "018f8f2e-6b7a-7c3d-9a1e-2f6b8c9d0e11"
+                        brokerageName: "Acme Insurance Brokerage"
+                        addressCity: "Columbus"
+                        addressState: "OH"
+                        addressZip: "43215"
+                        assignedUw: "J. Rivera"
+                        state: "OH"
+                    total: 1
+                    page: 1
+                    size: 25
+                brokerEmpty:
+                  summary: mode=broker with no matches
+                  value:
+                    items: []
+                    total: 0
+                    page: 1
+                    size: 25
+        '400':
+          description: >
+            Missing/invalid mode, missing required term (R10), missing required
+            state (R11), or malformed state code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                termRequired:
+                  value:
+                    error:
+                      code: term_required
+                      message: "term is required for mode=brokerage"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+                stateRequired:
+                  value:
+                    error:
+                      code: state_required
+                      message: "state is required for mode=state-broker"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+                invalidMode:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "mode must be one of: brokerage, broker, state-broker, agency, cga, state-agent"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    error:
+                      code: unauthenticated
+                      message: "Authentication required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    error:
+                      code: rate_limited
+                      message: "Too many requests"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+  /api/v1/lookups/assigned-uws:
+    get:
+      operationId: listAssignedUnderwriters
+      summary: Distinct underwriters currently assigned to at least one brokerage
+      description: >
+        BAssignedUW is free text, not a managed lookup (capability.md, intake Q7) —
+        this is a distinct-values read. Satisfies R8.
+      security:
+        - bearerAuth: [ "cms:partners.search" ]
+      responses:
+        '200':
+          description: List returned successfully; an empty list is valid (R8).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignedUwListResponse'
+              examples:
+                withValues:
+                  value:
+                    items:
+                      - uw: "J. Rivera"
+                      - uw: "T. Okafor"
+                empty:
+                  summary: No brokerage currently has an assigned underwriter
+                  value:
+                    items: []
+        '401':
+          description: Missing or invalid bearer token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    error:
+                      code: unauthenticated
+                      message: "Authentication required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    error:
+                      code: rate_limited
+                      message: "Too many requests"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Issuer, flow and token endpoint owned by UNIT-CMS-0001; scope
+        cms:partners.search required for both operations in this unit.
+
+  schemas:
+    SearchMode:
+      type: string
+      enum: [brokerage, broker, state-broker, agency, cga, state-agent]
+      description: Satisfies R1-R6 — closed enum, no other value accepted.
+
+    BrokerageResultItem:
+      type: object
+      additionalProperties: false
+      required: [kind, id, brokerageName, addressCity, addressState, addressZip, assignedUw, state]
+      description: Result shape for mode=brokerage and mode=state-broker (R1, R3).
+      properties:
+        kind:
+          type: string
+          enum: [brokerage]
+        id:
+          type: string
+          format: uuid
+          description: Opens Brokerage Detail (R7). Not personal data.
+        brokerageName:
+          type: string
+          description: Personal/business name, not special category.
+        addressCity:
+          type: string
+        addressState:
+          type: string
+        addressZip:
+          type: string
+        assignedUw:
+          type: string
+          nullable: true
+          description: Free text (capability.md, intake Q7); may be null if unassigned.
+        state:
+          type: string
+          description: Brokerage's own state, distinct from addressState in legacy data; retained as its own field per Appendix A's result columns.
+
+    BrokerResultItem:
+      type: object
+      additionalProperties: false
+      required: [kind, brokerageId, firstName, lastName, brokerageName, titleType, email, disabled]
+      description: Result shape for mode=broker (R2).
+      properties:
+        kind:
+          type: string
+          enum: [broker]
+        brokerageId:
+          type: string
+          format: uuid
+          description: Opens Brokerage Detail of that broker's brokerage (R7). Not personal data.
+        firstName:
+          type: string
+          description: Personal data (R27).
+        lastName:
+          type: string
+          description: Personal data (R27).
+        brokerageName:
+          type: string
+        titleType:
+          type: string
+        email:
+          type: string
+          format: email
+          description: "Personal data (R27); rendered by the caller as a mailto: link (FR-SEARCH-5) — this contract returns the raw address only."
+        disabled:
+          type: boolean
+          description: Closed boolean status (R14) — never a derived string.
+
+    AgencyResultItem:
+      type: object
+      additionalProperties: false
+      required: [kind, id, agencyName, address, agentName]
+      description: Result shape for mode=agency and mode=state-agent (R4, R6).
+      properties:
+        kind:
+          type: string
+          enum: [agency]
+        id:
+          type: string
+          format: uuid
+          description: Opens Agency Detail (R7). Not personal data.
+        agencyName:
+          type: string
+        address:
+          type: string
+          description: Combined address text, matching Appendix A's "agency + address text" backing semantics.
+        agentName:
+          type: string
+          nullable: true
+          description: Personal data (R27); null if the agency has no named agent on file.
+
+    CgaResultItem:
+      type: object
+      additionalProperties: false
+      required: [kind, id, cgaAgentName, address]
+      description: Result shape for mode=cga (R5).
+      properties:
+        kind:
+          type: string
+          enum: [cga]
+        id:
+          type: string
+          format: uuid
+          description: Opens CGA Detail (R7). Not personal data.
+        cgaAgentName:
+          type: string
+          description: Personal data (R27).
+        address:
+          type: string
+
+    SearchResultItem:
+      oneOf:
+        - $ref: '#/components/schemas/BrokerageResultItem'
+        - $ref: '#/components/schemas/BrokerResultItem'
+        - $ref: '#/components/schemas/AgencyResultItem'
+        - $ref: '#/components/schemas/CgaResultItem'
+      discriminator:
+        propertyName: kind
+        mapping:
+          brokerage: '#/components/schemas/BrokerageResultItem'
+          broker: '#/components/schemas/BrokerResultItem'
+          agency: '#/components/schemas/AgencyResultItem'
+          cga: '#/components/schemas/CgaResultItem'
+      description: >
+        The item shape is uniform within one response (all items match the
+        requested mode's shape); the union exists so one response schema serves
+        all six modes rather than six near-identical response schemas.
+
+    SearchResponse:
+      type: object
+      additionalProperties: false
+      required: [items, total, page, size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultItem'
+          description: Satisfies R12, R13 — total/page metadata always present, including on an empty result.
+        total:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Total matching records across all pages (R12).
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+
+    AssignedUwListResponse:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [uw]
+            properties:
+              uw:
+                type: string
+                description: Free-text underwriter value (capability.md, intake Q7).
+          description: Unpaginated — bounded by the small-scale constraint (low hundreds of brokerages, capability.md Constraints).
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, trace_id]
+          properties:
+            code:
+              type: string
+              enum: [term_required, state_required, invalid_request, unauthenticated, rate_limited]
+              description: Stable snake_case, part of the contract (10-platform.md Errors).
+            message:
+              type: string
+              description: Human-readable; never personal data.
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              description: ULID.
