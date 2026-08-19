@@ -269,6 +269,50 @@
 
   section[data-frame] { display: none; }
   section[data-frame].current { display: block; }
+
+  /* ---- real tab panels (added for interactivity — not part of the reference's static frames) ---- */
+  [data-panel] { display: none; }
+  [data-panel].panel-active { display: block; }
+
+  /* ---- toast (success confirmation) ---- */
+  #toastHost {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--status-active);
+    color: #fff;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+  }
+  .toast.toast-error { background: var(--danger); }
+
+  /* ---- demo-only controls: clearly separated from the spec'd UI ---- */
+  .demo-controls {
+    background: #222;
+    color: #ddd;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .demo-controls label { display: flex; align-items: center; gap: 4px; }
+
+  .live-dialog-overlay { display: none; }
+  .live-dialog-overlay.dialog-open { display: block; }
+
+  .cga-actions { display: flex; gap: 8px; }
 </style>
 </head>
 <body>
@@ -312,95 +356,140 @@
   </label>
 </div>
 
+<div class="demo-controls">
+  <span>DEMO ONLY (not part of the spec'd UI) —</span>
+  <label><input type="checkbox" id="simulateSaveError"> simulate next save as 409 conflict</label>
+  <label><input type="checkbox" id="simulateLoadError"> simulate next load as failed</label>
+  <label><input type="checkbox" id="simulateOffline"> simulate offline</label>
+  <span id="demoNote"></span>
+</div>
+
+<div id="toastHost"></div>
+
 <div class="canvas-outer">
 <div class="canvas" id="canvas" data-width="1440">
 
   <div class="app-header"><span class="text-h2">Partner Records</span></div>
 
   <!-- ============ 1. brokerage-detail-populated ============ -->
-  <section data-frame="brokerage-detail-populated" class="current">
-    <div class="tabs">
-      <button class="active">Details</button>
-      <button>Brokers</button>
-      <button>Activity</button>
-      <button>Policies</button>
+  <section data-frame="brokerage-detail-populated" class="current" id="brokerageDetailFrame">
+    <div class="tabs" id="brokerageTabs">
+      <button class="active" data-tab="details">Details</button>
+      <button data-tab="brokers">Brokers</button>
+      <button data-tab="activity">Activity</button>
+      <button data-tab="policies">Policies</button>
     </div>
-    <div class="content stack-24">
-      <h1 class="text-h1">Northgate Insurance Partners</h1>
-      <div class="text-caption" style="color:var(--text-secondary)">Account code AC-88214 (server-assigned, read-only)</div>
-      <div class="row">
-        <div class="field"><label>Brokerage name</label><input value="Northgate Insurance Partners"></div>
-        <div class="field"><label>Status</label><select><option>Active</option></select></div>
-        <div class="check"><input type="checkbox"><label>Mark as history (disable / archive)</label></div>
+    <div class="content">
+      <div id="brokerageLoadingPanel" class="stack-16" style="display:none">
+        <div class="skeleton" style="width:40%"></div>
+        <div class="skeleton" style="width:90%"></div>
+        <div class="skeleton" style="width:80%"></div>
       </div>
-      <div class="row">
-        <div class="field"><label>Address line 1</label><input value="400 W Broad St"></div>
-        <div class="field"><label>Address line 2</label><input value=""></div>
-        <div class="field"><label>City</label><input value="Columbus"></div>
+      <div id="brokerageErrorPanel" class="error-block" role="alert" style="display:none">
+        <div class="title" id="brokerageErrorTitle">Unable to load</div>
+        <div class="body" id="brokerageErrorBody">Something went wrong loading this. Try again.</div>
+        <button class="btn btn-secondary" id="brokerageErrorRetry">Retry</button>
       </div>
-      <div class="row">
-        <div class="field"><label>State</label><input value="OH"></div>
-        <div class="field"><label>Zip</label><input value="43215"></div>
-        <div class="field"><label>Assigned underwriter</label><input value="Marcus Reed"></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Phone</label><input value="(614) 555-0142"></div>
-        <div class="field"><label>Fax</label><input value="(614) 555-0199"></div>
-        <div class="field"><label>Tax ID (FEIN)</label><input value="31-1234567"></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Contract received</label><input value="2026-03-01"></div>
-      </div>
-      <div class="row">
-        <button class="btn btn-primary">Save changes</button>
-        <button class="btn btn-secondary">Accounting address</button>
-        <button class="btn btn-secondary">Back to Directory</button>
+      <div id="brokerageLoadedRegion">
+      <div id="brokerageConflictBanner" class="error-block" role="alert" style="display:none;margin-bottom:16px">
+        <div class="title">This record changed</div>
+        <div class="body">Someone else saved changes to this record after you loaded it. Your edits are still here — reload to see the latest version, or keep editing and try saving again.</div>
+        <button class="btn btn-secondary" id="brokerageConflictReload">Reload record</button>
       </div>
 
-      <h2 class="text-h3">Brokers</h2>
-      <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>First</th><th>Last</th><th>Broker type</th><th>Email</th><th>NPN</th><th>Disabled</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>Dana</td><td>Smith</td><td>Producer</td><td>d.smith@example.invalid</td><td>1234567</td><td>No</td><td><button class="btn btn-secondary">Edit broker Dana Smith</button></td></tr>
-          <tr><td>A.</td><td>Whitfield</td><td>Sub-producer</td><td>a.whitfield@example.invalid</td><td>7654321</td><td>No</td><td><button class="btn btn-secondary">Edit broker A. Whitfield</button></td></tr>
-          <tr class="load-more-row"><td colspan="7"><button class="btn btn-secondary">Load more (cursor-based — R-platform pagination)</button></td></tr>
-        </tbody>
-      </table>
+      <div data-panel="details" class="panel-active stack-24">
+        <h1 class="text-h1" id="brokerageName">Northgate Insurance Partners</h1>
+        <div class="text-caption" style="color:var(--text-secondary)">Account code <span id="brokerageAccountCode">AC-88214</span> (server-assigned, read-only)</div>
+        <div class="row">
+          <div class="field"><label>Brokerage name</label><input id="f-brk-name" value="Northgate Insurance Partners"></div>
+          <div class="field"><label>Status</label>
+            <select id="f-brk-status">
+              <option>Active</option><option>Prospect</option><option>Inactive</option>
+            </select>
+          </div>
+          <div class="check"><input type="checkbox" id="f-brk-history"><label>Mark as history (disable / archive)</label></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Address line 1</label><input id="f-brk-line1" value="400 W Broad St"></div>
+          <div class="field"><label>Address line 2</label><input id="f-brk-line2" value=""></div>
+          <div class="field"><label>City</label><input id="f-brk-city" value="Columbus"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>State</label><input id="f-brk-state" value="OH"></div>
+          <div class="field"><label>Zip</label><input id="f-brk-zip" value="43215"></div>
+          <div class="field"><label>Assigned underwriter</label><input id="f-brk-underwriter" value="Marcus Reed"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Phone</label><input id="f-brk-phone" value="(614) 555-0142"></div>
+          <div class="field"><label>Fax</label><input id="f-brk-fax" value="(614) 555-0199"></div>
+          <div class="field"><label>Tax ID (FEIN)</label><input id="f-brk-taxid" value="31-1234567"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Contract received</label><input id="f-brk-contract" type="date" value="2026-03-01"></div>
+        </div>
+        <div id="brokerageSaveBanner" class="notice" style="display:none">Saved</div>
+        <div class="row">
+          <button class="btn btn-primary" id="btnSaveBrokerage">Save changes</button>
+          <button class="btn btn-secondary" id="btnOpenAccounting">Accounting address</button>
+          <button class="btn btn-secondary" id="btnBrokerageBack">Back to Directory</button>
+        </div>
       </div>
-      <button class="btn btn-secondary">Add broker</button>
 
-      <h2 class="text-h3">Activity</h2>
-      <div class="card">
-        <p class="text-body-strong">Contact-activity panel (embedded from UNIT-CMS-0008)</p>
-        <p class="text-caption" style="color:var(--text-secondary);margin-top:4px">Linked by brokerage id only; content and states are that unit's own component contract.</p>
+      <div data-panel="brokers" class="stack-16">
+        <h2 class="text-h3">Brokers</h2>
+        <div class="tbl-wrap">
+        <table class="tbl" id="brokersTable">
+          <thead><tr><th>First</th><th>Last</th><th>Broker type</th><th>Email</th><th>NPN</th><th>Disabled</th><th></th></tr></thead>
+          <tbody id="brokersTbody"></tbody>
+        </table>
+        </div>
+        <button class="btn btn-secondary" id="btnAddBroker">Add broker</button>
       </div>
 
-      <h2 class="text-h3">Policies</h2>
-      <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>Policy id</th><th>Status</th><th>Term</th><th>Insured</th><th>Class / Subclass</th><th></th></tr></thead>
-        <tbody>
-          <tr>
-            <td>PL-004471</td>
-            <td><span class="badge-active"><span aria-hidden="true">&#9679;</span> In force</span></td>
-            <td>2026-01-01/2027-01-01</td>
-            <td>Northgate Insurance Partners</td>
-            <td>4 · General Liability</td>
-            <td><button class="btn btn-secondary" disabled>Open in policy system</button></td>
-          </tr>
-          <tr>
-            <td>PL-004472</td>
-            <td><span class="badge-warn"><span aria-hidden="true">&#9680;</span> Pending</span></td>
-            <td>2026-03-01/2027-03-01</td>
-            <td>Northgate Insurance Partners</td>
-            <td>7 · Property</td>
-            <td><button class="btn btn-secondary" disabled>Open in policy system</button></td>
-          </tr>
-        </tbody>
-      </table>
+      <div data-panel="activity" class="stack-16">
+        <h2 class="text-h3">Activity</h2>
+        <div class="card" id="brokerageActivityCard">
+          <p class="text-body-strong">Contact-activity panel (embedded from UNIT-CMS-0008)</p>
+          <p class="text-caption" style="color:var(--text-secondary);margin-top:4px">Linked by brokerage id only; content and states are that unit's own component contract.</p>
+        </div>
       </div>
-      <p class="text-caption" style="color:var(--text-secondary)">No pagination — the policy read is a bounded list per UNIT-CMS-0010's contract. The deep link is server-computed; no destination is invented here.</p>
+
+      <div data-panel="policies" class="stack-16">
+        <h2 class="text-h3">Policies</h2>
+        <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Policy id</th><th>Status</th><th>Term</th><th>Insured</th><th>Class / Subclass</th><th></th></tr></thead>
+          <tbody id="brokeragePoliciesTbody"></tbody>
+        </table>
+        </div>
+        <p class="text-caption" style="color:var(--text-secondary)">No pagination — the policy read is a bounded list per UNIT-CMS-0010's contract. The deep link is server-computed; no destination is invented here.</p>
+      </div>
+      </div>
+    </div>
+
+    <!-- live accounting-address dialog, opened for real by "Accounting address" above -->
+    <div class="overlay live-dialog-overlay" id="accountingDialogOverlay">
+      <div class="scrim">
+        <div class="box">
+          <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="accountingDialogTitle">
+            <div class="dialog-head"><h2 class="text-h2" id="accountingDialogTitle">Accounting address</h2></div>
+            <div class="dialog-body stack-16" id="accountingDialogBody">
+              <div class="field" id="fld-acct-contact"><label>Contact name</label><input id="f-acct-contact"></div>
+              <div class="field" id="fld-acct-line1"><label>Address line 1</label><input id="f-acct-line1"></div>
+              <div class="field"><label>Address line 2</label><input id="f-acct-line2"></div>
+              <div class="row">
+                <div class="field" id="fld-acct-city"><label>City</label><input id="f-acct-city"></div>
+                <div class="field" id="fld-acct-state"><label>State</label><input id="f-acct-state"></div>
+                <div class="field" id="fld-acct-zip"><label>Zip</label><input id="f-acct-zip"></div>
+              </div>
+            </div>
+            <div class="dialog-foot">
+              <button class="btn btn-primary" id="btnSaveAccounting">Save</button>
+              <button class="btn btn-secondary" id="btnCancelAccounting">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -541,35 +630,41 @@
   </section>
 
   <!-- ============ 8. add-brokerage-populated ============ -->
-  <section data-frame="add-brokerage-populated">
+  <section data-frame="add-brokerage-populated" id="addBrokerageFrame">
     <div class="content stack-24">
       <h1 class="text-h1">Add new brokerage</h1>
-      <div class="row">
-        <div class="field"><label>Brokerage name</label><input placeholder=""></div>
+      <div class="error-block" role="alert" id="addBrokerageErrorSummary" style="display:none">
+        <div class="title" id="addBrokerageErrorCount">2 fields need attention</div>
       </div>
       <div class="row">
-        <div class="field"><label>Address line 1</label><input placeholder="Start typing to see suggestions"></div>
-        <div class="field"><label>Address line 2</label><input></div>
-        <div class="field"><label>City</label><input></div>
+        <div class="field" id="fld-newbrk-name"><label>Brokerage name</label><input id="f-newbrk-name" placeholder=""><div class="invalid-msg" style="display:none">Enter a name.</div></div>
       </div>
       <div class="row">
-        <div class="field"><label>State</label><input></div>
-        <div class="field"><label>Zip</label><input></div>
-        <div class="field"><label>Assigned underwriter</label><input></div>
+        <div class="field" id="fld-newbrk-line1"><label>Address line 1</label><input id="f-newbrk-line1" placeholder="Start typing to see suggestions"><div class="invalid-msg" style="display:none">Enter a street address, or use suggest to fill it.</div></div>
+        <div class="field"><label>Address line 2</label><input id="f-newbrk-line2"></div>
+        <div class="field"><label>City</label><input id="f-newbrk-city"></div>
       </div>
       <div class="row">
-        <div class="field"><label>Phone</label><input></div>
-        <div class="field"><label>Fax</label><input></div>
-        <div class="field"><label>Tax ID (FEIN)</label><input></div>
+        <div class="field"><label>State</label><input id="f-newbrk-state"></div>
+        <div class="field"><label>Zip</label><input id="f-newbrk-zip"></div>
+        <div class="field"><label>Assigned underwriter</label><input id="f-newbrk-underwriter"></div>
       </div>
       <div class="row">
-        <div class="field"><label>Status</label><select><option>— select —</option></select></div>
-        <div class="field"><label>Contract received</label><input></div>
-        <div class="check"><input type="checkbox"><label>Mark as history</label></div>
+        <div class="field"><label>Phone</label><input id="f-newbrk-phone"></div>
+        <div class="field"><label>Fax</label><input id="f-newbrk-fax"></div>
+        <div class="field"><label>Tax ID (FEIN)</label><input id="f-newbrk-taxid"></div>
       </div>
       <div class="row">
-        <button class="btn btn-primary">Save</button>
-        <button class="btn btn-secondary">Cancel</button>
+        <div class="field">
+          <label>Status</label>
+          <select id="f-newbrk-status"><option>— select —</option><option>Active</option><option>Prospect</option><option>Inactive</option></select>
+        </div>
+        <div class="field"><label>Contract received</label><input id="f-newbrk-contract" type="date"></div>
+        <div class="check"><input type="checkbox" id="f-newbrk-history"><label>Mark as history</label></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="btnSaveNewBrokerage">Save</button>
+        <button class="btn btn-secondary" id="btnCancelNewBrokerage">Cancel</button>
       </div>
     </div>
   </section>
@@ -604,81 +699,96 @@
   </section>
 
   <!-- ============ 10. agency-detail-populated ============ -->
-  <section data-frame="agency-detail-populated">
-    <div class="tabs">
-      <button class="active">Details</button>
-      <button>Agents</button>
-      <button>Activity</button>
-      <button>Policies</button>
+  <section data-frame="agency-detail-populated" id="agencyDetailFrame">
+    <div class="tabs" id="agencyTabs">
+      <button class="active" data-tab="details">Details</button>
+      <button data-tab="agents">Agents</button>
+      <button data-tab="activity">Activity</button>
+      <button data-tab="policies">Policies</button>
     </div>
-    <div class="content stack-24">
-      <h1 class="text-h1">Buckeye Agency Group</h1>
-      <div class="text-caption" style="color:var(--text-secondary)">Account code AC-40021 (server-assigned at creation, read-only)</div>
-      <div class="row">
-        <div class="field"><label>Agency name</label><input value="Buckeye Agency Group"></div>
-        <div class="field"><label>Agency number (G1 Agency ID)</label><input value="G1-40021"></div>
-        <div class="check"><input type="checkbox"><label>Mark as history</label></div>
+    <div class="content">
+      <div id="agencyLoadingPanel" class="stack-16" style="display:none">
+        <div class="skeleton" style="width:40%"></div>
+        <div class="skeleton" style="width:90%"></div>
+        <div class="skeleton" style="width:80%"></div>
       </div>
-      <div class="row">
-        <div class="field"><label>Address line 1</label><input value="400 W Broad St"></div>
-        <div class="field"><label>Address line 2</label><input value=""></div>
-        <div class="field"><label>City</label><input value="Columbus"></div>
+      <div id="agencyErrorPanel" class="error-block" role="alert" style="display:none">
+        <div class="title" id="agencyErrorTitle">Unable to load</div>
+        <div class="body" id="agencyErrorBody">Something went wrong loading this. Try again.</div>
+        <button class="btn btn-secondary" id="agencyErrorRetry">Retry</button>
       </div>
-      <div class="row">
-        <div class="field"><label>State</label><input value="OH"></div>
-        <div class="field"><label>Zip</label><input value="43215"></div>
-        <div class="field"><label>Phone</label><input value="(614) 555-0142"></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Billing contact</label><input value="Dana Smith"></div>
-        <div class="field"><label>Billing contact phone</label><input value="(614) 555-0143"></div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Notes</label><input value=""></div>
-        <div class="check"><input type="checkbox"><label>High potential</label></div>
-        <div class="check"><input type="checkbox"><label>Premium financing</label></div>
-      </div>
-      <div class="row">
-        <button class="btn btn-primary">Save changes</button>
-        <button class="btn btn-secondary">Specialty</button>
-        <button class="btn btn-secondary">Back to Directory</button>
+      <div id="agencyLoadedRegion">
+      <div id="agencyConflictBanner" class="error-block" role="alert" style="display:none;margin-bottom:16px">
+        <div class="title">This record changed</div>
+        <div class="body">Someone else saved changes to this record after you loaded it. Your edits are still here — reload to see the latest version, or keep editing and try saving again.</div>
+        <button class="btn btn-secondary" id="agencyConflictReload">Reload record</button>
       </div>
 
-      <h2 class="text-h3">Agents</h2>
-      <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>First</th><th>Last</th><th>Agent type</th><th>Phone</th><th>Email</th><th>NPN</th><th>Disabled</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>Marcus</td><td>Reed</td><td>Agent</td><td>(614) 555-0150</td><td>m.reed@example.invalid</td><td>2345678</td><td>No</td><td><button class="btn btn-secondary">Edit agent Marcus Reed</button></td></tr>
-          <tr class="load-more-row"><td colspan="8"><button class="btn btn-secondary">Load more (cursor-based — R-platform pagination)</button></td></tr>
-        </tbody>
-      </table>
+      <div data-panel="details" class="panel-active stack-24">
+        <h1 class="text-h1" id="agencyName">Buckeye Agency Group</h1>
+        <div class="text-caption" style="color:var(--text-secondary)">Account code <span id="agencyAccountCode">AC-40021</span> (server-assigned at creation, read-only)</div>
+        <div class="row">
+          <div class="field"><label>Agency name</label><input id="f-agy-name" value="Buckeye Agency Group"></div>
+          <div class="field"><label>Agency number (G1 Agency ID)</label><input id="f-agy-number" value="G1-40021"></div>
+          <div class="check"><input type="checkbox" id="f-agy-history"><label>Mark as history</label></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Address line 1</label><input id="f-agy-line1" value="400 W Broad St"></div>
+          <div class="field"><label>Address line 2</label><input id="f-agy-line2" value=""></div>
+          <div class="field"><label>City</label><input id="f-agy-city" value="Columbus"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>State</label><input id="f-agy-state" value="OH"></div>
+          <div class="field"><label>Zip</label><input id="f-agy-zip" value="43215"></div>
+          <div class="field"><label>Phone</label><input id="f-agy-phone" value="(614) 555-0142"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Billing contact</label><input id="f-agy-billing-name" value="Dana Smith"></div>
+          <div class="field"><label>Billing contact phone</label><input id="f-agy-billing-phone" value="(614) 555-0143"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Notes</label><input id="f-agy-notes" value=""></div>
+          <div class="check"><input type="checkbox" id="f-agy-highpotential"><label>High potential</label></div>
+          <div class="check"><input type="checkbox" id="f-agy-financing"><label>Premium financing</label></div>
+        </div>
+        <div id="agencySaveBanner" class="notice" style="display:none">Saved</div>
+        <div class="row">
+          <button class="btn btn-primary" id="btnSaveAgency">Save changes</button>
+          <button class="btn btn-secondary" id="btnAgencySpecialty">Specialty</button>
+          <button class="btn btn-secondary" id="btnAgencyBack">Back to Directory</button>
+        </div>
       </div>
-      <button class="btn btn-secondary">Add agent</button>
 
-      <h2 class="text-h3">Activity</h2>
-      <div class="card">
-        <p class="text-body-strong">Contact-activity panel (embedded from UNIT-CMS-0008)</p>
-        <p class="text-caption" style="color:var(--text-secondary);margin-top:4px">Linked by agency id only; content and states are that unit's own component contract.</p>
+      <div data-panel="agents" class="stack-16">
+        <h2 class="text-h3">Agents</h2>
+        <div class="tbl-wrap">
+        <table class="tbl" id="agentsTable">
+          <thead><tr><th>First</th><th>Last</th><th>Agent type</th><th>Phone</th><th>Email</th><th>NPN</th><th>Disabled</th><th></th></tr></thead>
+          <tbody id="agentsTbody"></tbody>
+        </table>
+        </div>
+        <button class="btn btn-secondary" id="btnAddAgent">Add agent</button>
       </div>
 
-      <h2 class="text-h3">Policies</h2>
-      <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>Policy id</th><th>Status</th><th>Term</th><th>Insured</th><th>Class / Subclass</th><th></th></tr></thead>
-        <tbody>
-          <tr>
-            <td>PL-004473</td>
-            <td><span class="badge-lapsed"><span aria-hidden="true">&#8856;</span> Lapsed</span></td>
-            <td>2025-01-01/2026-01-01</td>
-            <td>Buckeye Agency Group</td>
-            <td>4 · General Liability</td>
-            <td><button class="btn btn-secondary" disabled>Open in policy system</button></td>
-          </tr>
-        </tbody>
-      </table>
+      <div data-panel="activity" class="stack-16">
+        <h2 class="text-h3">Activity</h2>
+        <div class="card">
+          <p class="text-body-strong">Contact-activity panel (embedded from UNIT-CMS-0008)</p>
+          <p class="text-caption" style="color:var(--text-secondary);margin-top:4px">Linked by agency id only; content and states are that unit's own component contract.</p>
+        </div>
       </div>
-      <p class="text-caption" style="color:var(--text-secondary)">No pagination — the policy read is a bounded list per UNIT-CMS-0010's contract.</p>
+
+      <div data-panel="policies" class="stack-16">
+        <h2 class="text-h3">Policies</h2>
+        <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Policy id</th><th>Status</th><th>Term</th><th>Insured</th><th>Class / Subclass</th><th></th></tr></thead>
+          <tbody id="agencyPoliciesTbody"></tbody>
+        </table>
+        </div>
+        <p class="text-caption" style="color:var(--text-secondary)">No pagination — the policy read is a bounded list per UNIT-CMS-0010's contract.</p>
+      </div>
+      </div>
     </div>
   </section>
 
@@ -706,35 +816,56 @@
   </section>
 
   <!-- ============ 12. add-agency-populated ============ -->
-  <section data-frame="add-agency-populated">
-    <div class="content stack-24">
+  <section data-frame="add-agency-populated" id="addAgencyFrame">
+    <div class="content stack-24" id="addAgencyFormWrap">
       <h1 class="text-h1">Add new agency</h1>
-      <div class="row">
-        <div class="field"><label>Agency name</label><input></div>
-        <div class="field"><label>Agency number (G1 Agency ID)</label><input></div>
+      <div class="error-block" role="alert" id="addAgencyErrorSummary" style="display:none">
+        <div class="title" id="addAgencyErrorCount">fields need attention</div>
       </div>
       <div class="row">
-        <div class="field"><label>Address line 1</label><input placeholder="Start typing to see suggestions"></div>
-        <div class="field"><label>Address line 2</label><input></div>
-        <div class="field"><label>City</label><input></div>
+        <div class="field" id="fld-newagy-name"><label>Agency name</label><input id="f-newagy-name"><div class="invalid-msg" style="display:none">Enter a name.</div></div>
+        <div class="field" id="fld-newagy-number"><label>Agency number (G1 Agency ID)</label><input id="f-newagy-number"><div class="invalid-msg" style="display:none">Enter the agency number.</div></div>
       </div>
       <div class="row">
-        <div class="field"><label>State</label><input></div>
-        <div class="field"><label>Zip</label><input></div>
-        <div class="field"><label>Phone</label><input></div>
+        <div class="field" id="fld-newagy-line1"><label>Address line 1</label><input id="f-newagy-line1" placeholder="Start typing to see suggestions"><div class="invalid-msg" style="display:none">Enter a street address, or use suggest to fill it.</div></div>
+        <div class="field"><label>Address line 2</label><input id="f-newagy-line2"></div>
+        <div class="field"><label>City</label><input id="f-newagy-city"></div>
       </div>
       <div class="row">
-        <div class="field"><label>Billing contact</label><input></div>
-        <div class="field"><label>Billing contact phone</label><input></div>
+        <div class="field"><label>State</label><input id="f-newagy-state"></div>
+        <div class="field"><label>Zip</label><input id="f-newagy-zip"></div>
+        <div class="field"><label>Phone</label><input id="f-newagy-phone"></div>
       </div>
       <div class="row">
-        <div class="field"><label>Notes</label><input></div>
-        <div class="check"><input type="checkbox"><label>High potential</label></div>
-        <div class="check"><input type="checkbox"><label>Premium financing</label></div>
+        <div class="field"><label>Billing contact</label><input id="f-newagy-billing-name"></div>
+        <div class="field"><label>Billing contact phone</label><input id="f-newagy-billing-phone"></div>
       </div>
       <div class="row">
-        <button class="btn btn-primary">Save</button>
-        <button class="btn btn-secondary">Cancel</button>
+        <div class="field"><label>Notes</label><input id="f-newagy-notes"></div>
+        <div class="check"><input type="checkbox" id="f-newagy-highpotential"><label>High potential</label></div>
+        <div class="check"><input type="checkbox" id="f-newagy-financing"><label>Premium financing</label></div>
+      </div>
+      <div class="row">
+        <button class="btn btn-primary" id="btnSaveNewAgency">Save</button>
+        <button class="btn btn-secondary" id="btnCancelNewAgency">Cancel</button>
+      </div>
+    </div>
+
+    <!-- live two-choice confirmation dialog (R15), opened for real on successful create -->
+    <div class="overlay live-dialog-overlay" id="agencyConfirmOverlay">
+      <div class="scrim">
+        <div class="box">
+          <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="agencyConfirmTitle">
+            <div class="dialog-head"><h2 class="text-h2" id="agencyConfirmTitle">Agency created</h2></div>
+            <div class="dialog-body">
+              <p class="text-body" id="agencyConfirmBody">The agency was created successfully.</p>
+            </div>
+            <div class="dialog-foot">
+              <button class="btn btn-primary" id="btnGoToAgencyDetail">Go to Agency Detail</button>
+              <button class="btn btn-secondary" id="btnAddAnotherAgency">Add another agency</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -763,21 +894,30 @@
   </section>
 
   <!-- ============ 14. cga-grid-populated ============ -->
-  <section data-frame="cga-grid-populated">
+  <section data-frame="cga-grid-populated" id="cgaGridFrame">
     <div class="content stack-24">
       <h1 class="text-h1">CGA records</h1>
+      <div id="cgaLoadingPanel" class="stack-16" style="display:none">
+        <div class="skeleton" style="width:90%"></div>
+        <div class="skeleton" style="width:80%"></div>
+        <div class="skeleton" style="width:70%"></div>
+      </div>
+      <div id="cgaErrorPanel" class="error-block" role="alert" style="display:none">
+        <div class="title">Unable to load</div>
+        <div class="body">Something went wrong loading this. Try again.</div>
+        <button class="btn btn-secondary" id="cgaErrorRetry">Retry</button>
+      </div>
+      <div id="cgaLoadedRegion">
       <div class="tbl-wrap">
       <table class="tbl">
         <thead><tr><th>Agent name</th><th>Address</th><th>City</th><th>State</th><th>Zip</th><th>Email</th><th>Phone</th><th>Agency id</th><th></th></tr></thead>
-        <tbody>
-          <tr><td>A. Whitfield</td><td>400 W Broad St</td><td>Columbus</td><td>OH</td><td>43215</td><td>a.whitfield@example.invalid</td><td>(614) 555-0142</td><td>G1-40021</td><td><button class="btn btn-secondary">Edit CGA record for A. Whitfield</button></td></tr>
-          <tr><td>Dana Smith</td><td>400 W Broad St</td><td>Columbus</td><td>OH</td><td>43215</td><td>d.smith@example.invalid</td><td>(614) 555-0143</td><td>G1-40022</td><td><button class="btn btn-secondary">Edit CGA record for Dana Smith</button></td></tr>
-        </tbody>
+        <tbody id="cgaTbody"></tbody>
       </table>
       </div>
       <div class="row">
-        <button class="btn btn-secondary">Add CGA</button>
-        <button class="btn btn-secondary">Back to Directory</button>
+        <button class="btn btn-secondary" id="btnAddCga">Add CGA</button>
+        <button class="btn btn-secondary" id="btnCgaBack">Back to Directory</button>
+      </div>
       </div>
     </div>
   </section>
@@ -872,9 +1012,14 @@
 </div>
 
 <script>
-  // Switcher only: shows/hides already-specified frame sections, toggles theme,
-  // and sets canvas width. No validation, no network, no timers, no storage,
-  // no computed values, no state machine — see SKILL.md § 2's boundary table.
+(function () {
+  "use strict";
+
+  /* ============================================================
+   * 0. Frame/theme/width switcher — unchanged mechanism, kept for
+   *    reviewers so every one of the 19 named states is still
+   *    directly reachable without going through the live flow.
+   * ============================================================ */
   var frameSelect = document.getElementById('frameSelect');
   var themeSelect = document.getElementById('themeSelect');
   var widthSelect = document.getElementById('widthSelect');
@@ -882,6 +1027,7 @@
   var html = document.documentElement;
   var label = document.getElementById('frameLabel');
   var sections = document.querySelectorAll('section[data-frame]');
+  var lastFrame = null;
 
   function update() {
     var frame = frameSelect.value;
@@ -893,12 +1039,910 @@
     html.setAttribute('data-theme', theme);
     canvas.setAttribute('data-width', width);
     label.textContent = 'UNIT-CMS-0006 · ' + frame + ' · ' + width + 'px · ' + theme;
+    if (frame !== lastFrame) {
+      lastFrame = frame;
+      onFrameNavigated(frame);
+    }
   }
 
   frameSelect.addEventListener('change', update);
   themeSelect.addEventListener('change', update);
   widthSelect.addEventListener('change', update);
+
+  /* ============================================================
+   * 1. Demo-only simulation switches
+   * ============================================================ */
+  var simSaveError = document.getElementById('simulateSaveError');
+  var simLoadError = document.getElementById('simulateLoadError');
+  var simOffline = document.getElementById('simulateOffline');
+  var demoNote = document.getElementById('demoNote');
+
+  function consumeSim(el) {
+    var v = el.checked;
+    if (v) { el.checked = false; }
+    return v;
+  }
+  function noteDemo(msg) {
+    demoNote.textContent = msg;
+    setTimeout(function () { if (demoNote.textContent === msg) demoNote.textContent = ''; }, 3000);
+  }
+
+  /* ============================================================
+   * 2. Toast
+   * ============================================================ */
+  var toastHost = document.getElementById('toastHost');
+  function toast(msg, isError) {
+    var t = document.createElement('div');
+    t.className = 'toast' + (isError ? ' toast-error' : '');
+    t.setAttribute('role', 'status');
+    t.textContent = msg;
+    toastHost.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3200);
+  }
+
+  /* ============================================================
+   * 3. In-memory demo dataset — field shapes follow requirements.md
+   *    (R1,R5,R9,R13,R16,R18,R21) and the copied interfaces
+   *    (UNIT-CMS-0005 address as line1/line2/city/state/zip,
+   *    accountCode read-only, disabled boolean; UNIT-CMS-0010
+   *    policy fields policyId/status/term/insured/classId/subclass).
+   * ============================================================ */
+  var seq = 100;
+  function nextId(prefix) { seq += 1; return prefix + '-' + seq; }
+
+  var DB = {
+    lookups: {
+      brokerStatus: ['Active', 'Prospect', 'Inactive'],
+      brokerType: ['Producer', 'Sub-producer', 'CSR'],
+      agentType: ['Agent', 'Sub-agent'],
+      states: ['OH', 'KY', 'IN', 'PA', 'WV']
+    },
+    brokerages: {
+      'brk-1': {
+        id: 'brk-1', accountCode: 'AC-88214', version: 3,
+        name: 'Northgate Insurance Partners',
+        address: { line1: '400 W Broad St', line2: '', city: 'Columbus', state: 'OH', zip: '43215' },
+        phone: '(614) 555-0142', fax: '(614) 555-0199', taxId: '31-1234567',
+        underwriter: 'Marcus Reed', status: 'Active', contractReceivedAt: '2026-03-01',
+        disabled: false,
+        accounting: { contactName: 'Dana Smith', line1: '400 W Broad St', line2: '', city: 'Columbus', state: 'OH', zip: '43215' },
+        brokersCursor: 0,
+        brokers: [
+          { id: 'bkr-1', firstName: 'Dana', lastName: 'Smith', type: 'Producer', email: 'd.smith@example.invalid', npn: '1234567', disabled: false },
+          { id: 'bkr-2', firstName: 'A.', lastName: 'Whitfield', type: 'Sub-producer', email: 'a.whitfield@example.invalid', npn: '7654321', disabled: false },
+          { id: 'bkr-3', firstName: 'Lee', lastName: 'Owens', type: 'Producer', email: 'l.owens@example.invalid', npn: '1122334', disabled: false },
+          { id: 'bkr-4', firstName: 'Priya', lastName: 'Nair', type: 'CSR', email: 'p.nair@example.invalid', npn: '2233445', disabled: true }
+        ],
+        policies: [
+          { policyId: 'PL-004471', status: 'active', term: '2026-01-01/2027-01-01', insured: 'Northgate Insurance Partners', classId: '4', subclass: 'General Liability' },
+          { policyId: 'PL-004472', status: 'pending', term: '2026-03-01/2027-03-01', insured: 'Northgate Insurance Partners', classId: '7', subclass: 'Property' }
+        ]
+      },
+      'brk-2': {
+        id: 'brk-2', accountCode: 'AC-91007', version: 1,
+        name: 'Riverbend Brokerage LLC',
+        address: { line1: '12 River Rd', line2: '', city: 'Dayton', state: 'OH', zip: '45402' },
+        phone: '(937) 555-0110', fax: '', taxId: '31-7654321',
+        underwriter: 'Marcus Reed', status: 'Prospect', contractReceivedAt: '',
+        disabled: false,
+        accounting: { contactName: '', line1: '', line2: '', city: '', state: '', zip: '' },
+        brokersCursor: 0, brokers: [], policies: []
+      }
+    },
+    agencies: {
+      'agy-1': {
+        id: 'agy-1', accountCode: 'AC-40021', version: 2,
+        name: 'Buckeye Agency Group', agencyNumber: 'G1-40021',
+        address: { line1: '400 W Broad St', line2: '', city: 'Columbus', state: 'OH', zip: '43215' },
+        phone: '(614) 555-0142',
+        billingContactName: 'Dana Smith', billingContactPhone: '(614) 555-0143',
+        notes: '', highPotential: true, premiumFinancing: false, disabled: false,
+        agentsCursor: 0,
+        agents: [
+          { id: 'agt-1', firstName: 'Marcus', lastName: 'Reed', type: 'Agent', phone: '(614) 555-0150', email: 'm.reed@example.invalid', npn: '2345678', disabled: false },
+          { id: 'agt-2', firstName: 'Sonia', lastName: 'Park', type: 'Sub-agent', phone: '(614) 555-0151', email: 's.park@example.invalid', npn: '3456789', disabled: false },
+          { id: 'agt-3', firstName: 'Wade', lastName: 'Ellis', type: 'Agent', phone: '(614) 555-0152', email: 'w.ellis@example.invalid', npn: '4567890', disabled: false }
+        ],
+        policies: [
+          { policyId: 'PL-004473', status: 'lapsed', term: '2025-01-01/2026-01-01', insured: 'Buckeye Agency Group', classId: '4', subclass: 'General Liability' }
+        ]
+      },
+      'agy-2': {
+        id: 'agy-2', accountCode: 'AC-40099', version: 1,
+        name: 'Delaney General Agency', agencyNumber: 'G1-40099',
+        address: { line1: '', line2: '', city: '', state: '', zip: '' },
+        phone: '', billingContactName: '', billingContactPhone: '',
+        notes: '', highPotential: false, premiumFinancing: false, disabled: false,
+        agentsCursor: 0, agents: [], policies: []
+      }
+    },
+    cga: [
+      { id: 'cga-1', agentName: 'A. Whitfield', line1: '400 W Broad St', city: 'Columbus', state: 'OH', zip: '43215', email: 'a.whitfield@example.invalid', phone: '(614) 555-0142', agencyId: 'G1-40021' },
+      { id: 'cga-2', agentName: 'Dana Smith', line1: '400 W Broad St', city: 'Columbus', state: 'OH', zip: '43215', email: 'd.smith@example.invalid', phone: '(614) 555-0143', agencyId: 'G1-40022' }
+    ]
+  };
+
+  var currentBrokerageId = 'brk-1';
+  var currentAgencyId = 'agy-1';
+  var PAGE_SIZE = 2;
+
+  /* ============================================================
+   * 4. Validation helpers (R28/R29 client-side mirror of
+   *    UNIT-CMS-0005's validators; messages from states.md's
+   *    Validation messages table)
+   * ============================================================ */
+  var RX_PHONE = /^\(\d{3}\) \d{3}-\d{4}$/;
+  var RX_ZIP = /^\d{5}(-\d{4})?$/;
+  var RX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var RX_FEIN = /^\d{2}-\d{7}$/;
+  var RX_STATE = /^[A-Za-z]{2}$/;
+
+  function todayISO() { return new Date().toISOString().slice(0, 10); }
+
+  function setFieldInvalid(fieldEl, invalid, msg) {
+    if (!fieldEl) return;
+    fieldEl.classList.toggle('invalid', !!invalid);
+    var m = fieldEl.querySelector('.invalid-msg');
+    if (m) { if (msg) m.textContent = msg; m.style.display = invalid ? 'block' : 'none'; }
+  }
+
+  function normalizePhone(v) { return (v || '').replace(/\D/g, ''); }
+
+  /* ============================================================
+   * 5. Generic tab-panel switching (real content swap, not a
+   *    pre-baked frame — this is what the reference mockup's own
+   *    <script> does for its snapshots; here it swaps the actual
+   *    DOM panel for Brokerage/Agency Detail).
+   * ============================================================ */
+  function wireTabs(tabsEl, panelsScopeEl) {
+    var buttons = tabsEl.querySelectorAll('button[data-tab]');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        buttons.forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var name = btn.getAttribute('data-tab');
+        panelsScopeEl.querySelectorAll('[data-panel]').forEach(function (p) {
+          p.classList.toggle('panel-active', p.getAttribute('data-panel') === name);
+        });
+      });
+    });
+  }
+  wireTabs(document.getElementById('brokerageTabs'), document.getElementById('brokerageLoadedRegion'));
+  wireTabs(document.getElementById('agencyTabs'), document.getElementById('agencyLoadedRegion'));
+
+  /* ============================================================
+   * 6. Generic "region load" simulator — loading skeleton, then
+   *    populated / unable-to-load / offline, driven by the demo
+   *    simulation checkboxes. This is what makes loading and
+   *    error states reachable through interaction instead of only
+   *    as a static frame.
+   * ============================================================ */
+  function loadRegion(opts) {
+    opts.loadingEl.style.display = 'block';
+    opts.errorEl.style.display = 'none';
+    if (opts.loadedEl) opts.loadedEl.style.display = 'none';
+    var offline = consumeSim(simOffline);
+    var loadError = consumeSim(simLoadError);
+    setTimeout(function () {
+      opts.loadingEl.style.display = 'none';
+      if (offline) {
+        opts.errorTitleEl.textContent = 'You\'re offline';
+        opts.errorBodyEl.textContent = 'Reconnect to continue.';
+        opts.errorEl.style.display = 'block';
+        noteDemo('Simulated: offline on load');
+      } else if (loadError) {
+        opts.errorTitleEl.textContent = 'Unable to load';
+        opts.errorBodyEl.textContent = 'Something went wrong loading this. Try again.';
+        opts.errorEl.style.display = 'block';
+        noteDemo('Simulated: load failed (retry to recover)');
+      } else {
+        if (opts.loadedEl) opts.loadedEl.style.display = 'block';
+        opts.onSuccess();
+      }
+    }, 450);
+  }
+
+  /* ============================================================
+   * 7. Brokerage Detail — render + save + broker grid
+   * ============================================================ */
+  var brokerageLoadingPanel = document.getElementById('brokerageLoadingPanel');
+  var brokerageErrorPanel = document.getElementById('brokerageErrorPanel');
+  var brokerageLoadedRegion = document.getElementById('brokerageLoadedRegion');
+  var brokerageErrorTitle = document.getElementById('brokerageErrorTitle');
+  var brokerageErrorBody = document.getElementById('brokerageErrorBody');
+
+  function loadBrokerageDetail(id) {
+    currentBrokerageId = id;
+    loadRegion({
+      loadingEl: brokerageLoadingPanel, errorEl: brokerageErrorPanel, loadedEl: brokerageLoadedRegion,
+      errorTitleEl: brokerageErrorTitle, errorBodyEl: brokerageErrorBody,
+      onSuccess: function () { renderBrokerageDetail(id); }
+    });
+  }
+  document.getElementById('brokerageErrorRetry').addEventListener('click', function () { loadBrokerageDetail(currentBrokerageId); });
+  document.getElementById('brokerageConflictReload').addEventListener('click', function () {
+    document.getElementById('brokerageConflictBanner').style.display = 'none';
+    loadBrokerageDetail(currentBrokerageId);
+    toast('Reloaded latest version');
+  });
+
+  function renderBrokerageDetail(id) {
+    var b = DB.brokerages[id];
+    document.getElementById('brokerageName').textContent = b.name;
+    document.getElementById('brokerageAccountCode').textContent = b.accountCode;
+    document.getElementById('f-brk-name').value = b.name;
+    document.getElementById('f-brk-status').value = b.status;
+    document.getElementById('f-brk-history').checked = b.disabled;
+    document.getElementById('f-brk-line1').value = b.address.line1;
+    document.getElementById('f-brk-line2').value = b.address.line2;
+    document.getElementById('f-brk-city').value = b.address.city;
+    document.getElementById('f-brk-state').value = b.address.state;
+    document.getElementById('f-brk-zip').value = b.address.zip;
+    document.getElementById('f-brk-underwriter').value = b.underwriter;
+    document.getElementById('f-brk-phone').value = b.phone;
+    document.getElementById('f-brk-fax').value = b.fax;
+    document.getElementById('f-brk-taxid').value = b.taxId;
+    document.getElementById('f-brk-contract').value = b.contractReceivedAt;
+    b.brokersCursor = Math.min(PAGE_SIZE, b.brokers.length);
+    renderBrokersTable(b);
+    renderBrokeragePolicies(b);
+  }
+
+  function renderBrokersTable(b) {
+    var tbody = document.getElementById('brokersTbody');
+    tbody.innerHTML = '';
+    var shown = b.brokers.slice(0, b.brokersCursor);
+    if (shown.length === 0) {
+      var emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = '<td colspan="7"><div class="empty-state"><div class="text-h3">No brokers yet</div><div class="text-body">Add the first broker for this brokerage.</div></div></td>';
+      tbody.appendChild(emptyRow);
+    } else {
+      shown.forEach(function (broker) { tbody.appendChild(brokerRow(b, broker)); });
+    }
+    if (b.brokersCursor < b.brokers.length) {
+      var moreRow = document.createElement('tr');
+      moreRow.className = 'load-more-row';
+      moreRow.innerHTML = '<td colspan="7"><button class="btn btn-secondary" id="btnLoadMoreBrokers">Load more (cursor-based — R-platform pagination)</button></td>';
+      tbody.appendChild(moreRow);
+      document.getElementById('btnLoadMoreBrokers').addEventListener('click', function () {
+        var btn = this; btn.disabled = true; btn.textContent = 'Loading more…';
+        setTimeout(function () {
+          b.brokersCursor = Math.min(b.brokersCursor + PAGE_SIZE, b.brokers.length);
+          renderBrokersTable(b);
+        }, 400);
+      });
+    }
+  }
+
+  function brokerRow(b, broker) {
+    var tr = document.createElement('tr');
+    tr.dataset.id = broker.id;
+    function view() {
+      tr.innerHTML = '';
+      tr.appendChild(td(broker.firstName));
+      tr.appendChild(td(broker.lastName));
+      tr.appendChild(td(broker.type));
+      tr.appendChild(td(broker.email));
+      tr.appendChild(td(broker.npn));
+      tr.appendChild(td(broker.disabled ? 'Yes' : 'No'));
+      var actionTd = document.createElement('td');
+      var editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-secondary';
+      editBtn.textContent = 'Edit broker ' + broker.firstName + ' ' + broker.lastName;
+      editBtn.addEventListener('click', edit);
+      actionTd.appendChild(editBtn);
+      tr.appendChild(actionTd);
+    }
+    function edit() {
+      tr.classList.add('editing');
+      tr.innerHTML = '';
+      tr.appendChild(tdInput('first', broker.firstName));
+      tr.appendChild(tdInput('last', broker.lastName));
+      var typeTd = document.createElement('td');
+      var sel = document.createElement('select');
+      DB.lookups.brokerType.forEach(function (t) {
+        var o = document.createElement('option'); o.textContent = t; if (t === broker.type) o.selected = true; sel.appendChild(o);
+      });
+      typeTd.appendChild(sel); tr.appendChild(typeTd);
+      tr.appendChild(tdInput('email', broker.email));
+      tr.appendChild(tdInput('npn', broker.npn));
+      var dTd = document.createElement('td');
+      var dChk = document.createElement('input'); dChk.type = 'checkbox'; dChk.checked = broker.disabled;
+      dTd.appendChild(dChk); tr.appendChild(dTd);
+      var actionTd = document.createElement('td');
+      var saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-primary'; saveBtn.textContent = 'Save';
+      saveBtn.addEventListener('click', function () {
+        var first = tr.querySelector('[data-f="first"]').value.trim();
+        var last = tr.querySelector('[data-f="last"]').value.trim();
+        var email = tr.querySelector('[data-f="email"]').value.trim();
+        if (!first || !last) { toast('First and last name are required', true); return; }
+        if (email && !RX_EMAIL.test(email)) { toast('Enter a valid email address.', true); return; }
+        if (consumeSim(simSaveError)) { toast('This record changed since you loaded it', true); noteDemo('Simulated: 409 on broker save'); return; }
+        broker.firstName = first; broker.lastName = last;
+        broker.type = sel.value; broker.email = email;
+        broker.npn = tr.querySelector('[data-f="npn"]').value.trim();
+        broker.disabled = dChk.checked;
+        tr.classList.remove('editing');
+        view();
+        toast('Saved');
+      });
+      var cancelBtn = document.createElement('button'); cancelBtn.className = 'btn btn-secondary'; cancelBtn.style.marginLeft = '8px'; cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', function () { tr.classList.remove('editing'); view(); });
+      actionTd.appendChild(saveBtn); actionTd.appendChild(cancelBtn);
+      tr.appendChild(actionTd);
+    }
+    function td(text) { var d = document.createElement('td'); d.textContent = text; return d; }
+    function tdInput(name, value) {
+      var d = document.createElement('td'); var i = document.createElement('input');
+      i.value = value; i.dataset.f = name; d.appendChild(i); return d;
+    }
+    view();
+    return tr;
+  }
+
+  document.getElementById('btnAddBroker').addEventListener('click', function () {
+    var b = DB.brokerages[currentBrokerageId];
+    var draft = { id: nextId('bkr'), firstName: '', lastName: '', type: DB.lookups.brokerType[0], email: '', npn: '', disabled: false };
+    b.brokers.push(draft);
+    b.brokersCursor = b.brokers.length; // reveal the new row immediately, like an inline add
+    renderBrokersTable(b);
+    var newTr = document.querySelector('#brokersTbody tr[data-id="' + draft.id + '"]');
+    if (newTr) { var editBtn = newTr.querySelector('button'); if (editBtn) editBtn.click(); }
+  });
+
+  function renderBrokeragePolicies(b) {
+    var tbody = document.getElementById('brokeragePoliciesTbody');
+    tbody.innerHTML = '';
+    if (b.policies.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="text-body">No policies for this brokerage.</div></div></td></tr>';
+      return;
+    }
+    b.policies.forEach(function (p) {
+      var badge = p.status === 'active' ? ['badge-active', '&#9679;', 'In force']
+        : p.status === 'pending' ? ['badge-warn', '&#9680;', 'Pending']
+        : p.status === 'lapsed' ? ['badge-lapsed', '&#8856;', 'Lapsed']
+        : ['badge-neutral', '&#9675;', 'Unknown'];
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + p.policyId + '</td><td><span class="' + badge[0] + '"><span aria-hidden="true">' + badge[1] + '</span> ' + badge[2] + '</span></td>' +
+        '<td>' + p.term + '</td><td>' + p.insured + '</td><td>' + p.classId + ' · ' + p.subclass + '</td>' +
+        '<td><button class="btn btn-secondary" disabled>Open in policy system</button></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('btnSaveBrokerage').addEventListener('click', function () {
+    var b = DB.brokerages[currentBrokerageId];
+    var name = document.getElementById('f-brk-name').value.trim();
+    var line1 = document.getElementById('f-brk-line1').value.trim();
+    var city = document.getElementById('f-brk-city').value.trim();
+    var state = document.getElementById('f-brk-state').value.trim();
+    var zip = document.getElementById('f-brk-zip').value.trim();
+    var phone = document.getElementById('f-brk-phone').value.trim();
+    var fax = document.getElementById('f-brk-fax').value.trim();
+    var taxId = document.getElementById('f-brk-taxid').value.trim();
+    var contract = document.getElementById('f-brk-contract').value;
+
+    var errors = [];
+    if (!name) errors.push('Enter a name.');
+    if (!line1 || !city || !state || !zip) errors.push('Enter city, state, and zip.');
+    if (phone && !RX_PHONE.test(phone)) errors.push('Enter a valid phone number.');
+    if (fax && !RX_PHONE.test(fax)) errors.push('Enter a valid fax number.');
+    if (taxId && !RX_FEIN.test(taxId)) errors.push('Enter a valid tax ID (FEIN).');
+    if (contract && contract > todayISO()) errors.push('Enter a valid date, not in the future.');
+    if (errors.length) { toast(errors[0], true); return; }
+
+    var btn = this; btn.disabled = true; var origText = btn.textContent; btn.textContent = 'Saving…';
+    setTimeout(function () {
+      btn.disabled = false; btn.textContent = origText;
+      if (consumeSim(simSaveError)) {
+        document.getElementById('brokerageConflictBanner').style.display = 'block';
+        noteDemo('Simulated: 409 conflict on save');
+        return;
+      }
+      b.name = name; b.address = { line1: line1, line2: document.getElementById('f-brk-line2').value.trim(), city: city, state: state, zip: zip };
+      b.phone = phone ? '(' + normalizePhone(phone).slice(0, 3) + ') ' + normalizePhone(phone).slice(3, 6) + '-' + normalizePhone(phone).slice(6) : '';
+      b.fax = fax;
+      b.taxId = taxId;
+      b.underwriter = document.getElementById('f-brk-underwriter').value.trim();
+      b.status = document.getElementById('f-brk-status').value;
+      b.disabled = document.getElementById('f-brk-history').checked;
+      b.contractReceivedAt = contract;
+      b.version += 1;
+      document.getElementById('brokerageName').textContent = b.name;
+      var banner = document.getElementById('brokerageSaveBanner');
+      banner.textContent = 'Saved';
+      banner.style.display = 'block';
+      setTimeout(function () { banner.style.display = 'none'; }, 2000);
+      toast('Saved');
+    }, 500);
+  });
+
+  document.getElementById('btnBrokerageBack').addEventListener('click', function () {
+    frameSelect.value = 'status-matrix'; // stand-in "Directory" destination — out of this unit's scope
+    toast('Returning to Directory (UNIT-CMS-0004, out of scope here)');
+    update();
+  });
+
+  /* ---- Accounting-address dialog (real open/close/validate/submit) ---- */
+  var accountingOverlay = document.getElementById('accountingDialogOverlay');
+  document.getElementById('btnOpenAccounting').addEventListener('click', function () {
+    var b = DB.brokerages[currentBrokerageId];
+    document.getElementById('f-acct-contact').value = b.accounting.contactName;
+    document.getElementById('f-acct-line1').value = b.accounting.line1;
+    document.getElementById('f-acct-line2').value = b.accounting.line2;
+    document.getElementById('f-acct-city').value = b.accounting.city;
+    document.getElementById('f-acct-state').value = b.accounting.state;
+    document.getElementById('f-acct-zip').value = b.accounting.zip;
+    ['fld-acct-contact', 'fld-acct-line1', 'fld-acct-city', 'fld-acct-state', 'fld-acct-zip'].forEach(function (id) {
+      setFieldInvalid(document.getElementById(id), false);
+    });
+    accountingOverlay.classList.add('dialog-open');
+    document.getElementById('f-acct-contact').focus();
+  });
+  document.getElementById('btnCancelAccounting').addEventListener('click', function () {
+    accountingOverlay.classList.remove('dialog-open');
+  });
+  document.getElementById('btnSaveAccounting').addEventListener('click', function () {
+    var contact = document.getElementById('f-acct-contact').value.trim();
+    var line1 = document.getElementById('f-acct-line1').value.trim();
+    var city = document.getElementById('f-acct-city').value.trim();
+    var state = document.getElementById('f-acct-state').value.trim();
+    var zip = document.getElementById('f-acct-zip').value.trim();
+    var ok = true;
+    setFieldInvalid(document.getElementById('fld-acct-contact'), !contact, 'Enter a name.'); ok = ok && !!contact;
+    setFieldInvalid(document.getElementById('fld-acct-line1'), !line1, 'Enter a street address, or use suggest to fill it.'); ok = ok && !!line1;
+    setFieldInvalid(document.getElementById('fld-acct-city'), !city, 'Enter city, state, and zip.'); ok = ok && !!city;
+    setFieldInvalid(document.getElementById('fld-acct-state'), !state || !RX_STATE.test(state), 'Enter city, state, and zip.'); ok = ok && !!state && RX_STATE.test(state);
+    setFieldInvalid(document.getElementById('fld-acct-zip'), !zip || !RX_ZIP.test(zip), 'Enter city, state, and zip.'); ok = ok && !!zip && RX_ZIP.test(zip);
+    if (!ok) return;
+    var btn = this; btn.disabled = true; btn.textContent = 'Saving…';
+    setTimeout(function () {
+      btn.disabled = false; btn.textContent = 'Save';
+      if (consumeSim(simSaveError)) { toast('This record changed since you loaded it', true); noteDemo('Simulated: 409 on accounting save'); return; }
+      var b = DB.brokerages[currentBrokerageId];
+      b.accounting = { contactName: contact, line1: line1, line2: document.getElementById('f-acct-line2').value.trim(), city: city, state: state, zip: zip };
+      accountingOverlay.classList.remove('dialog-open');
+      toast('Accounting address saved');
+    }, 400);
+  });
+
+  /* ============================================================
+   * 8. Agency Detail — render + save + agent grid (mirrors §7)
+   * ============================================================ */
+  var agencyLoadingPanel = document.getElementById('agencyLoadingPanel');
+  var agencyErrorPanel = document.getElementById('agencyErrorPanel');
+  var agencyLoadedRegion = document.getElementById('agencyLoadedRegion');
+  var agencyErrorTitle = document.getElementById('agencyErrorTitle');
+  var agencyErrorBody = document.getElementById('agencyErrorBody');
+
+  function loadAgencyDetail(id) {
+    currentAgencyId = id;
+    loadRegion({
+      loadingEl: agencyLoadingPanel, errorEl: agencyErrorPanel, loadedEl: agencyLoadedRegion,
+      errorTitleEl: agencyErrorTitle, errorBodyEl: agencyErrorBody,
+      onSuccess: function () { renderAgencyDetail(id); }
+    });
+  }
+  document.getElementById('agencyErrorRetry').addEventListener('click', function () { loadAgencyDetail(currentAgencyId); });
+  document.getElementById('agencyConflictReload').addEventListener('click', function () {
+    document.getElementById('agencyConflictBanner').style.display = 'none';
+    loadAgencyDetail(currentAgencyId);
+    toast('Reloaded latest version');
+  });
+
+  function renderAgencyDetail(id) {
+    var a = DB.agencies[id];
+    document.getElementById('agencyName').textContent = a.name;
+    document.getElementById('agencyAccountCode').textContent = a.accountCode;
+    document.getElementById('f-agy-name').value = a.name;
+    document.getElementById('f-agy-number').value = a.agencyNumber;
+    document.getElementById('f-agy-history').checked = a.disabled;
+    document.getElementById('f-agy-line1').value = a.address.line1;
+    document.getElementById('f-agy-line2').value = a.address.line2;
+    document.getElementById('f-agy-city').value = a.address.city;
+    document.getElementById('f-agy-state').value = a.address.state;
+    document.getElementById('f-agy-zip').value = a.address.zip;
+    document.getElementById('f-agy-phone').value = a.phone;
+    document.getElementById('f-agy-billing-name').value = a.billingContactName;
+    document.getElementById('f-agy-billing-phone').value = a.billingContactPhone;
+    document.getElementById('f-agy-notes').value = a.notes;
+    document.getElementById('f-agy-highpotential').checked = a.highPotential;
+    document.getElementById('f-agy-financing').checked = a.premiumFinancing;
+    a.agentsCursor = Math.min(PAGE_SIZE, a.agents.length);
+    renderAgentsTable(a);
+    renderAgencyPolicies(a);
+  }
+
+  function renderAgentsTable(a) {
+    var tbody = document.getElementById('agentsTbody');
+    tbody.innerHTML = '';
+    var shown = a.agents.slice(0, a.agentsCursor);
+    if (shown.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="text-h3">No agents yet</div></div></td></tr>';
+    } else {
+      shown.forEach(function (agent) { tbody.appendChild(agentRow(a, agent)); });
+    }
+    if (a.agentsCursor < a.agents.length) {
+      var moreRow = document.createElement('tr');
+      moreRow.className = 'load-more-row';
+      moreRow.innerHTML = '<td colspan="8"><button class="btn btn-secondary" id="btnLoadMoreAgents">Load more (cursor-based — R-platform pagination)</button></td>';
+      tbody.appendChild(moreRow);
+      document.getElementById('btnLoadMoreAgents').addEventListener('click', function () {
+        var btn = this; btn.disabled = true; btn.textContent = 'Loading more…';
+        setTimeout(function () {
+          a.agentsCursor = Math.min(a.agentsCursor + PAGE_SIZE, a.agents.length);
+          renderAgentsTable(a);
+        }, 400);
+      });
+    }
+  }
+
+  function agentRow(a, agent) {
+    var tr = document.createElement('tr');
+    tr.dataset.id = agent.id;
+    function td(text) { var d = document.createElement('td'); d.textContent = text; return d; }
+    function tdInput(name, value) { var d = document.createElement('td'); var i = document.createElement('input'); i.value = value; i.dataset.f = name; d.appendChild(i); return d; }
+    function view() {
+      tr.innerHTML = '';
+      tr.appendChild(td(agent.firstName)); tr.appendChild(td(agent.lastName)); tr.appendChild(td(agent.type));
+      tr.appendChild(td(agent.phone)); tr.appendChild(td(agent.email)); tr.appendChild(td(agent.npn)); tr.appendChild(td(agent.disabled ? 'Yes' : 'No'));
+      var actionTd = document.createElement('td');
+      var editBtn = document.createElement('button'); editBtn.className = 'btn btn-secondary';
+      editBtn.textContent = 'Edit agent ' + agent.firstName + ' ' + agent.lastName;
+      editBtn.addEventListener('click', edit);
+      actionTd.appendChild(editBtn); tr.appendChild(actionTd);
+    }
+    function edit() {
+      tr.classList.add('editing'); tr.innerHTML = '';
+      tr.appendChild(tdInput('first', agent.firstName));
+      tr.appendChild(tdInput('last', agent.lastName));
+      var typeTd = document.createElement('td'); var sel = document.createElement('select');
+      DB.lookups.agentType.forEach(function (t) { var o = document.createElement('option'); o.textContent = t; if (t === agent.type) o.selected = true; sel.appendChild(o); });
+      typeTd.appendChild(sel); tr.appendChild(typeTd);
+      tr.appendChild(tdInput('phone', agent.phone));
+      tr.appendChild(tdInput('email', agent.email));
+      tr.appendChild(tdInput('npn', agent.npn));
+      var dTd = document.createElement('td'); var dChk = document.createElement('input'); dChk.type = 'checkbox'; dChk.checked = agent.disabled;
+      dTd.appendChild(dChk); tr.appendChild(dTd);
+      var actionTd = document.createElement('td');
+      var saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-primary'; saveBtn.textContent = 'Save';
+      saveBtn.addEventListener('click', function () {
+        var first = tr.querySelector('[data-f="first"]').value.trim();
+        var last = tr.querySelector('[data-f="last"]').value.trim();
+        var phone = tr.querySelector('[data-f="phone"]').value.trim();
+        var email = tr.querySelector('[data-f="email"]').value.trim();
+        if (!first || !last) { toast('First and last name are required', true); return; }
+        if (phone && !RX_PHONE.test(phone)) { toast('Enter a valid phone number.', true); return; }
+        if (email && !RX_EMAIL.test(email)) { toast('Enter a valid email address.', true); return; }
+        if (consumeSim(simSaveError)) { toast('This record changed since you loaded it', true); noteDemo('Simulated: 409 on agent save'); return; }
+        agent.firstName = first; agent.lastName = last; agent.type = sel.value; agent.phone = phone; agent.email = email;
+        agent.npn = tr.querySelector('[data-f="npn"]').value.trim(); agent.disabled = dChk.checked;
+        tr.classList.remove('editing'); view(); toast('Saved');
+      });
+      var cancelBtn = document.createElement('button'); cancelBtn.className = 'btn btn-secondary'; cancelBtn.style.marginLeft = '8px'; cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', function () { tr.classList.remove('editing'); view(); });
+      actionTd.appendChild(saveBtn); actionTd.appendChild(cancelBtn); tr.appendChild(actionTd);
+    }
+    view();
+    return tr;
+  }
+
+  document.getElementById('btnAddAgent').addEventListener('click', function () {
+    var a = DB.agencies[currentAgencyId];
+    var draft = { id: nextId('agt'), firstName: '', lastName: '', type: DB.lookups.agentType[0], phone: '', email: '', npn: '', disabled: false };
+    a.agents.push(draft); a.agentsCursor = a.agents.length;
+    renderAgentsTable(a);
+    var newTr = document.querySelector('#agentsTbody tr[data-id="' + draft.id + '"]');
+    if (newTr) { var editBtn = newTr.querySelector('button'); if (editBtn) editBtn.click(); }
+  });
+
+  function renderAgencyPolicies(a) {
+    var tbody = document.getElementById('agencyPoliciesTbody');
+    tbody.innerHTML = '';
+    if (a.policies.length === 0) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="text-body">No policies for this agency.</div></div></td></tr>'; return; }
+    a.policies.forEach(function (p) {
+      var badge = p.status === 'active' ? ['badge-active', '&#9679;', 'In force']
+        : p.status === 'pending' ? ['badge-warn', '&#9680;', 'Pending']
+        : p.status === 'lapsed' ? ['badge-lapsed', '&#8856;', 'Lapsed']
+        : ['badge-neutral', '&#9675;', 'Unknown'];
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + p.policyId + '</td><td><span class="' + badge[0] + '"><span aria-hidden="true">' + badge[1] + '</span> ' + badge[2] + '</span></td>' +
+        '<td>' + p.term + '</td><td>' + p.insured + '</td><td>' + p.classId + ' · ' + p.subclass + '</td>' +
+        '<td><button class="btn btn-secondary" disabled>Open in policy system</button></td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  document.getElementById('btnSaveAgency').addEventListener('click', function () {
+    var a = DB.agencies[currentAgencyId];
+    var name = document.getElementById('f-agy-name').value.trim();
+    var number = document.getElementById('f-agy-number').value.trim();
+    var line1 = document.getElementById('f-agy-line1').value.trim();
+    var city = document.getElementById('f-agy-city').value.trim();
+    var state = document.getElementById('f-agy-state').value.trim();
+    var zip = document.getElementById('f-agy-zip').value.trim();
+    var phone = document.getElementById('f-agy-phone').value.trim();
+
+    var errors = [];
+    if (!name) errors.push('Enter a name.');
+    if (!number) errors.push('Enter the agency number.');
+    if (!line1 || !city || !state || !zip) errors.push('Enter city, state, and zip.');
+    if (phone && !RX_PHONE.test(phone)) errors.push('Enter a valid phone number.');
+    if (errors.length) { toast(errors[0], true); return; }
+
+    var btn = this; btn.disabled = true; var origText = btn.textContent; btn.textContent = 'Saving…';
+    setTimeout(function () {
+      btn.disabled = false; btn.textContent = origText;
+      if (consumeSim(simSaveError)) {
+        document.getElementById('agencyConflictBanner').style.display = 'block';
+        noteDemo('Simulated: 409 conflict on save');
+        return;
+      }
+      a.name = name; a.agencyNumber = number;
+      a.address = { line1: line1, line2: document.getElementById('f-agy-line2').value.trim(), city: city, state: state, zip: zip };
+      a.phone = phone;
+      a.billingContactName = document.getElementById('f-agy-billing-name').value.trim();
+      a.billingContactPhone = document.getElementById('f-agy-billing-phone').value.trim();
+      a.notes = document.getElementById('f-agy-notes').value.trim();
+      a.highPotential = document.getElementById('f-agy-highpotential').checked;
+      a.premiumFinancing = document.getElementById('f-agy-financing').checked;
+      a.disabled = document.getElementById('f-agy-history').checked;
+      a.version += 1;
+      document.getElementById('agencyName').textContent = a.name;
+      var banner = document.getElementById('agencySaveBanner');
+      banner.textContent = 'Saved'; banner.style.display = 'block';
+      setTimeout(function () { banner.style.display = 'none'; }, 2000);
+      toast('Saved');
+    }, 500);
+  });
+
+  document.getElementById('btnAgencySpecialty').addEventListener('click', function () {
+    toast('Specialty area is an external destination — out of scope for this unit');
+  });
+  document.getElementById('btnAgencyBack').addEventListener('click', function () {
+    frameSelect.value = 'status-matrix';
+    toast('Returning to Directory (UNIT-CMS-0004, out of scope here)');
+    update();
+  });
+
+  /* ============================================================
+   * 9. Add New Brokerage — real validation + submit + navigate
+   * ============================================================ */
+  document.getElementById('btnSaveNewBrokerage').addEventListener('click', function () {
+    var name = document.getElementById('f-newbrk-name').value.trim();
+    var line1 = document.getElementById('f-newbrk-line1').value.trim();
+    var fields = {
+      'fld-newbrk-name': !name,
+      'fld-newbrk-line1': !line1
+    };
+    var count = 0;
+    Object.keys(fields).forEach(function (id) {
+      setFieldInvalid(document.getElementById(id), fields[id]);
+      if (fields[id]) count += 1;
+    });
+    var summary = document.getElementById('addBrokerageErrorSummary');
+    if (count > 0) {
+      document.getElementById('addBrokerageErrorCount').textContent = count + (count === 1 ? ' field needs' : ' fields need') + ' attention';
+      summary.style.display = 'block';
+      return;
+    }
+    summary.style.display = 'none';
+    var btn = this; btn.disabled = true; var orig = btn.textContent; btn.textContent = 'Saving…';
+    setTimeout(function () {
+      btn.disabled = false; btn.textContent = orig;
+      var id = nextId('brk');
+      DB.brokerages[id] = {
+        id: id, accountCode: 'AC-' + (90000 + Math.floor(Math.random() * 9999)), version: 1,
+        name: name,
+        address: { line1: line1, line2: document.getElementById('f-newbrk-line2').value.trim(), city: document.getElementById('f-newbrk-city').value.trim(), state: document.getElementById('f-newbrk-state').value.trim(), zip: document.getElementById('f-newbrk-zip').value.trim() },
+        phone: document.getElementById('f-newbrk-phone').value.trim(),
+        fax: document.getElementById('f-newbrk-fax').value.trim(),
+        taxId: document.getElementById('f-newbrk-taxid').value.trim(),
+        underwriter: document.getElementById('f-newbrk-underwriter').value.trim(),
+        status: document.getElementById('f-newbrk-status').value === '— select —' ? 'Active' : document.getElementById('f-newbrk-status').value,
+        contractReceivedAt: document.getElementById('f-newbrk-contract').value,
+        disabled: document.getElementById('f-newbrk-history').checked,
+        accounting: { contactName: '', line1: '', line2: '', city: '', state: '', zip: '' },
+        brokersCursor: 0, brokers: [], policies: []
+      };
+      toast('Brokerage created');
+      // R3: navigate to the new brokerage's Detail screen
+      frameSelect.value = 'brokerage-detail-populated';
+      currentBrokerageId = id;
+      update();
+      resetAddBrokerageForm();
+    }, 500);
+  });
+  function resetAddBrokerageForm() {
+    ['f-newbrk-name', 'f-newbrk-line1', 'f-newbrk-line2', 'f-newbrk-city', 'f-newbrk-state', 'f-newbrk-zip', 'f-newbrk-underwriter', 'f-newbrk-phone', 'f-newbrk-fax', 'f-newbrk-taxid', 'f-newbrk-contract'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('f-newbrk-status').selectedIndex = 0;
+    document.getElementById('f-newbrk-history').checked = false;
+    document.getElementById('addBrokerageErrorSummary').style.display = 'none';
+    ['fld-newbrk-name', 'fld-newbrk-line1'].forEach(function (id) { setFieldInvalid(document.getElementById(id), false); });
+  }
+  document.getElementById('btnCancelNewBrokerage').addEventListener('click', function () {
+    resetAddBrokerageForm();
+    toast('Discarded — no record created');
+  });
+
+  /* ============================================================
+   * 10. Add New Agency — real validation + submit + two-choice dialog (R15)
+   * ============================================================ */
+  var agencyConfirmOverlay = document.getElementById('agencyConfirmOverlay');
+  var lastCreatedAgencyId = null;
+
+  document.getElementById('btnSaveNewAgency').addEventListener('click', function () {
+    var name = document.getElementById('f-newagy-name').value.trim();
+    var number = document.getElementById('f-newagy-number').value.trim();
+    var line1 = document.getElementById('f-newagy-line1').value.trim();
+    var fields = { 'fld-newagy-name': !name, 'fld-newagy-number': !number, 'fld-newagy-line1': !line1 };
+    var count = 0;
+    Object.keys(fields).forEach(function (id) { setFieldInvalid(document.getElementById(id), fields[id]); if (fields[id]) count += 1; });
+    var summary = document.getElementById('addAgencyErrorSummary');
+    if (count > 0) {
+      document.getElementById('addAgencyErrorCount').textContent = count + (count === 1 ? ' field needs' : ' fields need') + ' attention';
+      summary.style.display = 'block';
+      return;
+    }
+    summary.style.display = 'none';
+    var btn = this; btn.disabled = true; var orig = btn.textContent; btn.textContent = 'Saving…';
+    setTimeout(function () {
+      btn.disabled = false; btn.textContent = orig;
+      var id = nextId('agy');
+      DB.agencies[id] = {
+        id: id, accountCode: 'AC-' + (40000 + Math.floor(Math.random() * 999)), version: 1,
+        name: name, agencyNumber: number,
+        address: { line1: line1, line2: document.getElementById('f-newagy-line2').value.trim(), city: document.getElementById('f-newagy-city').value.trim(), state: document.getElementById('f-newagy-state').value.trim(), zip: document.getElementById('f-newagy-zip').value.trim() },
+        phone: document.getElementById('f-newagy-phone').value.trim(),
+        billingContactName: document.getElementById('f-newagy-billing-name').value.trim(),
+        billingContactPhone: document.getElementById('f-newagy-billing-phone').value.trim(),
+        notes: document.getElementById('f-newagy-notes').value.trim(),
+        highPotential: document.getElementById('f-newagy-highpotential').checked,
+        premiumFinancing: document.getElementById('f-newagy-financing').checked,
+        disabled: false, agentsCursor: 0, agents: [], policies: []
+      };
+      lastCreatedAgencyId = id;
+      document.getElementById('agencyConfirmBody').textContent = name + ' was created successfully.';
+      agencyConfirmOverlay.classList.add('dialog-open');
+    }, 500);
+  });
+  function resetAddAgencyForm() {
+    ['f-newagy-name', 'f-newagy-number', 'f-newagy-line1', 'f-newagy-line2', 'f-newagy-city', 'f-newagy-state', 'f-newagy-zip', 'f-newagy-phone', 'f-newagy-billing-name', 'f-newagy-billing-phone', 'f-newagy-notes'].forEach(function (id) { document.getElementById(id).value = ''; });
+    document.getElementById('f-newagy-highpotential').checked = false;
+    document.getElementById('f-newagy-financing').checked = false;
+    document.getElementById('addAgencyErrorSummary').style.display = 'none';
+    ['fld-newagy-name', 'fld-newagy-number', 'fld-newagy-line1'].forEach(function (id) { setFieldInvalid(document.getElementById(id), false); });
+  }
+  document.getElementById('btnCancelNewAgency').addEventListener('click', function () { resetAddAgencyForm(); toast('Discarded — no record created'); });
+  document.getElementById('btnGoToAgencyDetail').addEventListener('click', function () {
+    agencyConfirmOverlay.classList.remove('dialog-open');
+    currentAgencyId = lastCreatedAgencyId;
+    frameSelect.value = 'agency-detail-populated';
+    update();
+    resetAddAgencyForm();
+    toast('Agency created');
+  });
+  document.getElementById('btnAddAnotherAgency').addEventListener('click', function () {
+    // R15: "Add another agency" resets the form and keeps focus on it, no navigation
+    agencyConfirmOverlay.classList.remove('dialog-open');
+    resetAddAgencyForm();
+    document.getElementById('f-newagy-name').focus();
+  });
+
+  /* ============================================================
+   * 11. CGA grid — real inline add/edit (R21–R23)
+   * ============================================================ */
+  var cgaLoadingPanel = document.getElementById('cgaLoadingPanel');
+  var cgaErrorPanel = document.getElementById('cgaErrorPanel');
+  var cgaLoadedRegion = document.getElementById('cgaLoadedRegion');
+
+  function loadCgaGrid() {
+    loadRegion({
+      loadingEl: cgaLoadingPanel, errorEl: cgaErrorPanel, loadedEl: cgaLoadedRegion,
+      errorTitleEl: { set textContent(v) { cgaErrorPanel.querySelector('.title').textContent = v; } },
+      errorBodyEl: { set textContent(v) { cgaErrorPanel.querySelector('.body').textContent = v; } },
+      onSuccess: function () { renderCgaGrid(); }
+    });
+  }
+  document.getElementById('cgaErrorRetry').addEventListener('click', loadCgaGrid);
+
+  function renderCgaGrid() {
+    var tbody = document.getElementById('cgaTbody');
+    tbody.innerHTML = '';
+    if (DB.cga.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="text-h3">No CGA records yet</div></div></td></tr>';
+      return;
+    }
+    DB.cga.forEach(function (row) { tbody.appendChild(cgaRow(row)); });
+  }
+
+  function cgaRow(row) {
+    var tr = document.createElement('tr');
+    tr.dataset.id = row.id;
+    function td(text) { var d = document.createElement('td'); d.textContent = text; return d; }
+    function tdInput(name, value, placeholder) { var d = document.createElement('td'); var i = document.createElement('input'); i.value = value; i.dataset.f = name; if (placeholder) i.placeholder = placeholder; d.appendChild(i); return d; }
+    function view() {
+      tr.classList.remove('editing');
+      tr.innerHTML = '';
+      tr.appendChild(td(row.agentName)); tr.appendChild(td(row.line1)); tr.appendChild(td(row.city));
+      tr.appendChild(td(row.state)); tr.appendChild(td(row.zip)); tr.appendChild(td(row.email));
+      tr.appendChild(td(row.phone)); tr.appendChild(td(row.agencyId));
+      var actionTd = document.createElement('td');
+      var editBtn = document.createElement('button'); editBtn.className = 'btn btn-secondary';
+      editBtn.textContent = 'Edit CGA record for ' + row.agentName;
+      editBtn.addEventListener('click', edit);
+      actionTd.appendChild(editBtn); tr.appendChild(actionTd);
+    }
+    function edit() {
+      tr.classList.add('editing'); tr.innerHTML = '';
+      tr.appendChild(tdInput('agentName', row.agentName));
+      tr.appendChild(tdInput('line1', row.line1, 'Start typing to see suggestions'));
+      tr.appendChild(tdInput('city', row.city));
+      tr.appendChild(tdInput('state', row.state));
+      tr.appendChild(tdInput('zip', row.zip));
+      tr.appendChild(tdInput('email', row.email));
+      tr.appendChild(tdInput('phone', row.phone));
+      tr.appendChild(tdInput('agencyId', row.agencyId));
+      var actionTd = document.createElement('td'); actionTd.className = 'cga-actions';
+      var saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-primary'; saveBtn.textContent = 'Save';
+      saveBtn.addEventListener('click', function () {
+        var agentName = tr.querySelector('[data-f="agentName"]').value.trim();
+        var phone = tr.querySelector('[data-f="phone"]').value.trim();
+        var email = tr.querySelector('[data-f="email"]').value.trim();
+        var zip = tr.querySelector('[data-f="zip"]').value.trim();
+        if (!agentName) { toast('Enter a name.', true); return; }
+        if (phone && !RX_PHONE.test(phone)) { toast('Enter a valid phone number.', true); return; }
+        if (email && !RX_EMAIL.test(email)) { toast('Enter a valid email address.', true); return; }
+        if (zip && !RX_ZIP.test(zip)) { toast('Enter city, state, and zip.', true); return; }
+        if (consumeSim(simSaveError)) { toast('This record changed since you loaded it', true); noteDemo('Simulated: 409 on CGA row save'); return; }
+        row.agentName = agentName;
+        row.line1 = tr.querySelector('[data-f="line1"]').value.trim();
+        row.city = tr.querySelector('[data-f="city"]').value.trim();
+        row.state = tr.querySelector('[data-f="state"]').value.trim();
+        row.zip = zip;
+        row.email = email;
+        row.phone = phone; // R23: kept as a formatted string end-to-end, never coerced to a number
+        row.agencyId = tr.querySelector('[data-f="agencyId"]').value.trim();
+        view();
+        toast('Saved');
+      });
+      var cancelBtn = document.createElement('button'); cancelBtn.className = 'btn btn-secondary'; cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', function () {
+        if (!row.agentName) { DB.cga = DB.cga.filter(function (r) { return r.id !== row.id; }); renderCgaGrid(); return; }
+        view();
+      });
+      actionTd.appendChild(saveBtn); actionTd.appendChild(cancelBtn); tr.appendChild(actionTd);
+    }
+    view();
+    if (!row.agentName) edit(); // a freshly-added row opens straight into edit mode
+    return tr;
+  }
+
+  document.getElementById('btnAddCga').addEventListener('click', function () {
+    var draft = { id: nextId('cga'), agentName: '', line1: '', city: '', state: '', zip: '', email: '', phone: '', agencyId: '' };
+    DB.cga.unshift(draft);
+    renderCgaGrid();
+  });
+  document.getElementById('btnCgaBack').addEventListener('click', function () {
+    frameSelect.value = 'status-matrix';
+    toast('Returning to Directory (UNIT-CMS-0004, out of scope here)');
+    update();
+  });
+
+  /* ============================================================
+   * 12. Frame-navigation hook — (re)loads the live regions with a
+   *     real loading/error sequence whenever a reviewer selects
+   *     one of the live frames from the dropdown, so the loading
+   *     and error states stay reachable through interaction.
+   * ============================================================ */
+  function onFrameNavigated(frame) {
+    if (frame === 'brokerage-detail-populated') { document.getElementById('brokerageConflictBanner').style.display = 'none'; loadBrokerageDetail(currentBrokerageId); }
+    if (frame === 'agency-detail-populated') { document.getElementById('agencyConflictBanner').style.display = 'none'; loadAgencyDetail(currentAgencyId); }
+    if (frame === 'cga-grid-populated') { loadCgaGrid(); }
+  }
+
   update();
+})();
 </script>
 
 </body>

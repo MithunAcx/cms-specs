@@ -1,5 +1,36 @@
 # Frame inventory — UNIT-CMS-0006 Partner Records UI
 
+## Interaction model
+
+The mockup is a real, runnable click-through prototype backed by a small in-memory
+demo dataset (a few brokerages/agencies with brokers/agents/policies, and a few CGA
+rows), not only a frame-switcher over static snapshots. All 19 frames below remain
+directly reachable via the dropdown switcher for reviewers, unchanged in name and
+content. In addition, the three data-driven frames —
+`brokerage-detail-populated`, `agency-detail-populated`, `cga-grid-populated` — are
+now also reachable through ordinary interaction from within the mockup itself:
+
+- The `.tabs` bar on Brokerage/Agency Detail performs a real panel swap
+  (Details/Brokers/Activity/Policies and Details/Agents/Activity/Policies), not a
+  static, pre-selected `active` class.
+- "Accounting address" opens a real dialog over Brokerage Detail; "Add Brokerage" /
+  "Add Agency" run real client-side validation (states.md's Validation messages
+  table) and, on success, create the record in the in-memory dataset and navigate —
+  Add Agency's two-choice confirmation (R15) is a real dialog with both outcomes
+  wired.
+- The Brokers/Agents "Load more" row appends the next in-memory page (cursor
+  simulated client-side); the CGA grid's Edit action turns a real row into inputs,
+  validates, and saves back into the in-memory row.
+- Loading and "unable to load"/offline states for these three frames are reachable
+  by navigating to them (a short simulated fetch delay plays every time), and the
+  demo-only toolbar (`simulate next save as 409 conflict` / `simulate next load as
+  failed` / `simulate offline`) makes the corresponding error states in `states.md`
+  reachable on demand without a real backend. These toolbar controls are clearly
+  marked demo-only and are not part of the specified UI.
+
+This does not change what each of the 19 frames shows or means — it changes how a
+reviewer can reach the live ones, in addition to jumping straight to any named frame.
+
 ## Source position
 
 No design file exists for this unit. The generated HTML mockup at
