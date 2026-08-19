@@ -1,7 +1,28 @@
 # Frame inventory — UNIT-CMS-0004-partner-directory-ui
 
-**Source position:** no design file exists. This is the ordinary case — frames below
-are generated per `designer-unit-ux`'s default output, from `states.md` and `design.md`.
+**Source position:** no unit-specific design file exists. This is the ordinary case —
+frames below are generated per `designer-unit-ux`'s default output, from `states.md`
+and `design.md`. The sponsor-provided indicative UI redesign,
+`requirements/contactmanagement-full-mockup.html` (cited in
+`requirements/CMS-Modernization-Requirements.md` §1.4 as
+`contactmanagement-angular-mockup.html` — same file, filename drifted), **is** the
+reference for this unit's visual design system and for the Directory/Search landing
+screen's structure and copy (its `<!-- DIRECTORY / SEARCH -->` section, `~L236-283`,
+and its `<style>` block, `~L29-966`, as read at the time of this revision). This
+mockup rebuilds that screen's structure (segmented mode control, term/state input,
+Assigned Underwriter filter, results table/count, create launch points) inside
+`design-system.md`'s fixed vocabulary — the two are already colour-aligned
+(`design-system.md` §2 states its tokens are "Aligned to the product brand mockup"),
+so this file adopts the reference's component naming (`.seg`, `.chip`, `.count`,
+`.tbl`, `.panel`, `.pagehead`) built on `design-system.md`'s literal geometry, rather
+than the reference's own literal CSS (which uses forbidden gradients/shadows/
+animations and an external Google Font this repo's mockups may not fetch). Two
+structural differences from the reference, both required by this unit's own
+requirements/design: (1) results are paginated with a cursor-based "Load more"
+control (R12, `10-platform.md`), not the reference's simpler unpaginated list; (2)
+"Manage CGAs" and the CGA/Agency/Brokerage create-form dialogs are not drawn here —
+CGA is a search mode only in this unit's scope, and the create forms belong to
+UNIT-CMS-0006 (requirements.md Scope/Out of scope).
 
 **Constraints every frame respects:** the three canvas widths (360/768/1440),
 `design-system.md` §2 tokens (both themes), WCAG 2.2 AA contrast/target-size, usable

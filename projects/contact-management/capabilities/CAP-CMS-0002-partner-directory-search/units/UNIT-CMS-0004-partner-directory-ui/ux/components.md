@@ -27,6 +27,7 @@ owned by another unit).
 | Search input group | The term/state input(s), shown per the current mode's requirement | R3, R4 |
 | Assigned Underwriter filter | Independent dropdown search path | R5 |
 | Result row navigator | Click/keyboard-activate behaviour resolving a row to its detail-screen family | R10, R26 |
+| Load more control | Fetches the next cursor-based batch of results; present only while the response carries a `next_cursor` | R12 |
 | Create launch group | The two role-gated navigation entry points | R11, R18 |
 
 ### Mode switcher
@@ -137,6 +138,34 @@ activate).
 **Accessibility contract:** each row/card is independently focusable and
 activatable via Enter/Space, with an accessible name built from its primary
 visible field — see `a11y.md`.
+
+### Load more control
+
+**Purpose.** Fetches the next cursor-based batch of results for the current
+mode/term/state/UW-filter search (design.md's "Run a search" flow, step 6) —
+never a page-number control, per 10-platform.md's cursor-only pagination floor
+and R12.
+
+**Inputs**
+
+| Name | Type | Required | Default | Notes |
+|------|------|----------|---------|-------|
+| `nextCursor` | opaque string, nullable | yes | `null` | Presence, not value, drives visibility — the control renders only while non-null |
+
+**Events**
+
+| Event | Payload | When |
+|-------|---------|------|
+| `load-more` | `{ mode, term?, state?, cursor: nextCursor }` | User activates the control |
+
+**States it must render:** present (a `next_cursor` was returned) or entirely
+absent (the last batch had none) — same present/absent pattern as the create
+launch group, no third state. A `load-more` request goes through the same
+request sequencer as any other search request (design.md), so a stale response
+to it is discarded on the same token basis.
+
+**Accessibility contract:** standard button semantics, reachable in the focus
+order immediately after the results region — see `a11y.md`.
 
 ### Create launch group
 
