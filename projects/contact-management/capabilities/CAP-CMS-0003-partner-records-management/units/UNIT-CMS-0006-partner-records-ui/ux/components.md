@@ -37,6 +37,7 @@ away from the parent screen.
 | columns | list of field definitions | yes | — | Differ per grid (broker/agent/CGA field sets per R9/R18/R21) |
 | outcome | one of: `idle`, `loading`, `empty`, `row-editing`, `row-saving`, `row-error` | yes | `idle` | A single outcome input, not combinable booleans, per `60-frontend.md`'s component guidance |
 | readOnly | boolean | yes | `false` | `true` when the session lacks the required role (R39) |
+| nextCursor | string or null | no | `null` | Present only for the Brokers/Agents grids, which are cursor-paginated per UNIT-CMS-0005's `BrokerListResponse`/`AgentListResponse` (`items`/`next_cursor`, PR #60). `null` hides the "Load more" control. The CGA grid has no cursor input — its listing surface returns an unpaginated set |
 
 **Events**
 
@@ -47,6 +48,7 @@ away from the parent screen.
 | rowSaveSucceeded | row id, updated fields, new `version` | The corresponding create/update call resolves successfully |
 | rowSaveFailed | row id, error envelope | The call fails — the conflict/error presenter renders inside that row only |
 | rowEditCancelled | row id | User presses Esc or a Cancel control while editing a row |
+| loadMoreRequested | current `nextCursor` | User activates "Load more" on the Brokers/Agents grid (cursor-based, per 10-platform.md — never a page number) |
 
 **States it must render:** see `states.md` — the loading/empty/populated/submitting/
 error-recoverable/offline/session-expiry rows of each grid's view.

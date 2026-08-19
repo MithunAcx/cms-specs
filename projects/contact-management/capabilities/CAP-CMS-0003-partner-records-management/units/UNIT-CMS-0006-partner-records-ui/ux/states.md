@@ -28,7 +28,7 @@ unspecified state, and `ba-spec-validate` fails the unit for it.
 |-------|---------|--------------------|-------------------|
 | loading | Screen mount, fetching the brokerage record, Brokers grid, activity panel, policy panel | Skeleton blocks in the master-details panel and each grid/panel region independently | None |
 | empty | Brokers grid has zero rows (a new brokerage with no brokers yet) | Empty-state block in the Brokers grid region: "No brokers yet" + Add broker action; master details still populated | Add broker |
-| populated | Record and both grids loaded | Full master-details panel, Brokers grid rows, embedded activity and policy panels | Edit any master field, add/edit a broker row, open accounting dialog, switch panels |
+| populated | Record and both grids loaded | Full master-details panel, Brokers grid rows, embedded activity and policy panels | Edit any master field, add/edit a broker row, load a further page of Brokers when `next_cursor` is present (cursor-based, per 10-platform.md — never page numbers), open accounting dialog, switch panels |
 | partial | Master details load but the activity panel or policy panel fails independently (R35) | The failing panel shows its own inline error and retry; master details and Brokers grid remain fully usable | Retry the failing panel only |
 | submitting | User saves an edited master-detail field, or an inline broker row | The field/row group being saved shows a busy state and locks; the rest of the screen remains interactive | None on the saving region; other regions unaffected |
 | success | `200` on a master-detail save, or `201`/`200` on a broker row save | Inline confirmation near the saved region (R8); values refresh to the response, including the new `version` | Continue editing |
@@ -95,7 +95,7 @@ unspecified state, and `ba-spec-validate` fails the unit for it.
 |-------|---------|--------------------|-------------------|
 | loading | Screen mount, fetching agency, Agents grid, activity panel, policy panel | Skeleton blocks per region | None |
 | empty | Agents grid has zero rows | Empty-state block: "No agents yet" + Add agent | Add agent |
-| populated | Record and grids loaded | Full master-details panel, Agents grid, embedded activity/policy panels, Specialty link (if role permits) | Edit fields, add/edit agent row, navigate to Specialty, embed panels |
+| populated | Record and grids loaded | Full master-details panel, Agents grid, embedded activity/policy panels, Specialty link (if role permits) | Edit fields, add/edit agent row, load a further page of Agents when `next_cursor` is present (cursor-based, per 10-platform.md), navigate to Specialty, embed panels |
 | partial | Activity or policy panel fails independently | That panel shows its own inline error and retry; rest of screen unaffected | Retry that panel |
 | submitting | Saving a master field or agent row | Saving region busy/locked; rest of screen interactive | None on saving region |
 | success | `200`/`201` | Inline confirmation; values refresh including `version` | Continue editing |
@@ -197,3 +197,5 @@ All user-visible strings, so they are reviewable and translatable.
 | addAgency.confirm.addAnother | "Add another agency" |
 | save.success | "Saved" |
 | save.saving | "Saving…" |
+| grid.loadMore | "Load more" |
+| grid.loadingMore | "Loading more…" |
