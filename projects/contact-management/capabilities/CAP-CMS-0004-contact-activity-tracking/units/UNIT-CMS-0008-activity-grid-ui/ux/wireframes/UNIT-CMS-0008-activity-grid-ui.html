@@ -174,18 +174,17 @@
   }
   .card .card-row { display: flex; justify-content: space-between; gap: 8px; }
 
-  /* ---- filter/sort bar & pagination ---- */
+  /* ---- filter/sort bar & load-more ---- */
   .toolbar {
     display: flex; justify-content: space-between; align-items: center;
     flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
   }
   .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .pagination { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
-  .page-btn {
-    height: 36px; min-width: 36px; border-radius: 6px; background: var(--surface-raised);
+  .load-more-row { display: flex; justify-content: center; margin-top: 16px; }
+  .load-more-btn {
+    height: 36px; padding: 0 16px; border-radius: 6px; background: var(--surface-raised);
     border: 1px solid var(--border); color: var(--text-primary); font-size: 14px; cursor: pointer;
   }
-  .page-btn[aria-current="page"] { border-color: var(--primary); color: var(--primary); font-weight: 600; }
 
   /* ---- empty state ---- */
   .empty-state {
@@ -360,10 +359,9 @@
               </div>
             </div>
           </div>
-          <nav class="pagination" aria-label="Activity pages">
-            <button class="page-btn" aria-current="page">1</button>
-            <button class="page-btn">2</button>
-          </nav>
+          <div class="load-more-row">
+            <button class="load-more-btn">Load more activity</button>
+          </div>
         </section>
 
         <!-- ============ populated-viewer ============ -->
@@ -400,9 +398,8 @@
               </tr>
             </tbody>
           </table>
-          <nav class="pagination" aria-label="Activity pages">
-            <button class="page-btn" aria-current="page">1</button>
-          </nav>
+          <!-- No load-more control drawn here — this frame's two rows are the only
+               page; next_cursor is null, so the control does not render. -->
         </section>
 
         <!-- ============ empty-first-use ============ -->
@@ -522,7 +519,7 @@
           <div class="dialog-backdrop">
             <div class="dialog">
               <p class="text-h3">Delete this activity entry?</p>
-              <p class="text-body" style="margin-top:12px;">This removes it from the list. It can be recovered by an administrator if needed.</p>
+              <p class="text-body" style="margin-top:12px;">This removes it from the list. This cannot be undone — no unit exposes a restore path.</p>
               <div class="btn-row" style="margin-top:24px;">
                 <button class="btn-primary">Delete</button>
                 <button class="btn-secondary">Cancel</button>

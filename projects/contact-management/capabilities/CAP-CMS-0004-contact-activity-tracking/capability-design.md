@@ -5,7 +5,7 @@ project: CMS
 status: draft
 owner: "@MithunAcx"
 created: 2026-08-18
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Contact Activity & Follow-up Tracking — capability design
@@ -46,8 +46,8 @@ the `Activity` entity; U2 is a pure API consumer with no server-side schema of i
 |---|---|
 | Versioning | `/api/v1/...` |
 | Auth header shape | `Authorization: Bearer <access token>`, validated per CAP-CMS-0001/XD-0002 |
-| Pagination | `page`/`size`; response includes total count and page metadata |
-| Error envelope | `{ error: { code, message, fields? } }` |
+| Pagination | Cursor-based only, per `10-platform.md`: `limit` + `cursor` in, `items` + `next_cursor` out. Default `limit` 25, maximum 100. No offset pagination anywhere |
+| Error envelope | `{ code, message, details[], trace_id }` |
 | Idempotency | `PUT` idempotent by resource id; `DELETE` (soft) idempotent — deleting an already-deleted entry is a no-op `204`, not a `404` |
 | Rate limiting response | `429` with `Retry-After` |
 
@@ -55,7 +55,7 @@ the `Activity` entity; U2 is a pure API consumer with no server-side schema of i
 
 | Method | Path | Request | Response | Status / errors | Min role |
 |--------|------|---------|----------|------------------|----------|
-| GET | `/api/v1/activity?parentType=&parentId=&page=&size=&completed=&sort=followUpDate` | — | `{ items: Activity[], total, page, size }` (excludes soft-deleted by default) | — | Viewer |
+| GET | `/api/v1/activity?parentType=&parentId=&limit=&cursor=&completed=&sort=followUpDate` | — | `{ items: Activity[], next_cursor }` (excludes soft-deleted by default) | — | Viewer |
 | POST | `/api/v1/activity` | `{ parentType, parentId, statusId, note, followUpDate }` | `Activity` with new id, server-derived `userName`, `enteredDate` | `400` | Editor |
 | PUT | `/api/v1/activity/{id}` | `{ statusId, note, followUpDate, completed }` | updated `Activity`; `completedDate` server-set when `completed` flips true | `400`, `404` | Editor |
 | DELETE | `/api/v1/activity/{id}` | — | `204` (soft delete — sets `deletedAt`) | `404` if never existed | Editor |
@@ -124,3 +124,4 @@ CAP-CMS-0003's Brokerage Detail screen
 
 | Date | Change | Units whose `design.md` must follow |
 |------|--------|-------------------------------------|
+| 2026-08-19 | Corrected shared conventions to match the platform floor: pagination changed from `page`/`size` (offset) to cursor-based `limit`+`cursor` in / `items`+`next_cursor` out (10-platform.md, "no offset pagination anywhere"); error envelope corrected from the stale `{ error: { code, message, fields? } }` to the platform-standard `{ code, message, details[], trace_id }`. Endpoint table for U1 updated to match. No ADR — this restores the already-mandatory platform floor rather than adopting a new convention. | UNIT-CMS-0007, UNIT-CMS-0008 |

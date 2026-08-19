@@ -31,7 +31,7 @@ independent architectural choice — see Requirement coverage for R20.
 
 | Component | Responsibility | Satisfies |
 |---|---|---|
-| List/query view | Builds `page`/`size`/`sort`/`completed` filter parameters, calls UNIT-CMS-0007's list endpoint, and renders the loading/loaded/empty/error/throttled states | R1, R2, R3, R17, R18, R20, R29 |
+| List/query view | Builds `limit`/`cursor`/`sort`/`completed` filter parameters, calls UNIT-CMS-0007's list endpoint, and renders the loading/loaded/empty/error/throttled states | R1, R2, R3, R17, R18, R20, R29 |
 | Add action | Client-validates and submits a new entry; never offers a field for `userName`, `enteredDate`, `completedDate`, or `id` | R4, R5, R9, R10, R12, R14, R15, R28 |
 | Edit action | Client-validates and submits changes to `statusId`/`note`/`followUpDate` on an existing, non-deleted entry | R6, R9, R10, R11, R12, R14, R15, R28 |
 | Complete action | Single-action toggle that submits `completed: true` only; presents no completion-date input | R7, R9, R12, R14, R28 |
@@ -47,11 +47,14 @@ independent architectural choice — see Requirement coverage for R20.
 1. The host screen mounts this component, supplying `parentType`, `parentId`, and the
    caller's already-authenticated session (UNIT-CMS-0001).
 2. The component calls UNIT-CMS-0007's list endpoint with that `parentType`/`parentId`,
-   page 1, the default page size, sorted by follow-up date ascending, no completed
-   filter applied.
-3. On success, it renders the returned page, the total count, and pagination controls.
-4. A caller changing sort, the completed/open filter, or page re-issues the list call
-   with the new parameters; nothing is re-derived from a locally cached page (R20).
+   no `cursor` (first page), the default `limit` (25), sorted by follow-up date
+   ascending, no completed filter applied.
+3. On success, it renders the returned `items` and, if `next_cursor` is non-null, a
+   "load more"/next-page control that re-issues the call with that cursor. There is no
+   total count or page number to display — cursor pagination exposes neither.
+4. A caller changing sort or the completed/open filter re-issues the list call from the
+   first page (no cursor) with the new parameters; nothing is re-derived from a locally
+   cached page (R20).
 
 Failure paths:
 
@@ -82,7 +85,7 @@ Failure paths:
 
 | Step fails | Behaviour |
 |---|---|
-| `400`/`422` (invalid `statusId` for this parent type, malformed date) | Inline field-level error from the response's `fields`; submit re-enabled; no automatic retry (R10) |
+| `400`/`422` (invalid `statusId` for this parent type, malformed date) | Inline field-level error from the response's `details[]`; submit re-enabled; no automatic retry (R10) |
 | `401` | Session-expired state; the caller's entered values are retained in the still-open form so nothing is lost once re-authenticated (R13) |
 | `429` | Throttled message honoring `Retry-After`; submit re-enabled once it elapses (R18) |
 | Timeout / network error, outcome unknown | The component re-fetches the list rather than assuming failure or retrying the write blindly; if the entry now appears, the form closes as a success, otherwise submit is re-enabled (R15) |
@@ -232,7 +235,7 @@ UNIT-CMS-0007's and CAP-CMS-0001's responsibility (R30).
 | tenant isolation | This unit constructs no tenant selector of its own — every call carries only `parentType`/`parentId` plus the bearer token UNIT-CMS-0001 already scoped to one tenant. Isolation is enforced server-side by UNIT-CMS-0007's row-level-security policy on every operation, reads included; this unit has nothing further to enforce (R29) |
 | authn/authz | The session/bearer token comes from the host screen via UNIT-CMS-0001; the caller's role (Viewer/Editor) is read from that same session to gate which write controls render (R12/R28). A `401` from any call is always treated as session-expired, never retried by this unit (R13) |
 | validation | Every write is client-validated first (status from the controlled list, well-formed date — R10), but the server remains the authority; a client-side pass never substitutes for the server's own `400`/`422` |
-| errors | Every UNIT-CMS-0007 error follows `{ error: { code, message, fields? } }`; field-scoped entries map to the offending form control, non-field errors render as a banner naming the response's `trace_id` |
+| errors | Every UNIT-CMS-0007 error follows the platform envelope `{ code, message, details[], trace_id }` (`10-platform.md`); field-scoped entries in `details[]` map to the offending form control, non-field errors render as a banner naming the response's `trace_id` |
 | observability | A failed call logs the entry id (where known), the attempted operation, and the returned status/code; `note` and every other personal-data field are excluded from every log line (R31/R32) |
 | performance | p95 ≤ 800 ms / p99 ≤ 2 s to a populated first page (R22), budgeted against UNIT-CMS-0007's own cold-start-inclusive latency. A slow response shows the loading state, never stale cached data standing in for it |
 | migration/backfill | None — greenfield component with no data of its own to migrate (R34) |
@@ -302,3 +305,4 @@ record.
 
 | Date | Change ID | What changed |
 |------|-----------|--------------|
+| 2026-08-19 | — | Corrected list/query view, initial-load flow, and Cross-cutting → errors row from `page`/`size` offset pagination and the stale `{ error: { code, message, fields? } }` envelope to UNIT-CMS-0007's corrected cursor-based contract (`limit`/`cursor` in, `items`/`next_cursor` out) and the platform envelope `{ code, message, details[], trace_id }`, matching `capability-design.md`'s correction and the re-synced `interfaces/UNIT-CMS-0007.openapi.yaml`. Direct correction — unit is `ready`, not yet handed off. |

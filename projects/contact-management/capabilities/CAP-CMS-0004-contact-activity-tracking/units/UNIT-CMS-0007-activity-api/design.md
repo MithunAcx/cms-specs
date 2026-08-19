@@ -1,6 +1,6 @@
 ---
 unit: UNIT-CMS-0007
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Design — Activity API
@@ -60,8 +60,8 @@ Failure paths:
 
 ### GET /api/v1/activity — list — satisfies R4, R5
 
-1. Caller sends `GET` with `parentType`, `parentId`, and optional `page`, `size`, `completed`, `sort=followUpDate`.
-2. Request validator checks `parentType`/`parentId` presence and pagination bounds (`size` ≤ 100, default 25, cursor-based per platform convention).
+1. Caller sends `GET` with `parentType`, `parentId`, and optional `limit`, `cursor`, `completed`, `sort=followUpDate`.
+2. Request validator checks `parentType`/`parentId` presence and pagination bounds (`limit` ≤ 100, default 25, cursor-based per platform convention — no offset pagination).
 3. Activity store accessor reads rows scoped to the caller's tenant, the named parent, `deletedAt IS NULL` by default, applying the `completed` filter and `followUpDate` sort if given.
 4. Caller receives `200` with `{ items, next_cursor }`.
 
@@ -187,8 +187,8 @@ same-transaction concern, not a queue-durability one.
 |---|---|
 | tenant isolation | Every operation, including `GET`, is scoped by `tenant_id` enforced by a PostgreSQL row-level security policy on the `Activity` storage construct (`stack.md`) — never by an application-level `WHERE` clause alone, so a query that forgets the filter still cannot cross tenants (R21) |
 | authn/authz | Bearer token validated per CAP-CMS-0001; minimum role Viewer for `GET`, Editor for `POST`/`PUT`/`DELETE` (R20); ownership rule is tenant-wide, not per-author — any Editor in the tenant may edit or delete any entry |
-| validation | `parentType` restricted to `agency`\|`brokerage`; `parentId`/`statusId` format-checked before any store access; pagination bounds enforced (`size` ≤ 100, default 25) |
-| error model | Shared envelope `{ error: { code, message, fields? } }` per capability convention; `400 invalid_request`, `401`, `403`, `404 not_found`, `503` for a rolled-back write, `429` at the gateway layer |
+| validation | `parentType` restricted to `agency`\|`brokerage`; `parentId`/`statusId` format-checked before any store access; pagination is cursor-based only (`limit` ≤ 100, default 25, opaque `cursor`) — no offset pagination |
+| error model | Shared envelope `{ code, message, details[], trace_id }` per capability convention (`10-platform.md`); `400 invalid_request`, `401`, `403`, `404 not_found`, `503` for a rolled-back write, `429` at the gateway layer |
 | observability | Metrics: request count and error rate per endpoint, write-to-audit-emit latency. Logs: caller id, tenant id, `parentType`, `parentId`, activity id, operation, HTTP status — never `note` content (R23, R24) |
 | performance | p95 ≤ 500 ms / p99 ≤ 1500 ms inclusive of cold start (R14); ≤15 rps peak assumption (R15); 2× surge shed by API Gateway throttling with `429`/`Retry-After` (R16) |
 | migration/backfill | Legacy `PP_TskData` rows are migrated in by CAP-CMS-0006, translating its soft-delete convention into this unit's `deletedAt` field; this unit's own schema is otherwise greenfield and additive (R26) |
@@ -238,3 +238,4 @@ same-transaction concern, not a queue-durability one.
 
 | Date | Change ID | What changed |
 |------|-----------|--------------|
+| 2026-08-19 | — | Corrected Cross-cutting → error model row from the stale `{ error: { code, message, fields? } }` prose to the platform-standard `{ code, message, details[], trace_id }`, matching `interfaces/openapi.yaml` (which was already correct) and `capability-design.md`'s corrected Shared conventions. Corrected the GET list flow and Cross-cutting → validation row from `page`/`size` prose to `limit`/`cursor`, matching the interface and the corrected capability-design.md. Direct correction — unit is `ready`, not yet handed off. |

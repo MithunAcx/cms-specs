@@ -20,12 +20,12 @@ Components that already exist elsewhere and are used as-is.
 | Add/edit activity form | Inline form for creating or editing an entry | R4, R5, R6, R9, R10, R12, R14, R15, R28 |
 | Delete-confirm dialog | The explicit second step before a soft-delete call | R8, R11, R14 |
 | Filter/sort bar | Completed/open filter, follow-up-date sort control | R1, R2 |
-| Pagination control | Page navigation against UNIT-CMS-0007's page/size contract | R3 |
+| Load-more control | Cursor-based next-page navigation against UNIT-CMS-0007's `limit`/`cursor` contract | R3 |
 
 ### Activity grid
 
-**Purpose.** Fetches and renders one page of activity entries for a caller-supplied
-`parentType`/`parentId`, and hosts the filter/sort/pagination controls.
+**Purpose.** Fetches and renders a cursor-based page of activity entries for a
+caller-supplied `parentType`/`parentId`, and hosts the filter/sort/load-more controls.
 
 **Inputs**
 
@@ -35,6 +35,7 @@ Components that already exist elsewhere and are used as-is.
 | `parentId` | id | yes | — | Supplied by the host screen |
 | `outcome` | enum: `loading` \| `populated` \| `empty-first-use` \| `empty-filtered` \| `error-dependency` \| `error-throttled` \| `error-offline` \| `session-expired` | yes | — | One input drives which of these mutually-exclusive states renders, rather than several booleans that could combine into a state that should not exist |
 | `role` | enum: `viewer` \| `editor` | yes | — | Read from the session context; determines whether write controls exist in the DOM at all |
+| `nextCursor` | string \| null | yes | `null` | Drives whether the load-more control renders — present only while non-null |
 
 **Events**
 
@@ -42,7 +43,7 @@ Components that already exist elsewhere and are used as-is.
 |-------|---------|------|
 | `sort-changed` | `{ field, direction }` | Caller changes the sort control |
 | `filter-changed` | `{ completed: boolean \| null }` | Caller changes the completed/open filter |
-| `page-changed` | `{ page }` | Caller navigates pagination |
+| `load-more-requested` | `{ cursor }` | Caller activates the load-more control |
 | `retry-requested` | — | Caller activates retry on an error/offline state |
 | `add-requested` | — | Editor activates the add control |
 
@@ -93,7 +94,7 @@ inputs — those fields do not exist in this component's input set at all (R5).
 | `parentType` | enum: `agency` \| `brokerage` | yes | — | Threaded through unmodified from the grid |
 | `initialValues` | `{ statusId, note, followUpDate }` | edit mode only | — | Pre-populates the form when editing |
 | `outcome` | enum: `idle` \| `submitting` \| `error-field` \| `error-session-expired` | yes | `idle` | One input, not independent booleans |
-| `fieldErrors` | `{ field, message }[]` | no | `[]` | Populated from the server's `400`/`422` `fields` array |
+| `fieldErrors` | `{ field, message }[]` | no | `[]` | Populated from the server's `400`/`422` `details[]` array |
 
 **Events**
 
@@ -159,28 +160,31 @@ composable with each other (R2).
 **Accessibility contract:** see `a11y.md` § Semantics (columnheader, filter
 group).
 
-### Pagination control
+### Load-more control
 
-**Purpose.** Navigates the page/size contract UNIT-CMS-0007 exposes.
+**Purpose.** Requests the next cursor-based page from UNIT-CMS-0007's list endpoint
+(`limit`+`cursor` in, `items`+`next_cursor` out per `10-platform.md`). There is no
+page number or total count to render — cursor pagination exposes neither.
 
 **Inputs**
 
 | Name | Type | Required | Default | Notes |
 |------|------|----------|---------|-------|
-| `page` | integer ≥ 1 | yes | 1 | — |
-| `size` | integer, 1–100 | yes | 25 | Matches the platform pagination default/maximum |
-| `total` | integer ≥ 0 | yes | — | — |
+| `nextCursor` | string \| null | yes | `null` | Control renders only while non-null; absent once the last page is reached |
+| `loading` | boolean | yes | `false` | Disables the control for the duration of the in-flight request (R14) |
 
 **Events**
 
 | Event | Payload | When |
 |-------|---------|------|
-| `page-changed` | `{ page }` | — |
+| `load-more-requested` | `{ cursor }` | Caller activates the control |
 
-**States it must render:** always interactive, including for Viewer role.
+**States it must render:** hidden when `nextCursor` is `null`; disabled while
+`loading`; otherwise always interactive, including for Viewer role.
 
-**Accessibility contract:** `navigation` landmark, `aria-current="page"` — see
-`a11y.md`.
+**Accessibility contract:** a single button, accessible name "Load more activity",
+appended results announced via the grid's live region rather than a page-change
+announcement — see `a11y.md`.
 
 ## Layout
 

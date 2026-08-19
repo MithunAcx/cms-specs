@@ -11,7 +11,7 @@ engineering:
   frontend: { applicable: true }
   api:      { applicable: false }
 created: 2026-08-18
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Activity Grid UI
@@ -42,7 +42,7 @@ reuse, never delete.
 |------|-------------|-----------|----------|
 | R1 | The grid lists activity entries for one caller-supplied `parentType`/`parentId`, excluding soft-deleted entries, defaulting to sort by follow-up date ascending | CAP-CMS-0004/A3 | Must |
 | R2 | The grid can be filtered by completed/open state, combinable with the follow-up-date sort, to surface "what is owed this partner next" | CAP-CMS-0004/A3 | Must |
-| R3 | The grid paginates per UNIT-CMS-0007's page/size contract, displaying total count and current page, for either parent type | CAP-CMS-0004/A3 | Must |
+| R3 | The grid paginates per UNIT-CMS-0007's cursor-based contract (`limit`+`cursor` in, `items`+`next_cursor` out), offering a "load more"/next-page action driven by the returned `next_cursor` rather than a page number, for either parent type | CAP-CMS-0004/A3 | Must |
 | R4 | A caller holding Editor role can add a new entry by supplying task type/status, note, and follow-up date; on submit the component calls UNIT-CMS-0007's create endpoint with the host-supplied `parentType`/`parentId` | CAP-CMS-0004/A1, FR-ACT-2/3 | Must |
 | R5 | A newly created entry is added to the grid showing the server-returned id, `userName`, and `enteredDate`, without a full page reload; the add form never presents a `userName` field for the caller to set | CAP-CMS-0004/A1, M1 | Must |
 | R6 | A caller holding Editor role can edit an existing, non-deleted entry's task type/status, note, and follow-up date | FR-ACT-3 | Must |
