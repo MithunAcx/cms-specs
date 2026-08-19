@@ -101,7 +101,7 @@ control and this dialog's own field set is fixed at add/edit time only.
 |------|------|----------|---------|-------|
 | `mode` | enum: `add` \| `edit` | yes | — | — |
 | `parentType` | enum: `agency` \| `brokerage` | yes | — | Threaded through unmodified from the grid |
-| `initialValues` | `{ statusId, note, followUpDate }` | edit mode only | — | Pre-populates the form when editing |
+| `initialValues` | `{ statusId, note, followUpDate }` | edit mode only | — | Pre-populates the form when editing. `followUpDate` is a date-only value, captured and displayed with no time-of-day or timezone component (R19) |
 | `outcome` | enum: `idle` \| `submitting` \| `error-field` \| `error-session-expired` | yes | `idle` | One input, not independent booleans |
 | `fieldErrors` | `{ field, message }[]` | no | `[]` | Populated from the server's `400`/`422` `details[]` array |
 

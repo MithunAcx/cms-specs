@@ -52,6 +52,22 @@ Every frame except #17 is specified at `desktop` by default; the width control
 still reaches `mobile`/`tablet` for all of them, and #17 is the one a reviewer
 should check first at 360px, per `components.md` § Layout.
 
+**Reachability.** The mockup is a working prototype against an in-memory demo
+dataset, not a gallery of static per-frame snapshots: every frame above is
+reached by the same add/edit/complete/delete/filter/sort/load-more/retry code
+paths a real embedding would drive, seeded with demo activity rows and a
+simulated (client-side, no network) round trip for loading/submitting states.
+The mockup's "Jump to state" control is a convenience that drives those same
+functions to land on a given frame directly (e.g. selecting `delete-confirm`
+calls the real delete-request handler against the first visible row) — it is
+not a second, parallel rendering path, and every one of the 16 frames remains
+reachable purely by clicking through the live grid and dialogs by hand.
+Reviewer-only controls (parent picker, role toggle, a one-shot "simulate"
+selector for the four states this component cannot otherwise produce without
+a real UNIT-CMS-0007 — dependency-down, throttled, session-expired, row-gone
+— and an offline toggle) sit in the same switcher bar as the frame/theme/width
+controls and are visually distinct from the component's own UI.
+
 **`partial`** (some data loaded, some failed) has no frame: a single bounded list
 call either returns a full page or it does not — there is no code path in this
 unit where some rows of one response succeeded and others failed, so the row in
