@@ -11,7 +11,7 @@ engineering:
   frontend: { applicable: false }
   api:      { applicable: true }
 created: 2026-08-18
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Partner Search API
@@ -53,10 +53,10 @@ reuse, never delete.
 | R9 | `GET /search?mode=brokerage&uw=` filters brokerage results to exactly the brokerages currently assigned to the named underwriter. | CAP-CMS-0002/A2, FR-SEARCH-2 | P0 |
 | R10 | For `mode=brokerage`, `mode=broker`, `mode=agency`, `mode=cga` (the free-text modes), a request whose `term` is absent or empty is rejected with `400 term_required` before any query runs. | CAP-CMS-0002/A1, FR-SEARCH-3 | P0 |
 | R11 | For `mode=state-broker` and `mode=state-agent`, `term` is not required — the request runs on `state` alone. | FR-SEARCH-3 | P0 |
-| R12 | Every response includes a `total` count of matching records and page metadata, whether the result set is empty, partial, or full. | CAP-CMS-0002/A1, FR-SEARCH-4 | P0 |
-| R13 | An empty match set is a successful `200` response with `items: []` and `total: 0` — never an error. | FR-SEARCH-4 | P1 |
+| R12 | Every response includes a `total` count of matching records and a `next_cursor` for continuing the result set (`null` when no further results remain), whether the result set is empty, partial, or full. | CAP-CMS-0002/A1, FR-SEARCH-4 | P0 |
+| R13 | An empty match set is a successful `200` response with `items: []`, `total: 0`, and `next_cursor: null` — never an error. | FR-SEARCH-4 | P1 |
 | R14 | Every `broker` result item's status is represented by a single closed `disabled` boolean field — never a derived string the caller must parse. | FR-SEARCH-5 | P1 |
-| R15 | Results are paginated via `page`/`size` query parameters; the query itself runs server-side (filtering, matching, and pagination are all evaluated by the API, never returned unfiltered for the client to narrow). | CAP-CMS-0002/A3, FR-SEARCH-7, API-1 | P0 |
+| R15 | Results are paginated via cursor-based `limit`/`cursor` query parameters (10-platform.md floor — no offset/page-number pagination); the query itself runs server-side (filtering, matching, and pagination are all evaluated by the API, never returned unfiltered for the client to narrow). | CAP-CMS-0002/A3, FR-SEARCH-7, API-1 | P0 |
 
 ## Behaviour detail
 
@@ -108,6 +108,7 @@ Error cases:
 | `mode=brokerage`/`broker`/`agency`/`cga` with `term` absent or empty string | `400 term_required` |
 | `mode=state-broker`/`state-agent` with `state` absent | `400 state_required` |
 | `mode` absent or outside the closed six-value enum | `400 invalid_request` |
+| `cursor` supplied does not match the current request's `mode`/`term`/`state`/`uw` filter set (10-platform.md — a cursor is opaque and encodes the filter set it was issued for) | `400 cursor_invalid` |
 
 ## Non-functional requirements
 
