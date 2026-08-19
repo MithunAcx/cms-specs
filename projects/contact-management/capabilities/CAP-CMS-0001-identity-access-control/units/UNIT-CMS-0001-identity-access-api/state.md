@@ -10,3 +10,4 @@ current status.
 | 3 | 2026-08-19 | framed | designed | @MithunAcx | — | design.md covers all 28 R-IDs; interfaces/openapi.yaml (6 operations) and interfaces/001_create_identity_rbac_audit.sql (4 RLS-scoped tables) complete |
 | 4 | 2026-08-19 | designed | ready | @MithunAcx | — | tasks.md complete, full R1-R28 coverage; ba-spec-validate scoped to this unit passes (all content checks clean; tracker.md regeneration deferred to centralized pm-state-rollup) |
 | 5 | 2026-08-19 | ready | ready | @MithunAcx | — | spec-review: APPROVE — 0 conditions, PR #51 (self-review, disclosed) |
+| 6 | 2026-08-19 | ready | ready | @MithunAcx | — | spec-review: APPROVE WITH CONDITIONS — 1 non-blocking condition (reconcile audit-write-failure semantics as an XD decision or narrow design.md's claim), independent review, PR #51 |
