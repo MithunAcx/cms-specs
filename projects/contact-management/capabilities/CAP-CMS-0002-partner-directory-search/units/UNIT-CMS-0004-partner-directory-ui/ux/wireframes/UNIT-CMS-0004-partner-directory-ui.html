@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>UNIT-CMS-0004 partner-directory-ui — mockup</title>
+<style>
+  :root[data-theme="light"] {
+    --bg: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-raised: #FFFFFF;
+    --border: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-disabled: #94A3B8;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #E2E8F0;
+    --status-active: #047857;
+    --status-pending: #B45309;
+    --status-lapsed: #64748B;
+    --status-neutral: #64748B;
+    --danger: #A81A35;
+    --danger-surface: #FEF2F3;
+    --notice-surface: #F1F5F9;
+  }
+  :root[data-theme="dark"] {
+    --bg: #020617;
+    --surface: #1E293B;
+    --surface-raised: #0F172A;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-disabled: #64748B;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #334155;
+    --status-active: #34D399;
+    --status-pending: #FBBF24;
+    --status-lapsed: #94A3B8;
+    --status-neutral: #94A3B8;
+    --danger: #F7A3AB;
+    --danger-surface: #3A1620;
+    --notice-surface: #1E293B;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
+  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
+  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
+  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
+  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
+  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+
+  /* --- switcher chrome (scaffolding, not a specified screen) --- */
+  .chrome {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    padding: 12px 16px; background: #eee; border-bottom: 2px dashed #999;
+    font-family: system-ui, sans-serif; font-size: 12px;
+  }
+  .chrome label { display: flex; flex-direction: column; gap: 2px; color: #333; }
+  .chrome select { font-size: 12px; padding: 4px; }
+
+  /* --- canvas --- */
+  .canvas-outer { display: flex; justify-content: center; background: var(--surface); padding: 24px 0; }
+  .canvas {
+    background: var(--bg);
+    min-height: 200px;
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .canvas[data-width="360"]  { width: 360px; }
+  .canvas[data-width="768"]  { width: 768px; }
+  .canvas[data-width="1440"] { width: 1440px; }
+
+  .app-header {
+    height: 56px; width: 100%; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+  }
+  .canvas[data-width="360"] .app-header  { padding-left: 16px; }
+  .canvas[data-width="768"] .app-header  { padding-left: 24px; }
+  .canvas[data-width="1440"] .app-header { padding-left: 32px; }
+
+  .frame-content {
+    margin-top: 24px;
+  }
+  .canvas[data-width="360"]  .frame-content { padding: 0 16px; }
+  .canvas[data-width="768"]  .frame-content { padding: 0 24px; }
+  .canvas[data-width="1440"] .frame-content { padding: 0 32px; }
+
+  .frame { display: none; }
+  .frame.active { display: block; }
+
+  /* --- components --- */
+  .btn-primary {
+    height: 36px; border-radius: 6px; background: var(--primary);
+    color: var(--primary-text); border: none; padding: 0 16px; cursor: pointer;
+  }
+  .btn-secondary {
+    height: 36px; border-radius: 6px; background: var(--surface-raised);
+    border: 1px solid var(--border); color: var(--text-primary); padding: 0 16px; cursor: pointer;
+  }
+  .btn-disabled {
+    height: 36px; border-radius: 6px; background: var(--surface-raised);
+    border: 1px solid var(--border); color: var(--text-disabled); padding: 0 16px;
+  }
+  .input-field {
+    display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px;
+  }
+  .input-field label { color: var(--text-secondary); }
+  .input-field input, .input-field select {
+    height: 36px; border-radius: 6px; background: var(--surface-raised);
+    border: 1px solid var(--border); padding: 0 8px; color: var(--text-primary);
+    font-family: inherit;
+  }
+  .input-field.invalid input { border-color: var(--danger); }
+  .field-error { color: var(--danger); margin-top: 4px; }
+
+  .mode-switcher {
+    display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border);
+  }
+  .mode-option {
+    height: 44px; min-width: 96px; padding: 0 12px; display: flex; align-items: center;
+    color: var(--text-secondary); border-bottom: 2px solid transparent; cursor: pointer;
+  }
+  .mode-option[aria-checked="true"] {
+    color: var(--text-primary); border-bottom: 2px solid var(--primary); font-weight: 600;
+  }
+
+  table.results-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  table.results-table thead tr { height: 40px; background: var(--surface); }
+  table.results-table th { text-align: left; color: var(--text-secondary); font-size: 12px; font-weight: 400; padding: 0 8px; }
+  table.results-table tbody tr { height: 48px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  table.results-table td { padding: 0 8px; font-size: 14px; }
+  table.results-table td:first-child { font-weight: 600; }
+  table.results-table tbody tr:hover { background: var(--surface); }
+
+  .card-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+  .card {
+    border-radius: 8px; background: var(--surface-raised); border: 1px solid var(--border);
+    padding: 16px; display: flex; flex-direction: column; gap: 12px; cursor: pointer;
+  }
+  .card .row { display: flex; justify-content: space-between; font-size: 14px; }
+  .card .row .k { color: var(--text-secondary); }
+
+  .status-badge {
+    height: 22px; border-radius: 11px; padding: 0 10px; display: inline-flex;
+    align-items: center; gap: 6px; font-size: 12px;
+  }
+  .status-badge.active  { color: var(--status-active); }
+  .status-badge.pending { color: var(--status-pending); }
+  .status-badge.lapsed  { color: var(--status-lapsed); }
+  .status-badge.neutral { color: var(--status-neutral); }
+
+  .empty-state {
+    min-height: 160px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; color: var(--text-secondary); margin-top: 16px;
+  }
+
+  .error-block {
+    background: var(--danger-surface); border: 1px solid var(--danger); border-radius: 8px;
+    padding: 16px; margin-top: 16px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .error-block .title { color: var(--danger); }
+  .error-block .body { color: var(--text-primary); }
+
+  .notice {
+    background: var(--notice-surface); border-radius: 6px; padding: 12px; color: var(--text-secondary);
+    margin-top: 8px;
+  }
+
+  .skeleton-bar { height: 12px; border-radius: 6px; background: var(--skeleton); margin-bottom: 8px; }
+
+  .toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; flex-wrap: wrap; gap: 8px; }
+  .create-actions { display: flex; gap: 8px; }
+
+  .frame-label {
+    margin-top: 24px; color: var(--text-secondary); padding-bottom: 24px;
+  }
+
+  .badge-row { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="chrome">
+  <label>Frame
+    <select id="frame-select"></select>
+  </label>
+  <label>Theme
+    <select id="theme-select">
+      <option value="light">light</option>
+      <option value="dark">dark</option>
+    </select>
+  </label>
+  <label>Width
+    <select id="width-select">
+      <option value="360">360 (mobile)</option>
+      <option value="768">768 (tablet)</option>
+      <option value="1440" selected>1440 (desktop)</option>
+    </select>
+  </label>
+</div>
+
+<div class="canvas-outer">
+<div class="canvas" data-width="1440" id="canvas">
+  <div class="app-header"><span class="text-h2">Partner Directory</span></div>
+  <div class="frame-content">
+
+    <!-- 1: directory-idle -->
+    <section class="frame" data-frame="directory-idle">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Broker)</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Agency</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By CGA</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Agent)</div>
+      </div>
+      <div class="toolbar">
+        <div style="display:flex; gap:12px; align-items:flex-end;">
+          <div class="input-field"><label class="text-caption">Search term</label><input type="text" placeholder="Enter a brokerage name" /></div>
+          <div class="input-field"><label class="text-caption">Assigned Underwriter</label><select><option>All underwriters</option></select></div>
+          <button class="btn-primary text-body-strong">Search</button>
+        </div>
+        <div class="create-actions">
+          <button class="btn-secondary text-body">Add New Agency</button>
+          <button class="btn-secondary text-body">Add New Brokerage</button>
+        </div>
+      </div>
+      <div class="empty-state">
+        <div class="text-h3">Search the directory</div>
+        <div class="text-body">Choose a mode and enter a term to get started.</div>
+      </div>
+    </section>
+
+    <!-- 2: directory-validation-error -->
+    <section class="frame" data-frame="directory-validation-error">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Broker)</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Agency</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By CGA</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By State (Agent)</div>
+      </div>
+      <div class="toolbar">
+        <div style="display:flex; gap:12px; align-items:flex-start;">
+          <div class="input-field invalid">
+            <label class="text-caption">Search term</label>
+            <input type="text" value="" />
+            <div class="field-error text-caption">Enter a search term to search by By Brokerage.</div>
+          </div>
+          <button class="btn-primary text-body-strong">Search</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3: directory-loading -->
+    <section class="frame" data-frame="directory-loading">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
+      </div>
+      <div class="toolbar">
+        <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+      </div>
+      <table class="results-table">
+        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80%"></div></td><td><div class="skeleton-bar" style="width:50%"></div></td><td><div class="skeleton-bar" style="width:30%"></div></td></tr>
+          <tr><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80%"></div></td><td><div class="skeleton-bar" style="width:50%"></div></td><td><div class="skeleton-bar" style="width:30%"></div></td></tr>
+          <tr><td><div class="skeleton-bar" style="width:60%"></div></td><td><div class="skeleton-bar" style="width:80%"></div></td><td><div class="skeleton-bar" style="width:50%"></div></td><td><div class="skeleton-bar" style="width:30%"></div></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 4: directory-populated-desktop -->
+    <section class="frame" data-frame="directory-populated-desktop">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
+      </div>
+      <div class="toolbar">
+        <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+        <div class="create-actions">
+          <button class="btn-secondary text-body">Add New Agency</button>
+          <button class="btn-secondary text-body">Add New Brokerage</button>
+        </div>
+      </div>
+      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
+      <table class="results-table">
+        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
+          <tr><td class="text-body-strong">Riverbend Brokerage LLC</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Marcus Reed</td><td class="text-body">OH</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5: directory-populated-mobile -->
+    <section class="frame" data-frame="directory-populated-mobile">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
+      </div>
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
+      <div class="card-list">
+        <div class="card">
+          <div class="row"><span class="k text-caption">Brokerage</span><span class="text-body-strong">Northgate Insurance Partners</span></div>
+          <div class="row"><span class="k text-caption">Address</span><span class="text-body">400 W Broad St, Columbus, OH 43215</span></div>
+          <div class="row"><span class="k text-caption">Assigned UW</span><span class="text-body">Dana Smith</span></div>
+          <div class="row"><span class="k text-caption">State</span><span class="text-body">OH</span></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="k text-caption">Brokerage</span><span class="text-body-strong">Riverbend Brokerage LLC</span></div>
+          <div class="row"><span class="k text-caption">Address</span><span class="text-body">400 W Broad St, Columbus, OH 43215</span></div>
+          <div class="row"><span class="k text-caption">Assigned UW</span><span class="text-body">Marcus Reed</span></div>
+          <div class="row"><span class="k text-caption">State</span><span class="text-body">OH</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6: directory-broker-mode -->
+    <section class="frame" data-frame="directory-broker-mode">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Broker</div>
+      </div>
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Smith" /></div>
+      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
+      <table class="results-table">
+        <thead><tr><th>First</th><th>Last</th><th>Brokerage</th><th>Title/Type</th><th>Email</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="text-body-strong">Dana</td><td class="text-body">Smith</td><td class="text-body">Northgate Insurance Partners</td><td class="text-body">Broker</td>
+            <td class="text-body"><a href="#" style="color:var(--primary)">d.smith@example.invalid</a></td>
+            <td><span class="status-badge active"><span aria-hidden="true">&#9679;</span>Active</span></td>
+          </tr>
+          <tr>
+            <td class="text-body-strong">A.</td><td class="text-body">Whitfield</td><td class="text-body">Riverbend Brokerage LLC</td><td class="text-body">Broker</td>
+            <td class="text-body"><a href="#" style="color:var(--primary)">a.whitfield@example.invalid</a></td>
+            <td><span class="status-badge lapsed"><span aria-hidden="true">&#8856;</span>Disabled</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 7: directory-uw-filter -->
+    <section class="frame" data-frame="directory-uw-filter">
+      <div class="toolbar">
+        <div class="input-field"><label class="text-caption">Assigned Underwriter</label><select><option>Dana Smith</option></select></div>
+      </div>
+      <div class="text-body-strong" style="margin-top:16px;">1 result — scoped to Dana Smith</div>
+      <table class="results-table">
+        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 8: directory-empty -->
+    <section class="frame" data-frame="directory-empty">
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Zzzznotfound" /></div>
+      <div class="text-body-strong" style="margin-top:16px;">0 results</div>
+      <div class="empty-state">
+        <div class="text-h3">No records to display</div>
+        <div class="text-body">Try a different search term, state, or underwriter.</div>
+      </div>
+    </section>
+
+    <!-- 9: directory-partial -->
+    <section class="frame" data-frame="directory-partial">
+      <div class="toolbar">
+        <div class="input-field">
+          <label class="text-caption">Assigned Underwriter</label>
+          <select disabled><option>Unavailable</option></select>
+          <div class="notice text-caption">Underwriters unavailable right now — mode search still works.</div>
+        </div>
+      </div>
+      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
+      <table class="results-table">
+        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
+          <tr><td class="text-body-strong">Riverbend Brokerage LLC</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Marcus Reed</td><td class="text-body">OH</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 10: directory-error-recoverable -->
+    <section class="frame" data-frame="directory-error-recoverable">
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+      <div class="error-block">
+        <div class="text-body-strong title">We couldn't load results</div>
+        <div class="text-body body">Something went wrong reaching the search service.</div>
+        <button class="btn-secondary text-body" style="width:fit-content;">Retry</button>
+      </div>
+    </section>
+
+    <!-- 11: directory-error-terminal -->
+    <section class="frame" data-frame="directory-error-terminal">
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+      <div class="error-block">
+        <div class="text-body-strong title">Search is unavailable</div>
+        <div class="text-body body">This keeps failing. Contact support if it continues.</div>
+      </div>
+    </section>
+
+    <!-- 12: directory-rate-limited -->
+    <section class="frame" data-frame="directory-rate-limited">
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+      <div class="error-block">
+        <div class="text-body-strong title">Too many searches</div>
+        <div class="text-body body">Please wait a moment before searching again.</div>
+      </div>
+    </section>
+
+    <!-- 13: directory-access-denied -->
+    <section class="frame" data-frame="directory-access-denied">
+      <div class="empty-state">
+        <div class="text-h3">You don't have access to this screen</div>
+        <div class="text-body">Contact your administrator if you believe this is a mistake.</div>
+      </div>
+    </section>
+
+    <!-- 14: directory-no-create-permission -->
+    <section class="frame" data-frame="directory-no-create-permission">
+      <div class="mode-switcher" role="radiogroup" aria-label="Search mode">
+        <div class="mode-option text-body" role="radio" aria-checked="true">By Brokerage</div>
+        <div class="mode-option text-body" role="radio" aria-checked="false">By Broker</div>
+      </div>
+      <div class="toolbar">
+        <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+        <div class="create-actions"><!-- Add New Agency / Add New Brokerage intentionally absent --></div>
+      </div>
+      <div class="text-body-strong" style="margin-top:16px;">2 results</div>
+      <table class="results-table">
+        <thead><tr><th>Brokerage</th><th>Address</th><th>Assigned UW</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td class="text-body-strong">Northgate Insurance Partners</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Dana Smith</td><td class="text-body">OH</td></tr>
+          <tr><td class="text-body-strong">Riverbend Brokerage LLC</td><td class="text-body">400 W Broad St, Columbus, OH 43215</td><td class="text-body">Marcus Reed</td><td class="text-body">OH</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 15: directory-offline-load -->
+    <section class="frame" data-frame="directory-offline-load">
+      <div class="empty-state">
+        <div class="text-h3">You're offline</div>
+        <div class="text-body">Connect to the network to search the directory.</div>
+        <button class="btn-secondary text-body" style="width:fit-content;">Try again</button>
+      </div>
+    </section>
+
+    <!-- 16: directory-offline-submit -->
+    <section class="frame" data-frame="directory-offline-submit">
+      <div class="input-field"><label class="text-caption">Search term</label><input type="text" value="Northgate" /></div>
+      <div class="error-block">
+        <div class="text-body-strong title">We couldn't load results</div>
+        <div class="text-body body">You appear to be offline. Reconnect and try again.</div>
+        <button class="btn-secondary text-body" style="width:fit-content;">Try again</button>
+      </div>
+    </section>
+
+    <!-- 17: directory-session-expired -->
+    <section class="frame" data-frame="directory-session-expired">
+      <div class="notice text-body">Your session expired. Sign in again to continue.</div>
+    </section>
+
+    <!-- 18: status-matrix -->
+    <section class="frame" data-frame="status-matrix">
+      <div class="text-h3">Status badge — component reference</div>
+      <div class="text-caption" style="color:var(--text-secondary); margin-top:4px;">
+        This unit uses only Active/Disabled (mapped to active/lapsed below); the
+        other two variants are shown for the shared component's full set per the
+        design system's greyscale check.
+      </div>
+      <div class="badge-row">
+        <span class="status-badge active"><span aria-hidden="true">&#9679;</span>In force</span>
+        <span class="status-badge pending"><span aria-hidden="true">&#9680;</span>Pending</span>
+        <span class="status-badge lapsed"><span aria-hidden="true">&#8856;</span>Lapsed</span>
+        <span class="status-badge neutral"><span aria-hidden="true">&#9675;</span>Unknown</span>
+      </div>
+    </section>
+
+    <footer class="frame-label text-caption" id="frame-label">UNIT-CMS-0004 · directory-idle · 1440px · light</footer>
+  </div>
+</div>
+</div>
+
+<script>
+  // Switcher only — navigates between already-specified states. No validation,
+  // no fetch, no timers, no storage, no computed values, no state machine.
+  var frames = Array.prototype.map.call(document.querySelectorAll('.frame'), function (el) {
+    return el.getAttribute('data-frame');
+  });
+
+  var frameSelect = document.getElementById('frame-select');
+  frames.forEach(function (name) {
+    var opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    frameSelect.appendChild(opt);
+  });
+
+  var themeSelect = document.getElementById('theme-select');
+  var widthSelect = document.getElementById('width-select');
+  var canvas = document.getElementById('canvas');
+  var label = document.getElementById('frame-label');
+
+  function render() {
+    var frame = frameSelect.value;
+    var theme = themeSelect.value;
+    var width = widthSelect.value;
+
+    document.querySelectorAll('.frame').forEach(function (el) {
+      el.classList.toggle('active', el.getAttribute('data-frame') === frame);
+    });
+    document.documentElement.setAttribute('data-theme', theme);
+    canvas.setAttribute('data-width', width);
+    label.textContent = 'UNIT-CMS-0004 · ' + frame + ' · ' + width + 'px · ' + theme;
+  }
+
+  frameSelect.addEventListener('change', render);
+  themeSelect.addEventListener('change', render);
+  widthSelect.addEventListener('change', render);
+
+  frameSelect.value = frames[0];
+  render();
+</script>
+
+</body>
+</html>
