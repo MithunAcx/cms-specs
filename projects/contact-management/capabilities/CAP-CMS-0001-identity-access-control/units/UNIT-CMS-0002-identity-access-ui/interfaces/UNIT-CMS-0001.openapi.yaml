@@ -1,0 +1,311 @@
+# PROVISIONAL — not a copy of UNIT-CMS-0001/interfaces/openapi.yaml, because that file
+# does not exist yet: UNIT-CMS-0001 is still at status `draft` and has not been designed.
+#
+# This shape is derived directly from CAP-CMS-0001/capability-design.md's Unified API
+# contract table (§ identity-access-api (U1) — endpoints) and § Shared conventions, on
+# 2026-08-18, so UNIT-CMS-0002 has a concrete contract to design and build its login/
+# session/refresh flows against.
+#
+# Once UNIT-CMS-0001 runs architect-unit-interfaces and its own interfaces/openapi.yaml
+# exists, this file MUST be replaced with a byte-for-byte copy of that file (or the
+# relevant subset), per shared-spec-conventions' consumer-copy rule. Until then,
+# ba-spec-validate I11 (contract staleness) does not apply — there is no source yet to
+# have drifted from — but this header must be swapped for the standard "COPIED VERBATIM
+# from ..." header the moment a real source exists. Do not hand-edit this file once that
+# swap has happened; re-copy instead.
+
+openapi: 3.1.0
+info:
+  title: Identity Access API — consumer-side contract (UNIT-CMS-0002)
+  version: "1.0.0"
+  description: >
+    Provisional contract for the five auth endpoints UNIT-CMS-0002 (Identity Access UI)
+    consumes from UNIT-CMS-0001 (Identity Access API), per CAP-CMS-0001/capability-design.md
+    XD-0001 (token contract) and XD-0002 (role claim). See the file header for provenance
+    and the re-sync obligation once UNIT-CMS-0001 is designed.
+servers:
+  - url: /api/v1
+    description: >
+      Base path only — per stack.md, no concrete hostname may appear in this repo.
+      The engineering repo resolves the real host per environment.
+
+paths:
+  /auth/login:
+    post:
+      operationId: authLogin
+      summary: Exchange credentials for a token pair
+      description: >
+        Satisfies R2, R3. Unauthenticated. On success, returns the access/refresh token
+        pair (XD-0001) and the resolved identity is subsequently read via GET /auth/me
+        or the token's own claims, never client-computed.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              default:
+                value: { username: "jsmith", password: "correct-horse-battery-staple" }
+      responses:
+        "200":
+          description: Credentials accepted; token pair issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+              examples:
+                default:
+                  value:
+                    accessToken: "eyJhbGciOi..."
+                    refreshToken: "8f3b2e1c-..."
+                    expiresIn: 900
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          description: Bad credentials. Generic — never indicates which field was wrong.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      operationId: authRefresh
+      summary: Rotate a refresh token for a new token pair
+      description: >
+        Satisfies R8, R9, R10. Unauthenticated (the refresh token itself is the
+        credential). NOT idempotent — every successful call rotates the refresh token
+        (XD-0001), so UNIT-CMS-0002's design coalesces concurrent calls to at most one
+        in flight per tab (R9) rather than calling this once per failed request.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+            examples:
+              default:
+                value: { refreshToken: "8f3b2e1c-..." }
+      responses:
+        "200":
+          description: Refresh token valid; new rotated token pair issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        "401":
+          description: Refresh token invalid, expired, or revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/logout:
+    post:
+      operationId: authLogout
+      summary: Invalidate the current refresh token
+      description: >
+        Satisfies R6. Requires Viewer or above. Invalidates the refresh-token record
+        server-side; UNIT-CMS-0002's client-side session state is cleared regardless of
+        this call's outcome (design.md § Flows — Logout).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        "204":
+          description: Refresh token invalidated. No content.
+        "401":
+          $ref: '#/components/responses/Unauthenticated'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/me:
+    get:
+      operationId: authGetCurrentUser
+      summary: Resolve the identity and role of the current session
+      description: >
+        Satisfies R3. Requires Viewer or above. This is the only server-derived source
+        UNIT-CMS-0002 may use for username, display name, and role — never a
+        client-computed value.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current session identity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+              examples:
+                default:
+                  value: { username: "jsmith", displayName: "Jane Smith", role: "editor" }
+        "401":
+          $ref: '#/components/responses/Unauthenticated'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/change-password:
+    post:
+      operationId: authChangePassword
+      summary: Self-service password change for the current session
+      description: >
+        Satisfies R7. Requires Viewer or above (local-credentials-only build per intake
+        Q3 — unconditionally reachable, not gated on "where SSO is unavailable").
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        "204":
+          description: Password changed. Session remains signed in.
+        "400":
+          description: New password does not meet the password policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "401":
+          description: Old password incorrect, or session unauthenticated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        "429":
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        `Authorization: Bearer <access token>`, per stack.md's self-issued JWT choice —
+        no external identity provider, no OAuth2 flow.
+
+  responses:
+    BadRequest:
+      description: Malformed or missing required field.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthenticated:
+      description: Missing, expired, or invalid access token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    TooManyRequests:
+      description: >
+        Rate-limited by the API Gateway throttling layer (stack.md) — this response is
+        gateway-produced, not service code, but is made to match this same envelope
+        shape per 10-platform.md.
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+            description: Seconds to wait before retrying.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+
+  schemas:
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1 }
+        password: { type: string, minLength: 1, format: password }
+
+    RefreshRequest:
+      type: object
+      additionalProperties: false
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string, minLength: 1 }
+
+    ChangePasswordRequest:
+      type: object
+      additionalProperties: false
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword: { type: string, minLength: 1, format: password }
+        newPassword: { type: string, minLength: 1, format: password }
+
+    TokenPair:
+      type: object
+      additionalProperties: false
+      required: [accessToken, refreshToken, expiresIn]
+      properties:
+        accessToken:
+          type: string
+          description: Short-lived JWT access token (XD-0001). TTL not yet fixed — see CAP-CMS-0001/capability-design.md open question #1.
+        refreshToken:
+          type: string
+          description: Opaque, server-side-revocable refresh token (XD-0001). Rotated on every successful use.
+        expiresIn:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Access token lifetime in seconds from issuance.
+
+    CurrentUser:
+      type: object
+      additionalProperties: false
+      required: [username, displayName, role]
+      properties:
+        username:
+          type: string
+          description: Bare username, domain prefix stripped (AUTH-3). Personal data.
+        displayName:
+          type: string
+          description: First + last name (AUTH-3). Personal data.
+        role:
+          type: string
+          enum: [viewer, editor, administrator]
+          description: RBAC role (XD-0002). Closed enum — never extended without an ADR.
+
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Stable machine-readable snake_case code. Part of the contract.
+            message:
+              type: string
+              description: Human-readable. Never parsed. Never carries personal data.
+            fields:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [field, code]
+                properties:
+                  field: { type: string }
+                  code: { type: string }
