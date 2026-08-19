@@ -1,0 +1,187 @@
+openapi: 3.1.0
+info:
+  title: Address Integration API
+  version: 1.0.0
+  description: >
+    UNIT-CMS-0009 — stateless, server-side proxy to SmartyStreets US Autocomplete
+    Pro. No address data is persisted by this project. See
+    projects/contact-management/capabilities/CAP-CMS-0005-external-integrations/units/UNIT-CMS-0009-address-integration-api/requirements.md
+servers:
+  - url: UNRESOLVED
+    description: >
+      Base URL owned by the engineering repo's environment configuration. Not named
+      here — see stack.md, no concrete endpoint may be invented in this repo.
+      Owner: @MithunAcx. Blocks: ba-unit-handoff for this unit.
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/address/suggest:
+    get:
+      operationId: suggestAddress
+      summary: US address suggestions for a free-text partial address
+      description: >
+        Server-side proxy to SmartyStreets. Satisfies R1, R2, R3, R4, R5, R6, R9,
+        R10.
+      security:
+        - bearerAuth: [ "cms:address.suggest" ]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: >
+            Free-text partial US address. Must be at least 3 characters. Satisfies
+            R4.
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 200
+      responses:
+        '200':
+          description: Suggestions read successfully (satisfies R1, R6). An empty list is a valid, successful answer (R9).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressSuggestResponse'
+              examples:
+                withSuggestions:
+                  value:
+                    suggestions:
+                      - line1: "123 Main St"
+                        city: "Springfield"
+                        state: "IL"
+                        zip: "62701"
+                emptyResult:
+                  summary: SmartyStreets answered with zero matches — not an error (R9).
+                  value:
+                    suggestions: []
+        '400':
+          description: Missing, empty, or below-minimum-length q (satisfies R4).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  value:
+                    error:
+                      code: invalid_request
+                      message: "q must be at least 3 characters"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '401':
+          description: Missing or invalid bearer token (satisfies R5).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthenticated:
+                  value:
+                    error:
+                      code: unauthenticated
+                      message: "Authentication required"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '429':
+          description: Rate limit exceeded (gateway-enforced per stack.md).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+              description: Seconds until the caller may retry.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                rateLimited:
+                  value:
+                    error:
+                      code: rate_limited
+                      message: "Too many requests"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+        '502':
+          description: SmartyStreets unreachable, errored, or exceeded the timeout budget (satisfies R9, R10).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                upstreamDown:
+                  value:
+                    error:
+                      code: upstream_unavailable
+                      message: "The address-autocomplete provider did not respond in time"
+                      details: []
+                      trace_id: "01J8Z...ULID"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Issuer, flow and token endpoint owned by UNIT-CMS-0001; scope
+        cms:address.suggest required for this operation.
+
+  schemas:
+    AddressSuggestion:
+      type: object
+      additionalProperties: false
+      required: [line1, city, state, zip]
+      description: >
+        Matches UNIT-CMS-0005's own address sub-resource shape field-for-field
+        (capability-design.md XD-0002), so a consuming form can fill directly from
+        a selected suggestion with no reshaping. Satisfies R1, R6.
+      properties:
+        line1:
+          type: string
+          description: Street line. Not personal data at this point — a generic provider candidate, not yet associated with any record (R22).
+        city:
+          type: string
+        state:
+          type: string
+          description: Two-letter US state code.
+        zip:
+          type: string
+          description: "US ZIP or ZIP+4."
+
+    AddressSuggestResponse:
+      type: object
+      additionalProperties: false
+      required: [suggestions]
+      properties:
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/AddressSuggestion'
+          description: No pagination — capability design states both endpoints in CAP-CMS-0005 return small, bounded result sets.
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details, trace_id]
+          properties:
+            code:
+              type: string
+              enum: [invalid_request, unauthenticated, rate_limited, upstream_unavailable]
+              description: Stable snake_case, part of the contract (10-platform.md Errors).
+            message:
+              type: string
+              description: Human-readable; never personal data.
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              description: ULID.
