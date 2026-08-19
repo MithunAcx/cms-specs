@@ -11,7 +11,7 @@ engineering:
   frontend: { applicable: true }
   api:      { applicable: false }
 created: 2026-08-18
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Partner Directory UI
@@ -53,7 +53,7 @@ reuse, never delete.
 | R9 | Every non-empty result set displays the total result count sourced from the response's total field, not the number of items currently rendered on the page. | CAP-CMS-0002/FR-SEARCH-4 | Must |
 | R10 | Selecting a result row navigates to the detail screen appropriate to that row's mode (Brokerage Detail for By Brokerage/By Broker/By State (Broker); Agency Detail for By Agency/By State (Agent); CGA Detail for By CGA), passing the entity id from the result item. | CAP-CMS-0002/FR-SEARCH-1, A1 | Must |
 | R11 | The Directory screen offers "Add New Agency" and "Add New Brokerage" launch points that navigate to the create flows owned outside this unit; this unit performs no create-form logic and calls no create API. | CAP-CMS-0002/FR-SEARCH-6 | Must |
-| R12 | Result sets are paginated using UNIT-CMS-0003's `page`/`size`/`total` response fields; this unit never filters, sorts, or truncates results itself — every filter is expressed as a request parameter to UNIT-CMS-0003. | CAP-CMS-0002/FR-SEARCH-7, API-1, A3 | Must |
+| R12 | Result sets are paginated using UNIT-CMS-0003's cursor-based `limit`/`cursor`/`total`/`next_cursor` fields (10-platform.md floor — no offset/page-number pagination); this unit never filters, sorts, or truncates results itself — every filter is expressed as a request parameter to UNIT-CMS-0003. | CAP-CMS-0002/FR-SEARCH-7, API-1, A3 | Must |
 | R13 | On a viewport at or above the desktop breakpoint, results render as a table; below it, results render as stacked cards carrying the same fields and the same row-open behaviour (R10). | CAP-CMS-0002/FR-SEARCH-8 | Must |
 
 ## Behaviour detail
@@ -79,9 +79,9 @@ mode table; a mode is never rendered with an ad hoc column set. The Disabled fla
 from any other field.
 
 **R9 — result count.** Where the API's `total` and the number of `items` in the
-current page diverge (always true once results exceed one page), the total is what is
-shown; a page-relative count ("showing 1-25") is permitted alongside it but the
-capability-level count is always the API's `total`.
+current response diverge (always true once results exceed one `limit`-sized batch),
+the total is what is shown; a batch-relative count ("showing 25 of 140") is permitted
+alongside it but the capability-level count is always the API's `total`.
 
 **R10 — deep link target resolution.** Mode determines detail-screen family
 deterministically per R2's mode table; this unit holds no logic that infers the
@@ -158,4 +158,4 @@ Entities this unit owns, reads, or emits — language-neutral. Shapes belong in
 | # | Question | Blocks | Owner | Status |
 |---|----------|--------|-------|--------|
 | Q1 | Is UNIT-CMS-0006 confirmed as CAP-CMS-0003's frontend unit (the actual owner of the Brokerage/Agency/CGA detail and create screens this unit navigates to)? | design.md's navigation/routing section | @MithunAcx | Open — proceeding on the assumption above |
-| Q2 | Re-copy `interfaces/UNIT-CMS-0003.openapi.yaml` verbatim once UNIT-CMS-0003 authors its own `interfaces/openapi.yaml` (this unit's copy was constructed from capability-design.md instead, since UNIT-CMS-0003 had not yet authored one — a parallel, non-blocking unit) | `interfaces/UNIT-CMS-0003.openapi.yaml` becoming authoritative (`ba-spec-validate` I11) | @MithunAcx | Open — non-blocking; tracked as a tasks.md build task |
+| Q2 | Re-copy `interfaces/UNIT-CMS-0003.openapi.yaml` verbatim once UNIT-CMS-0003 authors its own `interfaces/openapi.yaml` (this unit's copy was constructed from capability-design.md instead, since UNIT-CMS-0003 had not yet authored one — a parallel, non-blocking unit) | `interfaces/UNIT-CMS-0003.openapi.yaml` becoming authoritative (`ba-spec-validate` I11) | @MithunAcx | Resolved 2026-08-19 — re-copied verbatim as part of the cursor-pagination fix |

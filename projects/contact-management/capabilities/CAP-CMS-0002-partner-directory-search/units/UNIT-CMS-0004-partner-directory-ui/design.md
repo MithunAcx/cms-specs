@@ -1,6 +1,6 @@
 ---
 unit: UNIT-CMS-0004
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Design — Partner Directory UI
@@ -73,17 +73,18 @@ other.
    submission stops here with an inline message and no request is sent.
 3. The request sequencer increments the sequence token, attempts to cancel any
    request still in flight for the previous token, and issues one `GET` to
-   UNIT-CMS-0003's `/search` endpoint with `mode`, `term`/`state`, `page=1`, and
-   the default page size.
+   UNIT-CMS-0003's `/search` endpoint with `mode`, `term`/`state`, no `cursor`,
+   and the default `limit` (10-platform.md cursor-pagination floor).
 4. On response, the sequencer compares the response's originating token to the
    current token. A stale response (R20/R24) is discarded silently — no error is
    shown, since the user has already moved on.
 5. A current-token response renders: items per mode's column set (R6), the empty
    state if zero items (R8), and the total count (R9).
-6. Subsequent pages are requested the same way, incrementing `page` on the same
-   mode/term/state and reusing the current sequence token's mode context (a new
-   page request gets its own new token per step 3, since it is itself a new
-   outbound request).
+6. A further batch is requested the same way, supplying the previous response's
+   `next_cursor` on the same mode/term/state and reusing the current sequence
+   token's mode context (a new batch request gets its own new token per step 3,
+   since it is itself a new outbound request). No further request is issued once
+   `next_cursor` is `null`.
 
 Failure paths:
 
@@ -146,8 +147,8 @@ the last rendered response, both discarded on navigation or reload.
 
 | Entity | Key | Fields of note | Retention |
 |---|---|---|---|
-| Search input state (transient, in-memory) | n/a — not persisted | mode, term, state, uw-filter, sequence token, page | Discarded on navigation/reload; never written to durable client storage |
-| Last rendered result page (transient, in-memory) | n/a — not persisted | items (per mode shape), total, page, size | Same as above |
+| Search input state (transient, in-memory) | n/a — not persisted | mode, term, state, uw-filter, sequence token, cursor | Discarded on navigation/reload; never written to durable client storage |
+| Last rendered result batch (transient, in-memory) | n/a — not persisted | items (per mode shape), total, next_cursor | Same as above |
 
 ## Contracts
 
@@ -167,8 +168,9 @@ current token), `resolved` (a current-token response was rendered, holding resul
 or the empty state), and `error` (a current-token response failed dependency-side
 — R21/R23). Transitions: `idle → loading` on first submit; `loading → resolved` on
 a matching-token success; `loading → error` on a matching-token failure;
-`resolved|error → loading` on any new submit (mode change, term change, page
-change, UW-filter select) that produces a new token. A stale (non-matching-token)
+`resolved|error → loading` on any new submit (mode change, term change,
+next-batch request via `next_cursor`, UW-filter select) that produces a new
+token. A stale (non-matching-token)
 response or failure causes **no transition at all** — the state machine only ever
 reacts to its own current token. This is the invariant: *the rendered state always
 corresponds to the most recently issued request*, enforced by the token comparison
@@ -289,3 +291,4 @@ Every R-ID in `requirements.md` must appear here.
 
 | Date | Change ID | What changed |
 |------|-----------|--------------|
+| 2026-08-19 | — | Fixed platform-floor defect: UNIT-CMS-0003's pagination switched from `page`/`size` (offset, forbidden by 10-platform.md) to cursor-based `limit`/`cursor`/`next_cursor`. Updated R12 in `requirements.md`; the "Run a search" flow's request/response fields, the Data model table, and the state-machine transition list here; and re-copied `interfaces/UNIT-CMS-0003.openapi.yaml` verbatim from UNIT-CMS-0003's now-authored contract (also resolves Q2). No R-ID renumbered. |
