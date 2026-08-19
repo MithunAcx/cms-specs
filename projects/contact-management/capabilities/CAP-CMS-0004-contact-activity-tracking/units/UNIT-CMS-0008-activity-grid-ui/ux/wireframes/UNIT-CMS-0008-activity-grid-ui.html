@@ -4,224 +4,207 @@
 <meta charset="utf-8">
 <title>UNIT-CMS-0008 activity-grid-ui — mockup</title>
 <style>
-  :root[data-theme="light"] {
-    --bg: #FFFFFF;
-    --surface: #F8FAFC;
-    --surface-raised: #FFFFFF;
-    --border: #E2E8F0;
-    --border-strong: #CBD5E1;
-    --text-primary: #1E293B;
-    --text-secondary: #475569;
-    --text-disabled: #94A3B8;
-    --primary: #C8213E;
-    --primary-text: #FFFFFF;
-    --focus: #E43E54;
-    --skeleton: #E2E8F0;
-    --status-active: #047857;
-    --status-pending: #B45309;
-    --status-lapsed: #64748B;
-    --status-neutral: #64748B;
-    --danger: #A81A35;
-    --danger-surface: #FEF2F3;
-    --notice-surface: #F1F5F9;
+  /* ============================================================
+     Design tokens and component classes copied verbatim (naming
+     and structure) from requirements/contactmanagement-full-mockup.html
+     -- the sponsor-provided reference design system -- per
+     designer-unit-ux's brief for this rebuild. Motion (animation/
+     transition/keyframes) is omitted throughout: a11y.md commits
+     this component to "no animation is used anywhere", and that
+     commitment is honoured here rather than the reference's own
+     hover/open transitions. Box-shadow is kept (it is static, not
+     motion) because it carries real elevation meaning for the
+     dialog/panel surfaces the reference relies on for visual match.
+     ============================================================ */
+  :root{
+    --brand:#c8213e; --brand-dark:#a81a35; --brand-light:#e43e54; --brand-50:#fef2f3; --brand-700:#a81a35;
+    --bg:#f8fafc; --panel:#ffffff; --panel-2:#f8fafc; --border:#e2e8f0; --border-strong:#cbd5e1;
+    --text:#1e293b; --text-2:#475569; --muted:#64748b; --faint:#94a3b8;
+    --emerald-50:#ecfdf5; --emerald-500:#10b981; --emerald-700:#047857;
+    --amber-50:#fffbeb; --amber-500:#f59e0b; --amber-700:#b45309;
+    --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-400:#94a3b8;
+    --shadow:0 1px 2px rgba(0,0,0,.05);
+    --shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);
+    --radius:.75rem;
   }
-  :root[data-theme="dark"] {
-    --bg: #020617;
-    --surface: #1E293B;
-    --surface-raised: #0F172A;
-    --border: #334155;
-    --border-strong: #475569;
-    --text-primary: #F1F5F9;
-    --text-secondary: #CBD5E1;
-    --text-disabled: #64748B;
-    --primary: #C8213E;
-    --primary-text: #FFFFFF;
-    --focus: #E43E54;
-    --skeleton: #334155;
-    --status-active: #34D399;
-    --status-pending: #FBBF24;
-    --status-lapsed: #94A3B8;
-    --status-neutral: #94A3B8;
-    --danger: #F7A3AB;
-    --danger-surface: #3A1620;
-    --notice-surface: #1E293B;
+  :root[data-theme="dark"]{
+    --bg:#020617; --panel:#0f172a; --panel-2:#1e293b; --border:#1e293b; --border-strong:#334155;
+    --text:#f1f5f9; --text-2:#cbd5e1; --muted:#94a3b8; --faint:#64748b;
+    --brand-50:rgba(228,62,84,.12); --brand-700:#f7a3ab; --slate-100:#1e293b; --slate-200:#334155;
+    --emerald-50:rgba(16,185,129,.12); --emerald-700:#34d399; --amber-50:rgba(245,158,11,.12); --amber-700:#fbbf24;
   }
 
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    background: var(--bg);
-    color: var(--text-primary);
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;
   }
-
-  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
-  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
-  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
-  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
-  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
-  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+  h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.01em}
 
   /* ---- switcher chrome (scaffolding, not a specified screen) ---- */
-  .switcher {
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
-    padding: 12px 16px; background: #444; border-bottom: 4px solid #222;
+  .switcher{
+    display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+    padding:12px 16px; background:#333; border-bottom:4px solid #111;
   }
-  .switcher label { color: #fff; font-size: 12px; margin-right: 4px; }
-  .switcher select, .switcher button.switcher-btn {
-    font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #888;
-    background: #fff; color: #111;
+  .switcher label{color:#fff; font-size:12px; margin-right:4px}
+  .switcher select, .switcher button.switcher-btn{
+    font-size:12px; padding:4px 8px; border-radius:4px; border:1px solid #888;
+    background:#fff; color:#111;
   }
-  .switcher button.switcher-btn[aria-pressed="true"] { outline: 2px solid #fff; }
+  .switcher button.switcher-btn[aria-pressed="true"]{outline:2px solid #fff}
 
   /* ---- canvas ---- */
-  .canvas-outer { display: flex; justify-content: center; background: #333; padding: 24px 0; }
-  .canvas {
-    background: var(--bg);
-    min-height: 200px;
-  }
-  .canvas[data-width="360"]  { width: 360px; }
-  .canvas[data-width="768"]  { width: 768px; }
-  .canvas[data-width="1440"] { width: 1440px; }
+  .canvas-outer{display:flex; justify-content:center; background:#222; padding:24px 0}
+  .canvas{background:var(--bg); min-height:200px; position:relative}
+  .canvas[data-width="360"]{width:360px}
+  .canvas[data-width="768"]{width:768px}
+  .canvas[data-width="1440"]{width:1440px}
+  .canvas[data-width="360"] .frame-body{padding:0 16px}
+  .canvas[data-width="768"] .frame-body{padding:0 24px}
+  .canvas[data-width="1440"] .frame-body{padding:0 32px}
 
-  .canvas[data-width="360"]  .frame-body { padding: 0 16px; }
-  .canvas[data-width="768"]  .frame-body { padding: 0 24px; }
-  .canvas[data-width="1440"] .frame-body { padding: 0 32px; }
+  .app-header{
+    height:56px; width:100%; display:flex; align-items:center; gap:.6rem;
+    background:var(--panel-2); border-bottom:1px solid var(--border);
+    padding-left:32px;
+  }
+  .canvas[data-width="360"] .app-header{padding-left:16px}
+  .canvas[data-width="768"] .app-header{padding-left:24px}
+  .brandmark{
+    display:grid; place-items:center; height:1.75rem; width:1.75rem; border-radius:.5rem;
+    color:#fff; background:var(--brand);
+  }
+  .brand-title{font-size:15px; font-weight:700; line-height:1.2}
 
-  .app-header {
-    height: 56px; width: 100%;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding-left: 32px;
-  }
-  .canvas[data-width="360"] .app-header { padding-left: 16px; }
-  .canvas[data-width="768"] .app-header { padding-left: 24px; }
+  .frame-body{margin-top:24px; padding-bottom:32px}
+  .frame-section{display:none}
+  .frame-section.active{display:block}
 
-  .frame-body { margin-top: 24px; padding-bottom: 32px; }
+  footer.frame-label{padding:8px 0 24px; color:var(--muted); font-size:12px}
+  .canvas[data-width="360"] footer.frame-label{padding-left:16px}
+  .canvas[data-width="768"] footer.frame-label{padding-left:24px}
+  .canvas[data-width="1440"] footer.frame-label{padding-left:32px}
 
-  .frame-section { display: none; }
-  .frame-section.active { display: block; }
+  /* ---- buttons (verbatim from the reference) ---- */
+  .btn{
+    display:inline-flex; align-items:center; gap:.4rem; border-radius:.5rem; padding:.5rem 1rem;
+    font-size:.875rem; font-weight:600; border:1px solid transparent; cursor:pointer;
+    background:transparent; color:var(--text); font-family:inherit;
+  }
+  .btn svg{height:1rem; width:1rem}
+  .btn-primary{background:var(--brand); color:#fff; box-shadow:var(--shadow)}
+  .btn-secondary{border-color:var(--border-strong); background:var(--panel); color:var(--text-2); box-shadow:var(--shadow)}
+  .btn-ghost{color:var(--muted); padding:.4rem .6rem}
+  .btn-sm{padding:.35rem .6rem; font-size:.78rem}
+  .btn-danger{color:#dc2626; border:1px solid var(--border-strong); background:var(--panel)}
+  .btn-disabled{
+    display:inline-flex; align-items:center; gap:.4rem; border-radius:.5rem; padding:.5rem 1rem;
+    font-size:.875rem; font-weight:600; border:1px solid var(--border-strong); background:var(--panel);
+    color:var(--faint);
+  }
+  .btn-disabled.btn-sm{padding:.35rem .6rem; font-size:.78rem}
+  .btn-row{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
+  .btn-caption{color:var(--muted); font-size:.78rem}
 
-  footer.frame-label {
-    padding: 8px 0 24px 0;
-    color: var(--text-secondary);
+  /* ---- fields (verbatim) ---- */
+  .field label{display:block; font-size:.72rem; font-weight:600; color:var(--muted); margin-bottom:.25rem}
+  .req{color:var(--brand)}
+  .inp, select.inp, textarea.inp{
+    width:100%; border-radius:.5rem; border:1px solid var(--border-strong); background:var(--panel);
+    color:var(--text); padding:.5rem .7rem; font-size:.875rem; box-shadow:var(--shadow); font-family:inherit;
   }
-  footer.frame-label.text-caption { padding-left: 32px; }
-  .canvas[data-width="360"] footer.frame-label { padding-left: 16px; }
-  .canvas[data-width="768"] footer.frame-label { padding-left: 24px; }
-  .canvas[data-width="1440"] footer.frame-label { padding-left: 32px; }
+  .inp:focus{outline:2px solid var(--brand-light); outline-offset:1px}
+  .inp.err{border-color:var(--brand); outline:2px solid var(--brand-light); outline-offset:1px}
+  textarea.inp{resize:vertical; min-height:64px}
+  .help-err{margin-top:.25rem; font-size:.72rem; font-weight:600; color:var(--brand)}
+  .field{margin-bottom:1rem}
+  .grid{display:grid; gap:1rem}
+  .g2{grid-template-columns:1fr}
+  .colspan2{grid-column:span 1}
+  @media(min-width:640px){ .g2{grid-template-columns:1fr 1fr} .colspan2{grid-column:span 2} }
 
-  /* ---- buttons ---- */
-  .btn-primary {
-    height: 36px; border-radius: 6px; background: var(--primary);
-    color: var(--primary-text); border: none; padding: 0 16px;
-    font-size: 14px; font-weight: 600; line-height: 20px; cursor: pointer;
+  /* ---- panel / section ---- */
+  .panel{border:1px solid var(--border); background:var(--panel); border-radius:1rem; box-shadow:var(--shadow)}
+  .panel-head{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem;
+    padding:.9rem 1.1rem; border-bottom:1px solid var(--border);
   }
-  .btn-secondary {
-    height: 36px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); color: var(--text-primary);
-    padding: 0 16px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer;
-  }
-  .btn-disabled {
-    height: 36px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); color: var(--text-disabled);
-    padding: 0 16px; font-size: 14px; font-weight: 400; line-height: 20px;
-  }
-  .btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .btn-caption { color: var(--text-secondary); }
+  .panel-head h3{font-size:.95rem}
+  .count{margin-left:.4rem; border-radius:9999px; background:var(--slate-200); color:var(--text-2); padding:.05rem .5rem; font-size:.72rem; font-weight:700}
+  .toolbar{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem}
+  .toolbar-group{display:flex; gap:.5rem; align-items:center; flex-wrap:wrap}
+  .toolbar-group select.inp{width:auto}
 
-  /* ---- input field ---- */
-  .field { margin-bottom: 16px; }
-  .field label {
-    display: block; font-size: 12px; font-weight: 400; line-height: 16px;
-    color: var(--text-secondary); margin-bottom: 4px;
-  }
-  .field input, .field select, .field textarea {
-    height: 36px; width: 100%; border-radius: 6px;
-    background: var(--surface-raised); border: 1px solid var(--border);
-    color: var(--text-primary); font-family: inherit; font-size: 14px; padding: 0 8px;
-  }
-  .field textarea { height: 72px; padding: 8px; resize: vertical; }
-  .field.has-error input, .field.has-error select { border-color: var(--danger); }
-  .field-error {
-    margin-top: 4px; color: var(--danger); font-size: 12px; line-height: 16px;
-  }
+  /* ---- table (verbatim: .tbl-wrap / table.tbl) ---- */
+  .tbl-wrap{overflow-x:auto}
+  table.tbl{width:100%; border-collapse:collapse; font-size:.875rem; text-align:left}
+  .tbl thead{background:var(--panel-2); border-bottom:1px solid var(--border); font-size:.72rem; text-transform:uppercase; letter-spacing:.03em; color:var(--muted)}
+  .tbl th{padding:.6rem .9rem; font-weight:600; white-space:nowrap}
+  .tbl td{padding:.6rem .9rem; border-top:1px solid var(--border); vertical-align:middle}
+  .tbl .strong{font-weight:600}
+  .tbl .right{text-align:right}
+  .empty{padding:2.5rem 1rem; text-align:center; color:var(--faint); font-size:.875rem}
+  .row-actions{display:flex; gap:.4rem; justify-content:flex-end; flex-wrap:wrap}
 
-  /* ---- table ---- */
-  table.activity-table { width: 100%; border-collapse: collapse; }
-  table.activity-table thead tr { height: 40px; background: var(--surface); }
-  table.activity-table th {
-    text-align: left; font-size: 12px; font-weight: 400; line-height: 16px;
-    color: var(--text-secondary); padding: 0 12px;
-  }
-  table.activity-table tbody tr { height: 48px; border-bottom: 1px solid var(--border); }
-  table.activity-table td { padding: 8px 12px; vertical-align: middle; }
-  table.activity-table td.strong { font-size: 14px; font-weight: 600; line-height: 20px; }
-  table.activity-table td.body { font-size: 14px; font-weight: 400; line-height: 20px; }
-  .row-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  /* ---- badges (verbatim: .badge / .dot) ---- */
+  .badge{display:inline-flex; align-items:center; gap:.35rem; border-radius:9999px; padding:.1rem .5rem; font-size:.72rem; font-weight:600}
+  .dot{height:.375rem; width:.375rem; border-radius:9999px}
+  .badge-active{background:var(--emerald-50); color:var(--emerald-700)} .badge-active .dot{background:var(--emerald-500)}
+  .badge-warn{background:var(--amber-50); color:var(--amber-700)} .badge-warn .dot{background:var(--amber-500)}
 
-  /* card layout (mobile, in place of table) */
-  .activity-cards { display: none; }
-  .canvas[data-width="360"] table.activity-table { display: none; }
-  .canvas[data-width="360"] .activity-cards { display: block; }
+  /* mobile card layout (below tablet width, in place of the table) */
+  .activity-cards{display:none}
+  .canvas[data-width="360"] table.tbl.activity-tbl{display:none}
+  .canvas[data-width="360"] .tbl-wrap.activity-tbl-wrap{display:none}
+  .canvas[data-width="360"] .activity-cards{display:block}
   .canvas[data-width="768"] .activity-cards,
-  .canvas[data-width="1440"] .activity-cards { display: none; }
+  .canvas[data-width="1440"] .activity-cards{display:none}
+  .card{border:1px solid var(--border); background:var(--panel); border-radius:1rem; box-shadow:var(--shadow); padding:1rem; margin-bottom:1rem}
+  .card .card-row{display:flex; justify-content:space-between; gap:.5rem; margin-bottom:.4rem}
 
-  .card {
-    border-radius: 8px; background: var(--surface-raised); border: 1px solid var(--border);
-    padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
-  }
-  .card .card-row { display: flex; justify-content: space-between; gap: 8px; }
-
-  /* ---- filter/sort bar & load-more ---- */
-  .toolbar {
-    display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
-  }
-  .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .load-more-row { display: flex; justify-content: center; margin-top: 16px; }
-  .load-more-btn {
-    height: 36px; padding: 0 16px; border-radius: 6px; background: var(--surface-raised);
-    border: 1px solid var(--border); color: var(--text-primary); font-size: 14px; cursor: pointer;
-  }
+  .load-more-row{display:flex; justify-content:center; margin-top:1rem}
 
   /* ---- empty state ---- */
-  .empty-state {
-    min-height: 160px; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 8px; text-align: center;
-  }
-  .empty-state .text-body { color: var(--text-secondary); }
+  .empty-state{min-height:160px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; text-align:center; padding:1rem}
+  .empty-state .muted{color:var(--muted)}
 
-  /* ---- error block ---- */
-  .error-block {
-    background: var(--danger-surface); border: 1px solid var(--danger); border-radius: 8px;
-    padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
-  }
-  .error-block .title { color: var(--danger); font-size: 14px; font-weight: 600; line-height: 20px; }
-  .error-block .body { color: var(--text-primary); font-size: 14px; font-weight: 400; line-height: 20px; }
+  /* ---- error block (built from the reference's palette; not itself a reference class) ---- */
+  .error-block{background:var(--brand-50); border:1px solid var(--brand); border-radius:.75rem; padding:1rem; display:flex; flex-direction:column; gap:.75rem; align-items:flex-start}
+  .error-block .title{color:var(--brand-700); font-weight:600}
+  .error-block .body{color:var(--text)}
 
-  /* ---- dialog ---- */
-  .dialog-backdrop {
-    background: var(--bg); outline: 1px solid var(--border-strong);
-    padding: 32px; display: flex; justify-content: center;
+  /* ---- dialog (verbatim: .overlay / .scrim / .box / .dialog / .dialog-head / .dialog-body / .dialog-foot)
+         Positioned relative to the frame, not position:fixed to the viewport, so
+         each frame-section stays independently switchable in this one-file mockup;
+         the real component's actual fixed/modal placement is the a11y.md text
+         contract, not this rendering. ---- */
+  .overlay{display:block}
+  .overlay .scrim{background:rgba(15,23,42,.5)}
+  .overlay .box{display:flex; align-items:flex-start; justify-content:center; padding:0}
+  .dialog{
+    position:relative; width:100%; max-width:32rem; background:var(--panel);
+    border-radius:1rem; box-shadow:var(--shadow-lg); border:1px solid var(--border);
   }
-  .dialog {
-    width: 480px; max-width: 100%; border-radius: 12px; background: var(--surface-raised);
-    border: 1px solid var(--border-strong); padding: 24px;
+  .canvas[data-width="360"] .dialog{max-width:100%}
+  .dialog-head{display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--border)}
+  .dialog-body{padding:1.25rem}
+  .dialog-foot{display:flex; justify-content:flex-end; gap:.5rem; padding:1rem 1.25rem; border-top:1px solid var(--border)}
+  .faint{color:var(--faint); font-size:.72rem}
+
+  /* ---- toast (verbatim palette/shape, rendered statically for the success frame) ---- */
+  .toast-in{
+    display:inline-flex; align-items:center; gap:.5rem; border-radius:.75rem; background:#0f172a;
+    color:#fff; padding:.6rem 1rem; font-size:.875rem; font-weight:500; box-shadow:var(--shadow-lg);
   }
-  .canvas[data-width="360"] .dialog { width: 100%; }
+  :root[data-theme="dark"] .toast-in{background:#fff; color:#0f172a}
+  .toast-in svg{height:1rem; width:1rem; color:var(--emerald-500)}
 
   /* ---- skeleton ---- */
-  .skeleton-bar { height: 12px; border-radius: 6px; background: var(--skeleton); margin: 8px 0; }
+  .skeleton-bar{height:12px; border-radius:6px; background:var(--slate-200); margin:8px 0}
 
-  /* ---- misc ---- */
-  .stack-16 > * + * { margin-top: 16px; }
-  .stack-24 > * + * { margin-top: 24px; }
-  .visually-hidden {
-    position: absolute; width: 1px; height: 1px; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap;
-  }
+  .stack-16 > * + *{margin-top:16px}
+  .visually-hidden{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
 </style>
 </head>
 <body>
@@ -260,7 +243,10 @@
   <div class="canvas-outer">
     <div class="canvas" id="canvas" data-width="1440">
       <div class="app-header">
-        <span class="text-h2">Activity Grid UI</span>
+        <span class="brandmark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </span>
+        <span class="brand-title">Activity Grid UI</span>
       </div>
       <div class="frame-body">
 
@@ -268,99 +254,108 @@
         <section class="frame-section active" data-frame="loading">
           <div class="toolbar">
             <div class="toolbar-group">
-              <span class="btn-disabled">Open only ▾</span>
-              <span class="btn-disabled">Follow-up date ▾</span>
+              <span class="btn-disabled btn-sm">Open only ▾</span>
+              <span class="btn-disabled btn-sm">Follow-up date ▾</span>
             </div>
             <span class="btn-disabled">Log activity</span>
           </div>
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr><td colspan="7"><div class="skeleton-bar" style="width:90%"></div></td></tr>
-              <tr><td colspan="7"><div class="skeleton-bar" style="width:75%"></div></td></tr>
-              <tr><td colspan="7"><div class="skeleton-bar" style="width:85%"></div></td></tr>
-            </tbody>
-          </table>
+          <div class="panel tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Done</th><th>By</th><th></th></tr></thead>
+              <tbody>
+                <tr><td colspan="7"><div class="skeleton-bar" style="width:90%"></div></td></tr>
+                <tr><td colspan="7"><div class="skeleton-bar" style="width:75%"></div></td></tr>
+                <tr><td colspan="7"><div class="skeleton-bar" style="width:85%"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <!-- ============ populated-editor ============ -->
         <section class="frame-section" data-frame="populated-editor">
           <div class="toolbar">
             <div class="toolbar-group">
-              <select class="text-body"><option>Open only</option><option>All</option></select>
-              <select class="text-body"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
+              <select class="inp"><option>Open only</option><option>All</option></select>
+              <select class="inp"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
             </div>
-            <button class="btn-primary">Log activity</button>
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Log activity
+            </button>
           </div>
-          <table class="activity-table">
-            <thead><tr>
-              <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
-              <th scope="col">Entered</th><th scope="col">Completed</th><th scope="col">By</th><th scope="col"></th>
-            </tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Mark complete</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="strong">Site visit</td>
-                <td class="body">Scheduled site visit to review compliance documents.</td>
-                <td class="body">2026-08-20</td>
-                <td class="body">2026-08-10</td>
-                <td class="body">Yes — 2026-08-18</td>
-                <td class="body">Marcus Reed</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="strong">Email sent</td>
-                <td class="body">Sent updated COI request.</td>
-                <td class="body">2026-09-05</td>
-                <td class="body">2026-08-12</td>
-                <td class="body">No</td>
-                <td class="body">A. Whitfield</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Mark complete</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="panel tbl-wrap activity-tbl-wrap">
+            <table class="tbl activity-tbl">
+              <thead><tr>
+                <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
+                <th scope="col">Entered</th><th scope="col">Done</th><th scope="col">By</th><th scope="col"></th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td class="strong">Follow-up call</td>
+                  <td class="muted">Called to confirm renewal timeline.</td>
+                  <td>2026-09-01</td>
+                  <td>2026-08-15</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>Open</span></td>
+                  <td>Dana Smith</td>
+                  <td><div class="row-actions">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-secondary btn-sm">Mark complete</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td class="strong">Site visit</td>
+                  <td class="muted">Scheduled site visit to review compliance documents.</td>
+                  <td>2026-08-20</td>
+                  <td>2026-08-10</td>
+                  <td><span class="badge badge-active"><span class="dot"></span>Complete — 2026-08-18</span></td>
+                  <td>Marcus Reed</td>
+                  <td><div class="row-actions">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td class="strong">Email sent</td>
+                  <td class="muted">Sent updated COI request.</td>
+                  <td>2026-09-05</td>
+                  <td>2026-08-12</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>Open</span></td>
+                  <td>A. Whitfield</td>
+                  <td><div class="row-actions">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-secondary btn-sm">Mark complete</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <div class="activity-cards">
             <div class="card">
-              <div class="card-row"><span class="text-body-strong">Follow-up call</span><span class="text-caption">2026-09-01</span></div>
-              <div class="text-body">Called to confirm renewal timeline.</div>
-              <div class="text-caption">Entered 2026-08-15 · By Dana Smith · Not completed</div>
-              <div class="row-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-secondary">Mark complete</button>
-                <button class="btn-secondary">Delete</button>
+              <div class="card-row"><span class="strong">Follow-up call</span><span class="faint">2026-09-01</span></div>
+              <div class="muted" style="margin-bottom:.4rem">Called to confirm renewal timeline.</div>
+              <div class="faint" style="margin-bottom:.6rem">Entered 2026-08-15 · By Dana Smith</div>
+              <span class="badge badge-warn" style="margin-bottom:.6rem"><span class="dot"></span>Open</span>
+              <div class="row-actions" style="justify-content:flex-start">
+                <button class="btn btn-ghost btn-sm">Edit</button>
+                <button class="btn btn-secondary btn-sm">Mark complete</button>
+                <button class="btn btn-danger btn-sm">Delete</button>
               </div>
             </div>
             <div class="card">
-              <div class="card-row"><span class="text-body-strong">Site visit</span><span class="text-caption">2026-08-20</span></div>
-              <div class="text-body">Scheduled site visit to review compliance documents.</div>
-              <div class="text-caption">Entered 2026-08-10 · By Marcus Reed · Completed 2026-08-18</div>
-              <div class="row-actions">
-                <button class="btn-secondary">Edit</button>
-                <button class="btn-secondary">Delete</button>
+              <div class="card-row"><span class="strong">Site visit</span><span class="faint">2026-08-20</span></div>
+              <div class="muted" style="margin-bottom:.4rem">Scheduled site visit to review compliance documents.</div>
+              <div class="faint" style="margin-bottom:.6rem">Entered 2026-08-10 · By Marcus Reed</div>
+              <span class="badge badge-active" style="margin-bottom:.6rem"><span class="dot"></span>Complete — 2026-08-18</span>
+              <div class="row-actions" style="justify-content:flex-start">
+                <button class="btn btn-ghost btn-sm">Edit</button>
+                <button class="btn btn-danger btn-sm">Delete</button>
               </div>
             </div>
           </div>
           <div class="load-more-row">
-            <button class="load-more-btn">Load more activity</button>
+            <button class="btn btn-secondary">Load more activity</button>
           </div>
         </section>
 
@@ -368,36 +363,38 @@
         <section class="frame-section" data-frame="populated-viewer">
           <div class="toolbar">
             <div class="toolbar-group">
-              <select class="text-body"><option>Open only</option><option>All</option></select>
-              <select class="text-body"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
+              <select class="inp"><option>Open only</option><option>All</option></select>
+              <select class="inp"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
             </div>
             <!-- No add control for Viewer role — absent, not disabled (R12/R28) -->
           </div>
-          <table class="activity-table">
-            <thead><tr>
-              <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
-              <th scope="col">Entered</th><th scope="col">Completed</th><th scope="col">By</th>
-            </tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <!-- No edit/complete/delete controls for Viewer role -->
-              </tr>
-              <tr>
-                <td class="strong">Site visit</td>
-                <td class="body">Scheduled site visit to review compliance documents.</td>
-                <td class="body">2026-08-20</td>
-                <td class="body">2026-08-10</td>
-                <td class="body">Yes — 2026-08-18</td>
-                <td class="body">Marcus Reed</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="panel tbl-wrap">
+            <table class="tbl">
+              <thead><tr>
+                <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
+                <th scope="col">Entered</th><th scope="col">Done</th><th scope="col">By</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td class="strong">Follow-up call</td>
+                  <td class="muted">Called to confirm renewal timeline.</td>
+                  <td>2026-09-01</td>
+                  <td>2026-08-15</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>Open</span></td>
+                  <td>Dana Smith</td>
+                  <!-- No edit/complete/delete controls for Viewer role -->
+                </tr>
+                <tr>
+                  <td class="strong">Site visit</td>
+                  <td class="muted">Scheduled site visit to review compliance documents.</td>
+                  <td>2026-08-20</td>
+                  <td>2026-08-10</td>
+                  <td><span class="badge badge-active"><span class="dot"></span>Complete — 2026-08-18</span></td>
+                  <td>Marcus Reed</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <!-- No load-more control drawn here — this frame's two rows are the only
                page; next_cursor is null, so the control does not render. -->
         </section>
@@ -406,13 +403,18 @@
         <section class="frame-section" data-frame="empty-first-use">
           <div class="toolbar">
             <div class="toolbar-group">
-              <select class="text-body"><option>Open only</option><option>All</option></select>
+              <select class="inp"><option>Open only</option><option>All</option></select>
             </div>
-            <button class="btn-primary">Log activity</button>
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Log activity
+            </button>
           </div>
-          <div class="empty-state">
-            <p class="text-h3">No activity logged yet.</p>
-            <p class="text-body">Use "Log activity" to record the first entry for this record.</p>
+          <div class="panel">
+            <div class="empty-state">
+              <h3>No activity logged yet.</h3>
+              <p class="muted">Use "Log activity" to record the first entry for this record.</p>
+            </div>
           </div>
         </section>
 
@@ -420,111 +422,137 @@
         <section class="frame-section" data-frame="empty-filtered">
           <div class="toolbar">
             <div class="toolbar-group">
-              <select class="text-body"><option selected>Open only</option><option>All</option></select>
+              <select class="inp"><option selected>Open only</option><option>All</option></select>
             </div>
-            <button class="btn-primary">Log activity</button>
+            <button class="btn btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+              Log activity
+            </button>
           </div>
-          <div class="empty-state">
-            <p class="text-h3">No entries match this filter.</p>
-            <p class="text-body">Every entry for this record is already marked complete.</p>
-            <button class="btn-secondary">Clear filter</button>
+          <div class="panel">
+            <div class="empty-state">
+              <h3>No entries match this filter.</h3>
+              <p class="muted">Every entry for this record is already marked complete.</p>
+              <button class="btn btn-secondary btn-sm">Clear filter</button>
+            </div>
           </div>
         </section>
 
-        <!-- ============ add-form-open ============ -->
+        <!-- ============ add-form-open ============
+             The Activity Editor dialog, add mode -- reuses the reference's
+             .overlay/.dialog/.dialog-head/.dialog-body/.dialog-foot construct
+             verbatim. No "Completed" checkbox is drawn here (unlike the
+             reference's own Activity Editor): R7 makes "mark complete" a
+             separate, single-action row control, never part of this form. -->
         <section class="frame-section" data-frame="add-form-open">
-          <div class="stack-16" style="max-width:480px;">
-            <p class="text-h3">Log activity</p>
-            <div class="field">
-              <label for="af-tasktype">Task type</label>
-              <select id="af-tasktype"><option>Choose a task type</option><option>Follow-up call</option><option>Site visit</option><option>Email sent</option></select>
-            </div>
-            <div class="field">
-              <label for="af-note">Note</label>
-              <textarea id="af-note" placeholder="What happened?"></textarea>
-            </div>
-            <div class="field">
-              <label for="af-followup">Follow-up date</label>
-              <input id="af-followup" type="text" placeholder="YYYY-MM-DD" value="2026-09-10">
-            </div>
-            <div class="btn-row">
-              <button class="btn-primary">Save</button>
-              <button class="btn-secondary">Cancel</button>
-            </div>
+          <div class="overlay open">
+            <div class="scrim"></div>
+            <div class="box"><div class="dialog">
+              <div class="dialog-head"><h3>Log activity</h3><button class="btn btn-ghost">✕</button></div>
+              <div class="dialog-body">
+                <div class="grid g2">
+                  <div class="field"><label>Task Type / Status</label>
+                    <select id="af-tasktype" class="inp"><option>Choose a task type</option><option>Follow-up call</option><option>Site visit</option><option>Email sent</option></select>
+                  </div>
+                  <div class="field"><label>Follow-up Date</label>
+                    <input id="af-followup" class="inp" placeholder="mm/dd/yyyy" value="09/10/2026">
+                  </div>
+                  <div class="field colspan2"><label>Note</label>
+                    <textarea id="af-note" class="inp" placeholder="What happened?"></textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="dialog-foot">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Save</button>
+              </div>
+            </div></div>
           </div>
         </section>
 
         <!-- ============ add-form-validation-error ============ -->
         <section class="frame-section" data-frame="add-form-validation-error">
-          <div class="stack-16" style="max-width:480px;">
-            <p class="text-h3">Log activity</p>
-            <div class="field has-error">
-              <label for="afe-tasktype">Task type</label>
-              <select id="afe-tasktype"><option>Choose a task type</option></select>
-              <p class="field-error">That task type isn't valid for this record.</p>
-            </div>
-            <div class="field">
-              <label for="afe-note">Note</label>
-              <textarea id="afe-note">Called to confirm renewal timeline.</textarea>
-            </div>
-            <div class="field has-error">
-              <label for="afe-followup">Follow-up date</label>
-              <input id="afe-followup" type="text" value="next tuesday">
-              <p class="field-error">Enter a valid date.</p>
-            </div>
-            <div class="btn-row">
-              <button class="btn-primary">Save</button>
-              <button class="btn-secondary">Cancel</button>
-            </div>
+          <div class="overlay open">
+            <div class="scrim"></div>
+            <div class="box"><div class="dialog">
+              <div class="dialog-head"><h3>Log activity</h3><button class="btn btn-ghost">✕</button></div>
+              <div class="dialog-body">
+                <div class="grid g2">
+                  <div class="field"><label>Task Type / Status</label>
+                    <select id="afe-tasktype" class="inp err"><option>Choose a task type</option></select>
+                    <p class="help-err">That task type isn't valid for this record.</p>
+                  </div>
+                  <div class="field"><label>Follow-up Date</label>
+                    <input id="afe-followup" class="inp err" value="next tuesday">
+                    <p class="help-err">Enter a valid date.</p>
+                  </div>
+                  <div class="field colspan2"><label>Note</label>
+                    <textarea id="afe-note" class="inp">Called to confirm renewal timeline.</textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="dialog-foot">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-primary">Save</button>
+              </div>
+            </div></div>
           </div>
         </section>
 
         <!-- ============ row-submitting ============ -->
         <section class="frame-section" data-frame="row-submitting">
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <td><div class="row-actions">
-                  <span class="btn-disabled">Edit</span>
-                  <span class="btn-disabled">Mark complete</span>
-                  <span class="btn-disabled">Delete</span>
-                </div></td>
-              </tr>
-              <tr>
-                <td class="strong">Site visit</td>
-                <td class="body">Scheduled site visit to review compliance documents.</td>
-                <td class="body">2026-08-20</td>
-                <td class="body">2026-08-10</td>
-                <td class="body">Yes — 2026-08-18</td>
-                <td class="body">Marcus Reed</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="text-caption btn-caption">Saving "Follow-up call" — other rows remain available.</p>
+          <div class="panel tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Done</th><th>By</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="strong">Follow-up call</td>
+                  <td class="muted">Called to confirm renewal timeline.</td>
+                  <td>2026-09-01</td>
+                  <td>2026-08-15</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>Open</span></td>
+                  <td>Dana Smith</td>
+                  <td><div class="row-actions">
+                    <span class="btn-disabled btn-sm">Edit</span>
+                    <span class="btn-disabled btn-sm">Mark complete</span>
+                    <span class="btn-disabled btn-sm">Delete</span>
+                  </div></td>
+                </tr>
+                <tr>
+                  <td class="strong">Site visit</td>
+                  <td class="muted">Scheduled site visit to review compliance documents.</td>
+                  <td>2026-08-20</td>
+                  <td>2026-08-10</td>
+                  <td><span class="badge badge-active"><span class="dot"></span>Complete — 2026-08-18</span></td>
+                  <td>Marcus Reed</td>
+                  <td><div class="row-actions">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="btn-caption" style="margin-top:.6rem">Saving "Follow-up call" — other rows remain available.</p>
         </section>
 
-        <!-- ============ delete-confirm ============ -->
+        <!-- ============ delete-confirm ============
+             Explicit second step before a soft-delete call is made (R8). Confirm
+             action uses .btn-danger, matching the reference's own destructive-action
+             styling, in place of the earlier draft's incorrect .btn-primary. -->
         <section class="frame-section" data-frame="delete-confirm">
-          <div class="dialog-backdrop">
-            <div class="dialog">
-              <p class="text-h3">Delete this activity entry?</p>
-              <p class="text-body" style="margin-top:12px;">This removes it from the list. This cannot be undone — no unit exposes a restore path.</p>
-              <div class="btn-row" style="margin-top:24px;">
-                <button class="btn-primary">Delete</button>
-                <button class="btn-secondary">Cancel</button>
+          <div class="overlay open">
+            <div class="scrim"></div>
+            <div class="box"><div class="dialog">
+              <div class="dialog-head"><h3>Delete this activity entry?</h3><button class="btn btn-ghost">✕</button></div>
+              <div class="dialog-body">
+                <p>This removes it from the list. This cannot be undone — no unit exposes a restore path.</p>
               </div>
-            </div>
+              <div class="dialog-foot">
+                <button class="btn btn-secondary">Cancel</button>
+                <button class="btn btn-danger">Delete</button>
+              </div>
+            </div></div>
           </div>
         </section>
 
@@ -533,7 +561,7 @@
           <div class="error-block">
             <p class="title">Activity could not be loaded.</p>
             <p class="body">Something went wrong reaching the activity service. Your entries have not changed.</p>
-            <button class="btn-secondary">Retry</button>
+            <button class="btn btn-secondary btn-sm">Retry</button>
           </div>
         </section>
 
@@ -542,7 +570,7 @@
           <div class="error-block">
             <p class="title">Too many requests.</p>
             <p class="body">Try again in 15s.</p>
-            <span class="btn-disabled">Retry</span>
+            <span class="btn-disabled btn-sm">Retry</span>
           </div>
         </section>
 
@@ -552,46 +580,52 @@
             <p class="title">Your session has ended.</p>
             <p class="body">Sign in again to continue — your entry has been kept.</p>
           </div>
-          <div class="stack-16" style="max-width:480px; margin-top:24px; opacity:0.85;">
-            <p class="text-h3">Log activity <span class="text-caption">(kept)</span></p>
-            <div class="field">
-              <label for="se-tasktype">Task type</label>
-              <select id="se-tasktype"><option>Follow-up call</option></select>
-            </div>
-            <div class="field">
-              <label for="se-note">Note</label>
-              <textarea id="se-note">Called to confirm renewal timeline.</textarea>
-            </div>
+          <div class="overlay open" style="margin-top:1.5rem; opacity:.85;">
+            <div class="box"><div class="dialog">
+              <div class="dialog-head"><h3>Log activity <span class="faint">(kept)</span></h3></div>
+              <div class="dialog-body">
+                <div class="grid g2">
+                  <div class="field"><label>Task Type / Status</label>
+                    <select class="inp"><option>Follow-up call</option></select>
+                  </div>
+                  <div class="field colspan2"><label>Note</label>
+                    <textarea class="inp">Called to confirm renewal timeline.</textarea>
+                  </div>
+                </div>
+              </div>
+            </div></div>
           </div>
         </section>
 
         <!-- ============ row-not-found ============ -->
         <section class="frame-section" data-frame="row-not-found">
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr>
-                <td colspan="7">
-                  <div class="error-block" style="padding:12px;">
-                    <p class="body" style="margin:0;">This entry is no longer available.</p>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td class="strong">Email sent</td>
-                <td class="body">Sent updated COI request.</td>
-                <td class="body">2026-09-05</td>
-                <td class="body">2026-08-12</td>
-                <td class="body">No</td>
-                <td class="body">A. Whitfield</td>
-                <td><div class="row-actions">
-                  <button class="btn-secondary">Edit</button>
-                  <button class="btn-secondary">Mark complete</button>
-                  <button class="btn-secondary">Delete</button>
-                </div></td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="panel tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Done</th><th>By</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td colspan="7">
+                    <div class="error-block" style="padding:.75rem">
+                      <p class="body" style="margin:0">This entry is no longer available.</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="strong">Email sent</td>
+                  <td class="muted">Sent updated COI request.</td>
+                  <td>2026-09-05</td>
+                  <td>2026-08-12</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>Open</span></td>
+                  <td>A. Whitfield</td>
+                  <td><div class="row-actions">
+                    <button class="btn btn-ghost btn-sm">Edit</button>
+                    <button class="btn btn-secondary btn-sm">Mark complete</button>
+                    <button class="btn btn-danger btn-sm">Delete</button>
+                  </div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <!-- ============ offline-on-load ============ -->
@@ -599,53 +633,68 @@
           <div class="error-block">
             <p class="title">You're offline.</p>
             <p class="body">Activity could not be loaded. Reconnect and try again.</p>
-            <button class="btn-secondary">Retry</button>
+            <button class="btn btn-secondary btn-sm">Retry</button>
           </div>
         </section>
 
         <!-- ============ offline-on-submit ============ -->
         <section class="frame-section" data-frame="offline-on-submit">
-          <div class="stack-16" style="max-width:480px;">
-            <p class="text-h3">Log activity</p>
-            <div class="field">
-              <label for="off-tasktype">Task type</label>
-              <select id="off-tasktype"><option>Follow-up call</option></select>
-            </div>
-            <div class="field">
-              <label for="off-note">Note</label>
-              <textarea id="off-note">Called to confirm renewal timeline.</textarea>
-            </div>
-            <div class="error-block">
-              <p class="body" style="margin:0;">Can't save while offline. Try again once you're back online.</p>
-            </div>
-            <div class="btn-row">
-              <span class="btn-disabled">Save</span>
-              <button class="btn-secondary">Cancel</button>
-            </div>
+          <div class="overlay open">
+            <div class="scrim"></div>
+            <div class="box"><div class="dialog">
+              <div class="dialog-head"><h3>Log activity</h3><button class="btn btn-ghost">✕</button></div>
+              <div class="dialog-body">
+                <div class="grid g2">
+                  <div class="field"><label>Task Type / Status</label>
+                    <select class="inp"><option>Follow-up call</option></select>
+                  </div>
+                  <div class="field colspan2"><label>Note</label>
+                    <textarea class="inp">Called to confirm renewal timeline.</textarea>
+                  </div>
+                  <div class="field colspan2">
+                    <div class="error-block" style="padding:.75rem">
+                      <p class="body" style="margin:0">Can't save while offline. Try again once you're back online.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="dialog-foot">
+                <button class="btn btn-secondary">Cancel</button>
+                <span class="btn-disabled">Save</span>
+              </div>
+            </div></div>
           </div>
         </section>
 
-        <!-- ============ success-confirmation ============ -->
+        <!-- ============ success-confirmation ============
+             The reference's own .toast/.toast-in shape, rendered statically
+             (not timed, per the switcher's no-timers rule) in place beside the
+             affected row. -->
         <section class="frame-section" data-frame="success-confirmation">
-          <table class="activity-table">
-            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
-            <tbody>
-              <tr>
-                <td class="strong">Follow-up call</td>
-                <td class="body">Called to confirm renewal timeline.</td>
-                <td class="body">2026-09-01</td>
-                <td class="body">2026-08-15</td>
-                <td class="body">No</td>
-                <td class="body">Dana Smith</td>
-                <td>
-                  <span class="text-caption" style="color:var(--status-active);">✓ Saved</span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="panel tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Done</th><th>By</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="strong">Follow-up call</td>
+                  <td class="muted">Called to confirm renewal timeline.</td>
+                  <td>2026-09-01</td>
+                  <td>2026-08-15</td>
+                  <td><span class="badge badge-warn"><span class="dot"></span>Open</span></td>
+                  <td>Dana Smith</td>
+                  <td>
+                    <span class="toast-in">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                      Saved
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
-        <footer class="frame-label text-caption" id="frame-label">UNIT-CMS-0008 · populated-editor · 1440px · light</footer>
+        <footer class="frame-label" id="frame-label">UNIT-CMS-0008 · populated-editor · 1440px · light</footer>
       </div>
     </div>
   </div>

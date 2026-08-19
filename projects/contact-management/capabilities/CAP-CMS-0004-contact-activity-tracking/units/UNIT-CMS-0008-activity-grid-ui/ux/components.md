@@ -17,7 +17,7 @@ Components that already exist elsewhere and are used as-is.
 |---|---|---|
 | Activity grid | The list/sort/filter/paginate surface | R1, R2, R3, R17, R18, R20, R29 |
 | Activity row | One entry's read display plus (Editor only) its edit/complete/delete controls | R6, R7, R8, R11, R12, R14, R28 |
-| Add/edit activity form | Inline form for creating or editing an entry | R4, R5, R6, R9, R10, R12, R14, R15, R28 |
+| Activity Editor dialog | Modal dialog for creating or editing an entry, matching the reference product mockup's Activity Editor pattern | R4, R5, R6, R9, R10, R12, R14, R15, R28 |
 | Delete-confirm dialog | The explicit second step before a soft-delete call | R8, R11, R14 |
 | Filter/sort bar | Completed/open filter, follow-up-date sort control | R1, R2 |
 | Load-more control | Cursor-based next-page navigation against UNIT-CMS-0007's `limit`/`cursor` contract | R3 |
@@ -56,7 +56,9 @@ announcements — see `a11y.md`.
 
 **Purpose.** Renders one entry's fields and, for Editor, its per-row actions;
 manages that row's own submitting/error/success sub-state independently of the
-rest of the grid.
+rest of the grid. The completed/open indicator is a two-state badge (shape dot
++ text label, never colour alone), matching the reference product mockup's
+badge component for status.
 
 **Inputs**
 
@@ -80,11 +82,18 @@ rest of the grid.
 **Accessibility contract:** each action button's accessible name disambiguates the
 row (e.g. by entered date) — see `a11y.md`.
 
-### Add/edit activity form
+### Activity Editor dialog
 
 **Purpose.** Collects `statusId`, `note`, `followUpDate` for a new or existing
-entry. Never presents `userName`, `enteredDate`, `completedDate`, or `id` as
-inputs — those fields do not exist in this component's input set at all (R5).
+entry, presented as a modal dialog — the same construct the reference product
+mockup's own Activity Editor uses (a titled header, a body holding the fields,
+and a footer holding Cancel/Save) — rather than an inline form embedded in the
+grid. Never presents `userName`, `enteredDate`, `completedDate`, `id`, or a
+completed/completion-date field as inputs — those fields do not exist in this
+component's input set at all (R5, R7). The reference's own Activity Editor
+includes a "Completed" checkbox in this same dialog; this unit deliberately
+omits it, because R7 makes "mark complete" a separate, single-action row
+control and this dialog's own field set is fixed at add/edit time only.
 
 **Inputs**
 
@@ -114,7 +123,9 @@ error — see `a11y.md`.
 
 **Purpose.** The explicit second step required before a soft-delete call is made
 (R8), reducing accidental, effectively-irreversible-from-the-caller's-view data
-loss.
+loss. Uses the same dialog construct as the Activity Editor; its confirm
+action is styled as a destructive action (the reference product mockup's own
+danger-button treatment), distinct from the primary Save action elsewhere.
 
 **Inputs**
 
@@ -193,4 +204,34 @@ Responsive behaviour by breakpoint, described in terms of what reflows.
 | Breakpoint | Behaviour |
 |---|---|
 | `desktop` (1440) and `tablet` (768) | Real table: one row per entry, all columns visible, actions right-aligned in the last cell |
-| `mobile` (360) | The table becomes a stack of cards, one per entry (per `design-system.md`'s Card component) — each card shows the same fields as a row, labelled, with actions below the note text; filter/sort/pagination controls stack vertically above the list |
+| `mobile` (360) | The table becomes a stack of cards, one per entry — each card shows the same fields as a row, labelled, with actions below the note text; filter/sort/load-more controls stack vertically above the list |
+
+## Visual system
+
+This unit's screens are drawn from the reference product mockup's design
+system (`requirements/contactmanagement-full-mockup.html`), not from a
+component vocabulary invented for this unit alone, so that the embedded grid
+reads as part of the same product as the host screen (UNIT-CMS-0006) rather
+than a visually distinct island. Concretely, this unit's mockup reuses,
+verbatim by name and structure:
+
+| Reference class(es) | Used for |
+|---|---|
+| `.btn` / `.btn-primary` / `.btn-secondary` / `.btn-ghost` / `.btn-danger` / `.btn-sm` | Every button in the grid, dialogs and toolbar. `.btn-danger` is reserved for the destructive delete actions (row delete, delete-confirm dialog); `.btn-primary` is reserved for the affirmative Save action; row-level Edit uses `.btn-ghost` |
+| `.tbl-wrap` / `table.tbl` | The activity grid itself |
+| `.badge` / `.dot` / `.badge-active` / `.badge-warn` | The completed/open indicator — a shape dot plus a text label, colour is reinforcement only |
+| `.overlay` / `.scrim` / `.box` / `.dialog` / `.dialog-head` / `.dialog-body` / `.dialog-foot` | The Activity Editor and Delete-confirm dialogs |
+| `.field` / `.inp` / `.help-err` | Every form field and its validation message |
+| `.panel` / `.empty` / `.card` | Panel framing, the empty-state block, and the mobile card layout |
+| `.toast-in` | The success-confirmation frame's inline saved indicator |
+
+The colour tokens (`--brand`, `--bg`, `--panel`, `--text`, etc.) and the
+type family (`Inter`, falling back to system/Segoe UI fonts since no external
+font request is permitted in a self-contained mockup) are copied from the same
+reference file. Two deliberate departures from the reference, both required by
+this repo's accessibility floor rather than by preference: no CSS `animation`
+or `transition` is used anywhere (`a11y.md` commits this component to no
+motion), and the `.overlay` construct is positioned relative to its own frame
+section rather than `position: fixed` to the viewport, so each of this one
+file's frames stays independently switchable — the real component's actual
+modal/fixed placement is specified in `a11y.md`'s text, not by this rendering.
