@@ -5,7 +5,7 @@ project: CMS
 status: draft
 owner: "@MithunAcx"
 created: 2026-08-18
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Partner Directory & Search — capability design
@@ -47,7 +47,7 @@ schema, since it is cross-*capability*, not cross-*unit-within-this-capability*.
 |---|---|
 | Versioning | `/api/v1/...` |
 | Auth header shape | `Authorization: Bearer <access token>`, validated per CAP-CMS-0001/XD-0002 |
-| Pagination | `page`/`size` query params; response includes total count and page metadata (FR-SEARCH-7, API-1) |
+| Pagination | Cursor-based (10-platform.md floor): `limit`+`cursor` query params in, `items`+`next_cursor` out; default `limit` 25, maximum 100; no offset/page-number pagination anywhere. Response also carries `total` (FR-SEARCH-4/FR-SEARCH-7, API-1) — cheap to compute at this capability's confirmed small-scale row counts (capability.md Constraints), so it rides alongside the cursor rather than being dropped. |
 | Error envelope | `{ error: { code, message, fields? } }` |
 | Idempotency | All endpoints here are `GET` — inherently idempotent |
 | Rate limiting response | `429` with `Retry-After`, per API Gateway throttling |
@@ -56,7 +56,7 @@ schema, since it is cross-*capability*, not cross-*unit-within-this-capability*.
 
 | Method | Path | Request | Response | Status / errors | Min role |
 |--------|------|---------|----------|------------------|----------|
-| GET | `/api/v1/search?mode=brokerage\|broker\|state-broker\|agency\|cga\|state-agent&term=&state=&uw=&page=&size=` | query params per XD-0001 | `{ items: [...], total, page, size }` — item shape depends on `mode`, per raw-ask Appendix A's result columns | `400` if `term` required for the mode and missing (FR-SEARCH-3) | Viewer |
+| GET | `/api/v1/search?mode=brokerage\|broker\|state-broker\|agency\|cga\|state-agent&term=&state=&uw=&limit=&cursor=` | query params per XD-0001; `limit`/`cursor` per the cursor-pagination convention above | `{ items: [...], total, next_cursor }` — item shape depends on `mode`, per raw-ask Appendix A's result columns; `next_cursor` is `null` when no further results | `400` if `term` required for the mode and missing (FR-SEARCH-3) | Viewer |
 | GET | `/api/v1/lookups/assigned-uws` | — | `[{ uw: string }]` — distinct underwriters currently assigned to ≥1 brokerage | — | Viewer |
 
 ### partner-directory-ui (U2) — endpoints
@@ -124,3 +124,4 @@ U2 (Directory screen)                    U1 (partner-search-api)
 
 | Date | Change | Units whose `design.md` must follow |
 |------|--------|-------------------------------------|
+| 2026-08-19 | Fixed a platform-floor defect: the Unified API Contract's pagination was `page`/`size` (offset), which 10-platform.md forbids unconditionally ("Cursor-based only... No offset pagination anywhere"). This was inherited silently by both units with no ADR and no disclosed exception. Replaced with real cursor pagination — `limit`+`cursor` in, `items`+`next_cursor` out, default limit 25, max 100 — on the `/search` endpoint's Shared convention and its own row. `total` is retained alongside the cursor since it is cheap at this capability's confirmed row counts and existing requirements (FR-SEARCH-4) depend on it. | UNIT-CMS-0003, UNIT-CMS-0004 |
