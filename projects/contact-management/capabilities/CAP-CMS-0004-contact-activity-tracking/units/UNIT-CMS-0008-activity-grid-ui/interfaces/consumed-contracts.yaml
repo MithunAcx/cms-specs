@@ -1,0 +1,67 @@
+# What UNIT-CMS-0008-activity-grid-ui consumes, why, and how every error code
+# maps to a user-visible outcome. Authored prose — not machine-generated, and not
+# itself a contract; the contract is the copy(-in-progress) alongside it.
+unit: UNIT-CMS-0008
+updated: 2026-08-19
+
+consumes:
+  - producer: UNIT-CMS-0007-activity-api
+    why: >
+      Owns the Activity entity end to end (list/create/update/soft-delete). This
+      unit renders and drives every one of those four operations but persists
+      nothing itself — see design.md § Approach.
+    contract_file: UNIT-CMS-0007.openapi.yaml
+    generated_from:
+      source: "./UNIT-CMS-0007.openapi.yaml"
+      status: >
+        DERIVED, NOT COPIED — UNIT-CMS-0007-activity-api had not yet published
+        its own interfaces/openapi.yaml as of 2026-08-19 (only a .gitkeep
+        present on main at that date). The local file was authored from
+        CAP-CMS-0004/capability-design.md's fixed endpoint table instead. Once
+        UNIT-CMS-0007 publishes its own file, re-run architect-unit-interfaces
+        for this unit to replace the local file with a byte-for-byte copy and
+        flip this status to COPIED.
+    operations_used:
+      - operationId: listActivity
+        satisfies: [R1, R2, R3, R29]
+      - operationId: createActivity
+        satisfies: [R4, R5, R9]
+      - operationId: updateActivity
+        satisfies: [R6, R7, R9]
+      - operationId: deleteActivity
+        satisfies: [R8, R9, R16]
+
+error_to_outcome_map:
+  - code: validation_failed
+    http: [400, 422]
+    user_visible_outcome: >
+      Inline, field-scoped error on the offending add/edit control (R10); the
+      form stays open and populated so nothing typed is lost.
+  - code: not_found
+    http: 404
+    user_visible_outcome: >
+      "No longer available" — the row is removed from the local grid without a
+      crash or a retry (R11).
+  - code: unauthenticated
+    http: 401
+    user_visible_outcome: >
+      Session-expired state; any in-progress form's values are retained locally
+      until the host re-authenticates and remounts this component (R13).
+  - code: rate_limited
+    http: 429
+    user_visible_outcome: >
+      A "try again" state honoring the response's Retry-After header; the
+      triggering control re-enables once that interval elapses (R18).
+  - code: (none — connection failure, timeout, or 5xx)
+    http: "n/a or 5xx"
+    user_visible_outcome: >
+      On initial load: an error state with a retry action (R17). On a write
+      whose outcome is unknown: a list re-fetch to reconcile before any further
+      write is permitted, never a blind retry (R15).
+
+not_consumed:
+  - note: >
+      This unit calls no other unit's contract. UNIT-CMS-0001 (auth/session) is
+      a dependency but exposes no API this component calls directly — the
+      bearer token and role are supplied by the host screen's already-established
+      session, per requirements.md § Dependencies.

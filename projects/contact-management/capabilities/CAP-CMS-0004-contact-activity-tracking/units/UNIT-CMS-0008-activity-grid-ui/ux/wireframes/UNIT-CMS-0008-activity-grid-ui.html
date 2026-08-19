@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>UNIT-CMS-0008 activity-grid-ui — mockup</title>
+<style>
+  :root[data-theme="light"] {
+    --bg: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-raised: #FFFFFF;
+    --border: #E2E8F0;
+    --border-strong: #CBD5E1;
+    --text-primary: #1E293B;
+    --text-secondary: #475569;
+    --text-disabled: #94A3B8;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #E2E8F0;
+    --status-active: #047857;
+    --status-pending: #B45309;
+    --status-lapsed: #64748B;
+    --status-neutral: #64748B;
+    --danger: #A81A35;
+    --danger-surface: #FEF2F3;
+    --notice-surface: #F1F5F9;
+  }
+  :root[data-theme="dark"] {
+    --bg: #020617;
+    --surface: #1E293B;
+    --surface-raised: #0F172A;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-disabled: #64748B;
+    --primary: #C8213E;
+    --primary-text: #FFFFFF;
+    --focus: #E43E54;
+    --skeleton: #334155;
+    --status-active: #34D399;
+    --status-pending: #FBBF24;
+    --status-lapsed: #94A3B8;
+    --status-neutral: #94A3B8;
+    --danger: #F7A3AB;
+    --danger-surface: #3A1620;
+    --notice-surface: #1E293B;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .text-h1 { font-size: 28px; font-weight: 700; line-height: 36px; margin: 0; }
+  .text-h2 { font-size: 20px; font-weight: 600; line-height: 28px; margin: 0; }
+  .text-h3 { font-size: 16px; font-weight: 600; line-height: 24px; margin: 0; }
+  .text-body { font-size: 14px; font-weight: 400; line-height: 20px; }
+  .text-body-strong { font-size: 14px; font-weight: 600; line-height: 20px; }
+  .text-caption { font-size: 12px; font-weight: 400; line-height: 16px; }
+
+  /* ---- switcher chrome (scaffolding, not a specified screen) ---- */
+  .switcher {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    padding: 12px 16px; background: #444; border-bottom: 4px solid #222;
+  }
+  .switcher label { color: #fff; font-size: 12px; margin-right: 4px; }
+  .switcher select, .switcher button.switcher-btn {
+    font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #888;
+    background: #fff; color: #111;
+  }
+  .switcher button.switcher-btn[aria-pressed="true"] { outline: 2px solid #fff; }
+
+  /* ---- canvas ---- */
+  .canvas-outer { display: flex; justify-content: center; background: #333; padding: 24px 0; }
+  .canvas {
+    background: var(--bg);
+    min-height: 200px;
+  }
+  .canvas[data-width="360"]  { width: 360px; }
+  .canvas[data-width="768"]  { width: 768px; }
+  .canvas[data-width="1440"] { width: 1440px; }
+
+  .canvas[data-width="360"]  .frame-body { padding: 0 16px; }
+  .canvas[data-width="768"]  .frame-body { padding: 0 24px; }
+  .canvas[data-width="1440"] .frame-body { padding: 0 32px; }
+
+  .app-header {
+    height: 56px; width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding-left: 32px;
+  }
+  .canvas[data-width="360"] .app-header { padding-left: 16px; }
+  .canvas[data-width="768"] .app-header { padding-left: 24px; }
+
+  .frame-body { margin-top: 24px; padding-bottom: 32px; }
+
+  .frame-section { display: none; }
+  .frame-section.active { display: block; }
+
+  footer.frame-label {
+    padding: 8px 0 24px 0;
+    color: var(--text-secondary);
+  }
+  footer.frame-label.text-caption { padding-left: 32px; }
+  .canvas[data-width="360"] footer.frame-label { padding-left: 16px; }
+  .canvas[data-width="768"] footer.frame-label { padding-left: 24px; }
+  .canvas[data-width="1440"] footer.frame-label { padding-left: 32px; }
+
+  /* ---- buttons ---- */
+  .btn-primary {
+    height: 36px; border-radius: 6px; background: var(--primary);
+    color: var(--primary-text); border: none; padding: 0 16px;
+    font-size: 14px; font-weight: 600; line-height: 20px; cursor: pointer;
+  }
+  .btn-secondary {
+    height: 36px; border-radius: 6px; background: var(--surface-raised);
+    border: 1px solid var(--border); color: var(--text-primary);
+    padding: 0 16px; font-size: 14px; font-weight: 400; line-height: 20px; cursor: pointer;
+  }
+  .btn-disabled {
+    height: 36px; border-radius: 6px; background: var(--surface-raised);
+    border: 1px solid var(--border); color: var(--text-disabled);
+    padding: 0 16px; font-size: 14px; font-weight: 400; line-height: 20px;
+  }
+  .btn-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .btn-caption { color: var(--text-secondary); }
+
+  /* ---- input field ---- */
+  .field { margin-bottom: 16px; }
+  .field label {
+    display: block; font-size: 12px; font-weight: 400; line-height: 16px;
+    color: var(--text-secondary); margin-bottom: 4px;
+  }
+  .field input, .field select, .field textarea {
+    height: 36px; width: 100%; border-radius: 6px;
+    background: var(--surface-raised); border: 1px solid var(--border);
+    color: var(--text-primary); font-family: inherit; font-size: 14px; padding: 0 8px;
+  }
+  .field textarea { height: 72px; padding: 8px; resize: vertical; }
+  .field.has-error input, .field.has-error select { border-color: var(--danger); }
+  .field-error {
+    margin-top: 4px; color: var(--danger); font-size: 12px; line-height: 16px;
+  }
+
+  /* ---- table ---- */
+  table.activity-table { width: 100%; border-collapse: collapse; }
+  table.activity-table thead tr { height: 40px; background: var(--surface); }
+  table.activity-table th {
+    text-align: left; font-size: 12px; font-weight: 400; line-height: 16px;
+    color: var(--text-secondary); padding: 0 12px;
+  }
+  table.activity-table tbody tr { height: 48px; border-bottom: 1px solid var(--border); }
+  table.activity-table td { padding: 8px 12px; vertical-align: middle; }
+  table.activity-table td.strong { font-size: 14px; font-weight: 600; line-height: 20px; }
+  table.activity-table td.body { font-size: 14px; font-weight: 400; line-height: 20px; }
+  .row-actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+
+  /* card layout (mobile, in place of table) */
+  .activity-cards { display: none; }
+  .canvas[data-width="360"] table.activity-table { display: none; }
+  .canvas[data-width="360"] .activity-cards { display: block; }
+  .canvas[data-width="768"] .activity-cards,
+  .canvas[data-width="1440"] .activity-cards { display: none; }
+
+  .card {
+    border-radius: 8px; background: var(--surface-raised); border: 1px solid var(--border);
+    padding: 16px; display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;
+  }
+  .card .card-row { display: flex; justify-content: space-between; gap: 8px; }
+
+  /* ---- filter/sort bar & pagination ---- */
+  .toolbar {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+  }
+  .toolbar-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pagination { display: flex; gap: 8px; align-items: center; margin-top: 16px; }
+  .page-btn {
+    height: 36px; min-width: 36px; border-radius: 6px; background: var(--surface-raised);
+    border: 1px solid var(--border); color: var(--text-primary); font-size: 14px; cursor: pointer;
+  }
+  .page-btn[aria-current="page"] { border-color: var(--primary); color: var(--primary); font-weight: 600; }
+
+  /* ---- empty state ---- */
+  .empty-state {
+    min-height: 160px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; text-align: center;
+  }
+  .empty-state .text-body { color: var(--text-secondary); }
+
+  /* ---- error block ---- */
+  .error-block {
+    background: var(--danger-surface); border: 1px solid var(--danger); border-radius: 8px;
+    padding: 16px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+  }
+  .error-block .title { color: var(--danger); font-size: 14px; font-weight: 600; line-height: 20px; }
+  .error-block .body { color: var(--text-primary); font-size: 14px; font-weight: 400; line-height: 20px; }
+
+  /* ---- dialog ---- */
+  .dialog-backdrop {
+    background: var(--bg); outline: 1px solid var(--border-strong);
+    padding: 32px; display: flex; justify-content: center;
+  }
+  .dialog {
+    width: 480px; max-width: 100%; border-radius: 12px; background: var(--surface-raised);
+    border: 1px solid var(--border-strong); padding: 24px;
+  }
+  .canvas[data-width="360"] .dialog { width: 100%; }
+
+  /* ---- skeleton ---- */
+  .skeleton-bar { height: 12px; border-radius: 6px; background: var(--skeleton); margin: 8px 0; }
+
+  /* ---- misc ---- */
+  .stack-16 > * + * { margin-top: 16px; }
+  .stack-24 > * + * { margin-top: 24px; }
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+  <div class="switcher">
+    <label for="frame-select">Frame</label>
+    <select id="frame-select" onchange="setFrame(this.value)">
+      <option value="loading">loading</option>
+      <option value="populated-editor" selected>populated-editor</option>
+      <option value="populated-viewer">populated-viewer</option>
+      <option value="empty-first-use">empty-first-use</option>
+      <option value="empty-filtered">empty-filtered</option>
+      <option value="add-form-open">add-form-open</option>
+      <option value="add-form-validation-error">add-form-validation-error</option>
+      <option value="row-submitting">row-submitting</option>
+      <option value="delete-confirm">delete-confirm</option>
+      <option value="error-dependency-down">error-dependency-down</option>
+      <option value="throttled">throttled</option>
+      <option value="session-expired">session-expired</option>
+      <option value="row-not-found">row-not-found</option>
+      <option value="offline-on-load">offline-on-load</option>
+      <option value="offline-on-submit">offline-on-submit</option>
+      <option value="success-confirmation">success-confirmation</option>
+    </select>
+
+    <label>Theme</label>
+    <button class="switcher-btn" id="theme-light-btn" aria-pressed="true" onclick="setTheme('light')">light</button>
+    <button class="switcher-btn" id="theme-dark-btn" aria-pressed="false" onclick="setTheme('dark')">dark</button>
+
+    <label>Width</label>
+    <button class="switcher-btn" id="width-360-btn" aria-pressed="false" onclick="setWidth('360')">360</button>
+    <button class="switcher-btn" id="width-768-btn" aria-pressed="false" onclick="setWidth('768')">768</button>
+    <button class="switcher-btn" id="width-1440-btn" aria-pressed="true" onclick="setWidth('1440')">1440</button>
+  </div>
+
+  <div class="canvas-outer">
+    <div class="canvas" id="canvas" data-width="1440">
+      <div class="app-header">
+        <span class="text-h2">Activity Grid UI</span>
+      </div>
+      <div class="frame-body">
+
+        <!-- ============ loading ============ -->
+        <section class="frame-section active" data-frame="loading">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <span class="btn-disabled">Open only ▾</span>
+              <span class="btn-disabled">Follow-up date ▾</span>
+            </div>
+            <span class="btn-disabled">Log activity</span>
+          </div>
+          <table class="activity-table">
+            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
+            <tbody>
+              <tr><td colspan="7"><div class="skeleton-bar" style="width:90%"></div></td></tr>
+              <tr><td colspan="7"><div class="skeleton-bar" style="width:75%"></div></td></tr>
+              <tr><td colspan="7"><div class="skeleton-bar" style="width:85%"></div></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ============ populated-editor ============ -->
+        <section class="frame-section" data-frame="populated-editor">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <select class="text-body"><option>Open only</option><option>All</option></select>
+              <select class="text-body"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
+            </div>
+            <button class="btn-primary">Log activity</button>
+          </div>
+          <table class="activity-table">
+            <thead><tr>
+              <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
+              <th scope="col">Entered</th><th scope="col">Completed</th><th scope="col">By</th><th scope="col"></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="strong">Follow-up call</td>
+                <td class="body">Called to confirm renewal timeline.</td>
+                <td class="body">2026-09-01</td>
+                <td class="body">2026-08-15</td>
+                <td class="body">No</td>
+                <td class="body">Dana Smith</td>
+                <td><div class="row-actions">
+                  <button class="btn-secondary">Edit</button>
+                  <button class="btn-secondary">Mark complete</button>
+                  <button class="btn-secondary">Delete</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="strong">Site visit</td>
+                <td class="body">Scheduled site visit to review compliance documents.</td>
+                <td class="body">2026-08-20</td>
+                <td class="body">2026-08-10</td>
+                <td class="body">Yes — 2026-08-18</td>
+                <td class="body">Marcus Reed</td>
+                <td><div class="row-actions">
+                  <button class="btn-secondary">Edit</button>
+                  <button class="btn-secondary">Delete</button>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="strong">Email sent</td>
+                <td class="body">Sent updated COI request.</td>
+                <td class="body">2026-09-05</td>
+                <td class="body">2026-08-12</td>
+                <td class="body">No</td>
+                <td class="body">A. Whitfield</td>
+                <td><div class="row-actions">
+                  <button class="btn-secondary">Edit</button>
+                  <button class="btn-secondary">Mark complete</button>
+                  <button class="btn-secondary">Delete</button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="activity-cards">
+            <div class="card">
+              <div class="card-row"><span class="text-body-strong">Follow-up call</span><span class="text-caption">2026-09-01</span></div>
+              <div class="text-body">Called to confirm renewal timeline.</div>
+              <div class="text-caption">Entered 2026-08-15 · By Dana Smith · Not completed</div>
+              <div class="row-actions">
+                <button class="btn-secondary">Edit</button>
+                <button class="btn-secondary">Mark complete</button>
+                <button class="btn-secondary">Delete</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-row"><span class="text-body-strong">Site visit</span><span class="text-caption">2026-08-20</span></div>
+              <div class="text-body">Scheduled site visit to review compliance documents.</div>
+              <div class="text-caption">Entered 2026-08-10 · By Marcus Reed · Completed 2026-08-18</div>
+              <div class="row-actions">
+                <button class="btn-secondary">Edit</button>
+                <button class="btn-secondary">Delete</button>
+              </div>
+            </div>
+          </div>
+          <nav class="pagination" aria-label="Activity pages">
+            <button class="page-btn" aria-current="page">1</button>
+            <button class="page-btn">2</button>
+          </nav>
+        </section>
+
+        <!-- ============ populated-viewer ============ -->
+        <section class="frame-section" data-frame="populated-viewer">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <select class="text-body"><option>Open only</option><option>All</option></select>
+              <select class="text-body"><option>Follow-up date ↑</option><option>Follow-up date ↓</option></select>
+            </div>
+            <!-- No add control for Viewer role — absent, not disabled (R12/R28) -->
+          </div>
+          <table class="activity-table">
+            <thead><tr>
+              <th scope="col">Task</th><th scope="col">Note</th><th scope="col">Follow-up</th>
+              <th scope="col">Entered</th><th scope="col">Completed</th><th scope="col">By</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="strong">Follow-up call</td>
+                <td class="body">Called to confirm renewal timeline.</td>
+                <td class="body">2026-09-01</td>
+                <td class="body">2026-08-15</td>
+                <td class="body">No</td>
+                <td class="body">Dana Smith</td>
+                <!-- No edit/complete/delete controls for Viewer role -->
+              </tr>
+              <tr>
+                <td class="strong">Site visit</td>
+                <td class="body">Scheduled site visit to review compliance documents.</td>
+                <td class="body">2026-08-20</td>
+                <td class="body">2026-08-10</td>
+                <td class="body">Yes — 2026-08-18</td>
+                <td class="body">Marcus Reed</td>
+              </tr>
+            </tbody>
+          </table>
+          <nav class="pagination" aria-label="Activity pages">
+            <button class="page-btn" aria-current="page">1</button>
+          </nav>
+        </section>
+
+        <!-- ============ empty-first-use ============ -->
+        <section class="frame-section" data-frame="empty-first-use">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <select class="text-body"><option>Open only</option><option>All</option></select>
+            </div>
+            <button class="btn-primary">Log activity</button>
+          </div>
+          <div class="empty-state">
+            <p class="text-h3">No activity logged yet.</p>
+            <p class="text-body">Use "Log activity" to record the first entry for this record.</p>
+          </div>
+        </section>
+
+        <!-- ============ empty-filtered ============ -->
+        <section class="frame-section" data-frame="empty-filtered">
+          <div class="toolbar">
+            <div class="toolbar-group">
+              <select class="text-body"><option selected>Open only</option><option>All</option></select>
+            </div>
+            <button class="btn-primary">Log activity</button>
+          </div>
+          <div class="empty-state">
+            <p class="text-h3">No entries match this filter.</p>
+            <p class="text-body">Every entry for this record is already marked complete.</p>
+            <button class="btn-secondary">Clear filter</button>
+          </div>
+        </section>
+
+        <!-- ============ add-form-open ============ -->
+        <section class="frame-section" data-frame="add-form-open">
+          <div class="stack-16" style="max-width:480px;">
+            <p class="text-h3">Log activity</p>
+            <div class="field">
+              <label for="af-tasktype">Task type</label>
+              <select id="af-tasktype"><option>Choose a task type</option><option>Follow-up call</option><option>Site visit</option><option>Email sent</option></select>
+            </div>
+            <div class="field">
+              <label for="af-note">Note</label>
+              <textarea id="af-note" placeholder="What happened?"></textarea>
+            </div>
+            <div class="field">
+              <label for="af-followup">Follow-up date</label>
+              <input id="af-followup" type="text" placeholder="YYYY-MM-DD" value="2026-09-10">
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary">Save</button>
+              <button class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ add-form-validation-error ============ -->
+        <section class="frame-section" data-frame="add-form-validation-error">
+          <div class="stack-16" style="max-width:480px;">
+            <p class="text-h3">Log activity</p>
+            <div class="field has-error">
+              <label for="afe-tasktype">Task type</label>
+              <select id="afe-tasktype"><option>Choose a task type</option></select>
+              <p class="field-error">That task type isn't valid for this record.</p>
+            </div>
+            <div class="field">
+              <label for="afe-note">Note</label>
+              <textarea id="afe-note">Called to confirm renewal timeline.</textarea>
+            </div>
+            <div class="field has-error">
+              <label for="afe-followup">Follow-up date</label>
+              <input id="afe-followup" type="text" value="next tuesday">
+              <p class="field-error">Enter a valid date.</p>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary">Save</button>
+              <button class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ row-submitting ============ -->
+        <section class="frame-section" data-frame="row-submitting">
+          <table class="activity-table">
+            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="strong">Follow-up call</td>
+                <td class="body">Called to confirm renewal timeline.</td>
+                <td class="body">2026-09-01</td>
+                <td class="body">2026-08-15</td>
+                <td class="body">No</td>
+                <td class="body">Dana Smith</td>
+                <td><div class="row-actions">
+                  <span class="btn-disabled">Edit</span>
+                  <span class="btn-disabled">Mark complete</span>
+                  <span class="btn-disabled">Delete</span>
+                </div></td>
+              </tr>
+              <tr>
+                <td class="strong">Site visit</td>
+                <td class="body">Scheduled site visit to review compliance documents.</td>
+                <td class="body">2026-08-20</td>
+                <td class="body">2026-08-10</td>
+                <td class="body">Yes — 2026-08-18</td>
+                <td class="body">Marcus Reed</td>
+                <td><div class="row-actions">
+                  <button class="btn-secondary">Edit</button>
+                  <button class="btn-secondary">Delete</button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="text-caption btn-caption">Saving "Follow-up call" — other rows remain available.</p>
+        </section>
+
+        <!-- ============ delete-confirm ============ -->
+        <section class="frame-section" data-frame="delete-confirm">
+          <div class="dialog-backdrop">
+            <div class="dialog">
+              <p class="text-h3">Delete this activity entry?</p>
+              <p class="text-body" style="margin-top:12px;">This removes it from the list. It can be recovered by an administrator if needed.</p>
+              <div class="btn-row" style="margin-top:24px;">
+                <button class="btn-primary">Delete</button>
+                <button class="btn-secondary">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ error-dependency-down ============ -->
+        <section class="frame-section" data-frame="error-dependency-down">
+          <div class="error-block">
+            <p class="title">Activity could not be loaded.</p>
+            <p class="body">Something went wrong reaching the activity service. Your entries have not changed.</p>
+            <button class="btn-secondary">Retry</button>
+          </div>
+        </section>
+
+        <!-- ============ throttled ============ -->
+        <section class="frame-section" data-frame="throttled">
+          <div class="error-block">
+            <p class="title">Too many requests.</p>
+            <p class="body">Try again in 15s.</p>
+            <span class="btn-disabled">Retry</span>
+          </div>
+        </section>
+
+        <!-- ============ session-expired ============ -->
+        <section class="frame-section" data-frame="session-expired">
+          <div class="error-block">
+            <p class="title">Your session has ended.</p>
+            <p class="body">Sign in again to continue — your entry has been kept.</p>
+          </div>
+          <div class="stack-16" style="max-width:480px; margin-top:24px; opacity:0.85;">
+            <p class="text-h3">Log activity <span class="text-caption">(kept)</span></p>
+            <div class="field">
+              <label for="se-tasktype">Task type</label>
+              <select id="se-tasktype"><option>Follow-up call</option></select>
+            </div>
+            <div class="field">
+              <label for="se-note">Note</label>
+              <textarea id="se-note">Called to confirm renewal timeline.</textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ row-not-found ============ -->
+        <section class="frame-section" data-frame="row-not-found">
+          <table class="activity-table">
+            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td colspan="7">
+                  <div class="error-block" style="padding:12px;">
+                    <p class="body" style="margin:0;">This entry is no longer available.</p>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td class="strong">Email sent</td>
+                <td class="body">Sent updated COI request.</td>
+                <td class="body">2026-09-05</td>
+                <td class="body">2026-08-12</td>
+                <td class="body">No</td>
+                <td class="body">A. Whitfield</td>
+                <td><div class="row-actions">
+                  <button class="btn-secondary">Edit</button>
+                  <button class="btn-secondary">Mark complete</button>
+                  <button class="btn-secondary">Delete</button>
+                </div></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ============ offline-on-load ============ -->
+        <section class="frame-section" data-frame="offline-on-load">
+          <div class="error-block">
+            <p class="title">You're offline.</p>
+            <p class="body">Activity could not be loaded. Reconnect and try again.</p>
+            <button class="btn-secondary">Retry</button>
+          </div>
+        </section>
+
+        <!-- ============ offline-on-submit ============ -->
+        <section class="frame-section" data-frame="offline-on-submit">
+          <div class="stack-16" style="max-width:480px;">
+            <p class="text-h3">Log activity</p>
+            <div class="field">
+              <label for="off-tasktype">Task type</label>
+              <select id="off-tasktype"><option>Follow-up call</option></select>
+            </div>
+            <div class="field">
+              <label for="off-note">Note</label>
+              <textarea id="off-note">Called to confirm renewal timeline.</textarea>
+            </div>
+            <div class="error-block">
+              <p class="body" style="margin:0;">Can't save while offline. Try again once you're back online.</p>
+            </div>
+            <div class="btn-row">
+              <span class="btn-disabled">Save</span>
+              <button class="btn-secondary">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ success-confirmation ============ -->
+        <section class="frame-section" data-frame="success-confirmation">
+          <table class="activity-table">
+            <thead><tr><th>Task</th><th>Note</th><th>Follow-up</th><th>Entered</th><th>Completed</th><th>By</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="strong">Follow-up call</td>
+                <td class="body">Called to confirm renewal timeline.</td>
+                <td class="body">2026-09-01</td>
+                <td class="body">2026-08-15</td>
+                <td class="body">No</td>
+                <td class="body">Dana Smith</td>
+                <td>
+                  <span class="text-caption" style="color:var(--status-active);">✓ Saved</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <footer class="frame-label text-caption" id="frame-label">UNIT-CMS-0008 · populated-editor · 1440px · light</footer>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Switcher only — shows/hides already-specified frame sections and toggles
+  // theme/width. No validation, no network calls, no timers, no storage, no
+  // computed values, no state machine of its own.
+  var state = { frame: 'populated-editor', theme: 'light', width: '1440' };
+
+  function updateLabel() {
+    document.getElementById('frame-label').textContent =
+      'UNIT-CMS-0008 · ' + state.frame + ' · ' + state.width + 'px · ' + state.theme;
+  }
+
+  function setFrame(name) {
+    state.frame = name;
+    var sections = document.querySelectorAll('.frame-section');
+    for (var i = 0; i < sections.length; i++) {
+      sections[i].classList.toggle('active', sections[i].getAttribute('data-frame') === name);
+    }
+    updateLabel();
+  }
+
+  function setTheme(theme) {
+    state.theme = theme;
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-light-btn').setAttribute('aria-pressed', theme === 'light');
+    document.getElementById('theme-dark-btn').setAttribute('aria-pressed', theme === 'dark');
+    updateLabel();
+  }
+
+  function setWidth(width) {
+    state.width = width;
+    document.getElementById('canvas').setAttribute('data-width', width);
+    document.getElementById('width-360-btn').setAttribute('aria-pressed', width === '360');
+    document.getElementById('width-768-btn').setAttribute('aria-pressed', width === '768');
+    document.getElementById('width-1440-btn').setAttribute('aria-pressed', width === '1440');
+    updateLabel();
+  }
+
+  updateLabel();
+</script>
+</body>
+</html>
