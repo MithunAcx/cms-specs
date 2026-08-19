@@ -1,3 +1,7 @@
+# COPIED VERBATIM from
+# projects/contact-management/capabilities/CAP-CMS-0003-partner-records-management/units/UNIT-CMS-0005-partner-records-api/interfaces/openapi.yaml
+# on 2026-08-19. Do not edit here. If this has drifted from the source, re-copy it —
+# never patch the copy to match what you think the source now says.
 openapi: 3.1.0
 info:
   title: Partner Records API

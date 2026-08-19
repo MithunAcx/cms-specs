@@ -13,16 +13,10 @@ consumes:
       through this contract. Satisfies R1-R30, R31-R41, R43-R57.
     generated_from:
       source: UNIT-CMS-0005.openapi.yaml
-      status: PENDING — UNIT-CMS-0005 has not yet authored its own interfaces/openapi.yaml
-        (that unit is still at status draft/framed in this parallel work stream).
-        This unit's design.md instead names the endpoint set from
-        capability-design.md's Unified API Contract table (XD-0001..XD-0004),
-        which is the agreed shape both units were designed against.
+      status: COPIED — see interfaces/UNIT-CMS-0005.openapi.yaml (byte-identical
+        copy taken 2026-08-19, including the corrected cursor-based pagination on
+        listBrokers/listAgents — limit/cursor in, items/next_cursor out).
       owner: "@MithunAcx"
-      action_required: >
-        Re-run architect-unit-interfaces for UNIT-CMS-0006 once UNIT-CMS-0005's own
-        interfaces/openapi.yaml exists, to replace this pending note with a
-        byte-identical copy per shared-spec-conventions' consumer-unit rule.
     error_mapping:
       - code: conflict_version_mismatch
         http_status: 409
