@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cms.example/schemas/UNIT-CMS-0011/validation-report.schema.json",
+  "title": "MigrationValidationReport",
+  "description": "The per-source-table count/checksum reconciliation report produced by the Validator (design.md, Flow 'Validation report'). Satisfies R11. Carries only counts, keys, and outcome codes — never a personal-data field (requirements.md R22), so this report itself needs no special handling to view or store.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["runId", "generatedAt", "runStatus", "tables"],
+  "properties": {
+    "runId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The migration run this report was generated against."
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC RFC 3339 timestamp of report generation."
+    },
+    "runStatus": {
+      "type": "string",
+      "enum": ["in-progress", "completed"],
+      "description": "Whether the run this report describes had reached completed status at generation time. A report generated against 'in-progress' must be read as partial, never as a final reconciliation (design.md, Flow 'Validation report' failure path)."
+    },
+    "tables": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/TableReconciliation" }
+    }
+  },
+  "$defs": {
+    "TableReconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceTable",
+        "sourceRecordCount",
+        "sourceChecksum",
+        "migratedCount",
+        "skippedCount",
+        "failedCount",
+        "unaccountedCount",
+        "checksumMatch"
+      ],
+      "properties": {
+        "sourceTable": {
+          "type": "string",
+          "description": "The legacy source table this row reconciles, e.g. 'pp_brokerage', 'pp_agency_cga'.",
+          "minLength": 1
+        },
+        "sourceRecordCount": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "description": "Count of rows in this table's staged snapshot."
+        },
+        "sourceChecksum": {
+          "type": "string",
+          "description": "A field-level checksum of the staged snapshot, used to detect a mismatch against the migrated target content beyond a simple count comparison."
+        },
+        "migratedCount": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "description": "Count of MigrationLog rows for this sourceTable with outcome 'migrated'."
+        },
+        "skippedCount": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "description": "Count of MigrationLog rows for this sourceTable with outcome 'skipped'. Reported separately — never folded into migratedCount (design.md, Flow 'Validation report')."
+        },
+        "failedCount": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "description": "Count of MigrationLog rows for this sourceTable with outcome 'failed'."
+        },
+        "unaccountedCount": {
+          "type": "integer",
+          "format": "int64",
+          "minimum": 0,
+          "description": "sourceRecordCount minus (migratedCount + skippedCount + failedCount) — a staged row with no terminal MigrationLog row at all. Non-zero here is the report's headline finding: the phase controller's own completion check should never permit this (design.md, Flow 'Validation report')."
+        },
+        "checksumMatch": {
+          "type": "boolean",
+          "description": "Whether the migrated target content's own checksum, recomputed from the target-schema records this sourceTable's migrated rows point to (via MigrationLog.targetId), matches sourceChecksum."
+        },
+        "discrepancyNotes": {
+          "type": "array",
+          "description": "Human-readable notes on any mismatch found — never a field value itself, only identifying keys and outcome codes, per data-classification rules.",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "runId": "018f2e6a-7a10-7c40-9a1e-2b7c9a3d1e40",
+      "generatedAt": "2026-09-01T06:00:00Z",
+      "runStatus": "completed",
+      "tables": [
+        {
+          "sourceTable": "pp_agency",
+          "sourceRecordCount": 312,
+          "sourceChecksum": "sha256:9f2c...",
+          "migratedCount": 305,
+          "skippedCount": 4,
+          "failedCount": 3,
+          "unaccountedCount": 0,
+          "checksumMatch": true,
+          "discrepancyNotes": []
+        },
+        {
+          "sourceTable": "pp_agency_cga",
+          "sourceRecordCount": 58,
+          "sourceChecksum": "sha256:1ab4...",
+          "migratedCount": 54,
+          "skippedCount": 0,
+          "failedCount": 3,
+          "unaccountedCount": 1,
+          "checksumMatch": false,
+          "discrepancyNotes": [
+            "1 staged pp_agency_cga row has no terminal MigrationLog row — investigate before declaring cutover complete."
+          ]
+        }
+      ]
+    }
+  ]
+}

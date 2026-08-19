@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cms.example/schemas/UNIT-CMS-0011/migration-log-entry.schema.json",
+  "title": "MigrationLogEntry",
+  "description": "The payload shape both UNIT-CMS-0011's own migration writes and UNIT-CMS-0012's logging call (ADR-0001) supply to record one migration outcome. Mirrors the migration_log table (interfaces/0002_migration_log.sql). Satisfies R9, R10.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourceTable": {
+      "type": "string",
+      "description": "The legacy source table/entity type this outcome is about, e.g. 'pp_brokerage', 'pp_agency_cga', 'pp_agent' (UNIT-CMS-0012's CGA-reconciliation source).",
+      "minLength": 1
+    },
+    "sourceId": {
+      "type": "string",
+      "description": "The legacy record's identifying key, as a string regardless of its native legacy type (int or nvarchar) — required so DR-6's Agency_ID type mismatch never has to be reconciled in this contract.",
+      "minLength": 1
+    },
+    "outcome": {
+      "type": "string",
+      "description": "The terminal state this source record reached. Closed set — matches migration_log_outcome.",
+      "enum": ["migrated", "skipped", "failed"]
+    },
+    "reason": {
+      "type": ["string", "null"],
+      "description": "Required (non-null) when outcome is 'skipped' or 'failed'; must be null when outcome is 'migrated'. A closed set of reason codes is expected (design.md § Cross-cutting, error model): unmapped_lookup_value, unrecognized_history_value, parent_not_migrated, agency_id_unresolvable, phone_unparseable, missing_required_date, target_write_rejected. Never free text and never a personal-data field (R22).",
+      "enum": [null, "unmapped_lookup_value", "unrecognized_history_value", "parent_not_migrated", "agency_id_unresolvable", "phone_unparseable", "missing_required_date", "target_write_rejected"]
+    },
+    "targetId": {
+      "type": ["string", "null"],
+      "description": "Required (non-null) when outcome is 'migrated' — the newly-created target-schema record's id (UNIT-CMS-0005's schema). Must be null for 'skipped'/'failed'. Additive field beyond CAP-CMS-0006's capability-design MigrationLog shape; see design.md Data model.",
+      "minLength": 1
+    },
+    "processedBy": {
+      "type": "string",
+      "description": "Which unit's logging call produced this row — a provenance tag, not a second writer of the underlying table (XD-0002, ADR-0001).",
+      "enum": ["legacy-data-etl", "cga-reconciliation"]
+    },
+    "processedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC RFC 3339 timestamp of when this outcome was recorded."
+    }
+  },
+  "required": ["sourceTable", "sourceId", "outcome", "processedBy", "processedAt"],
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "migrated" } } },
+      "then": {
+        "properties": {
+          "reason": { "const": null },
+          "targetId": { "type": "string", "minLength": 1 }
+        },
+        "required": ["targetId"]
+      }
+    },
+    {
+      "if": { "not": { "properties": { "outcome": { "const": "migrated" } } } },
+      "then": {
+        "properties": {
+          "reason": { "type": "string" },
+          "targetId": { "const": null }
+        },
+        "required": ["reason"]
+      }
+    }
+  ],
+  "examples": [
+    {
+      "sourceTable": "pp_agency",
+      "sourceId": "48213",
+      "outcome": "migrated",
+      "reason": null,
+      "targetId": "018f2e6a-8f3e-7c9a-9c1a-3b2a1e9d7c40",
+      "processedBy": "legacy-data-etl",
+      "processedAt": "2026-09-01T03:14:07Z"
+    },
+    {
+      "sourceTable": "pp_agent",
+      "sourceId": "77021",
+      "outcome": "failed",
+      "reason": "agency_id_unresolvable",
+      "targetId": null,
+      "processedBy": "cga-reconciliation",
+      "processedAt": "2026-09-02T04:02:11Z"
+    }
+  ]
+}

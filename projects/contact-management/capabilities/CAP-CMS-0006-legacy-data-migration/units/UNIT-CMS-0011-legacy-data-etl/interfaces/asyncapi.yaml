@@ -1,0 +1,160 @@
+asyncapi: 3.0.0
+info:
+  title: UNIT-CMS-0011 — Legacy Data ETL — phase-completion signal
+  version: 1.0.0
+  description: >
+    Publishes one event per migration phase, once every staged record in that
+    phase has reached a terminal MigrationLog outcome (design.md, "Event
+    durability"). UNIT-CMS-0012 subscribes to the agency-phase event as the
+    XD-0003 gate before it may begin its own CGA reconciliation pass. Satisfies
+    R8, R10.
+    Transport: SQS/SNS (projects/contact-management/stack.md). Delivery is
+    at-least-once (10-platform.md default); this project's stack.md states
+    nothing that overrides it.
+
+defaultContentType: application/json
+
+servers:
+  migrationEventBus:
+    host: UNRESOLVED
+    protocol: sns
+    description: >
+      Concrete topic ARN/host is an engineering-repo provisioning detail, not a
+      value this repo may invent (10-platform.md — never a concrete endpoint).
+      Owner: whoever provisions CMS-legacy-data-migration's infrastructure
+      (stack.md names AWS CDK as the provisioning tool).
+
+channels:
+  migrationPhaseCompleted:
+    address: cms.migration.phase.completed
+    description: >
+      One message per phase completion, in past tense per the platform naming
+      convention (10-platform.md).
+    messages:
+      migrationPhaseCompleted:
+        $ref: '#/components/messages/MigrationPhaseCompleted'
+
+operations:
+  publishMigrationPhaseCompleted:
+    action: send
+    channel:
+      $ref: '#/channels/migrationPhaseCompleted'
+    summary: >
+      Published by UNIT-CMS-0011's phase controller once the Validator confirms
+      every staged record in the named phase has a terminal MigrationLog row.
+      Satisfies R8, R10.
+    messages:
+      - $ref: '#/channels/migrationPhaseCompleted/messages/migrationPhaseCompleted'
+  subscribeMigrationPhaseCompleted:
+    action: receive
+    channel:
+      $ref: '#/channels/migrationPhaseCompleted'
+    summary: >
+      UNIT-CMS-0012 subscribes and waits for the `agency` phase's event before
+      starting its own reconciliation pass (XD-0003). No other subscriber is
+      defined for this unit.
+    messages:
+      - $ref: '#/channels/migrationPhaseCompleted/messages/migrationPhaseCompleted'
+
+components:
+  messages:
+    MigrationPhaseCompleted:
+      messageId: cms.migration.phase.completed.v1
+      title: MigrationPhaseCompleted
+      summary: One migration phase has reached a durably-confirmed completed state.
+      headers:
+        type: object
+        additionalProperties: false
+        required: [correlationId, dedupeKey, sequenceNumber]
+        properties:
+          correlationId:
+            type: string
+            format: uuid
+            description: >
+              Identifies the migration run this phase belongs to; the same
+              value appears on every phase-completion event within one run.
+          dedupeKey:
+            type: string
+            description: >
+              `<runId>:<phase>` — fixed before the event is derived, per
+              design.md's idempotency walk; a redelivered copy of the same
+              event carries the same key so a subscriber can discard the
+              duplicate rather than re-triggering work.
+          sequenceNumber:
+            type: integer
+            format: int64
+            minimum: 1
+            description: >
+              Monotonic per `runId` — this run's phases are strictly ordered
+              (lookups, brokerage/broker, agency/agent/CGA, activity), so a
+              subscriber can detect an out-of-order or missing prior phase
+              rather than assuming delivery order is guaranteed
+              (10-platform.md — consumers must never assume ordering unless the
+              transport guarantees it per key and stack.md says it is relied
+              upon; this project's stack.md does not, so the sequence number is
+              this event's own ordering guarantee, not the transport's).
+      payload:
+        $ref: '#/components/schemas/MigrationPhaseCompletedPayload'
+
+  schemas:
+    MigrationPhaseCompletedPayload:
+      type: object
+      additionalProperties: false
+      required: [runId, phase, completedAt, recordCounts]
+      properties:
+        runId:
+          type: string
+          format: uuid
+          description: Identifies the migration run this phase belongs to.
+        phase:
+          type: string
+          description: Which phase completed. Closed set, in the order this unit runs them.
+          enum: [reference-lookups, brokerage-and-broker, agency-agent-and-cga, activity]
+        completedAt:
+          type: string
+          format: date-time
+          description: UTC RFC 3339 timestamp of when the phase controller confirmed completion.
+        recordCounts:
+          type: object
+          additionalProperties: false
+          required: [staged, migrated, skipped, failed]
+          description: >
+            Per-outcome counts for this phase, drawn from the same durable
+            MigrationLog rows the completion check itself used — never a
+            separate, possibly-stale tally.
+          properties:
+            staged:
+              type: integer
+              format: int64
+              minimum: 0
+            migrated:
+              type: integer
+              format: int64
+              minimum: 0
+            skipped:
+              type: integer
+              format: int64
+              minimum: 0
+            failed:
+              type: integer
+              format: int64
+              minimum: 0
+      examples:
+        - runId: "018f2e6a-7a10-7c40-9a1e-2b7c9a3d1e40"
+          phase: agency-agent-and-cga
+          completedAt: "2026-09-01T04:22:53Z"
+          recordCounts:
+            staged: 312
+            migrated: 305
+            skipped: 4
+            failed: 3
+
+x-dead-letter-behaviour: >
+  A message that a subscriber cannot process after the transport's configured
+  retry attempts is routed to this channel's dead-letter queue (provisioned per
+  stack.md's AWS CDK convention; concrete queue name is an engineering-repo
+  detail, not invented here) rather than being dropped. Because every
+  phase-completion event is re-derivable from MigrationLog's own durable state
+  (design.md, "Event durability"), a dead-lettered event can always be
+  regenerated by re-running the phase controller's completion check — it is
+  not the sole record of the phase having completed.
