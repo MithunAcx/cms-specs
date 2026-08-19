@@ -85,3 +85,24 @@ None — every frame above is expressible with the reference's own component
 vocabulary (`.field`/`.inp`, `.btn`/`.btn-primary`/`.btn-secondary`, `.panel`/
 `.panel-pad`, `.dialog`, `.badge`), extended only where the reference has no
 counterpart at all — see `components.md`.
+
+## Interaction model (corrected 2026-08-19)
+
+The mockup was originally a state switcher only — the frame dropdown swapped
+between 17 static, pre-baked HTML snapshots, mirroring the reference's own
+`#view-login`/`#view-app` toggle but with none of the reference's actual
+seed-data-backed logic. It is now a real, click-through prototype: typing
+credentials and submitting the sign-in form runs an in-memory (simulated)
+`POST /auth/login` against demo seed users, transitions through
+`sign-in-submitting`, and lands on the credential-rejected, retry-eligible, or
+signed-in outcome exactly as `states.md` and `design.md`'s Flows describe;
+change-password and the session-expiry/silent-refresh flow (R8/R9/R10) work
+the same way. The frame dropdown still works exactly as before — selecting a
+frame jumps straight to that state — so every row above remains reachable
+either way. No frame was added, removed, or renamed, and no documented
+state's meaning changed; only how each is reached did. Scenario controls
+(simulate offline; force the next submit to fail with a 5xx/timeout/429) let
+a reviewer exercise the offline and retry-eligible rows without a backend.
+No MFA / account-lock / rate-limit state exists here, because none is named
+in `requirements.md` or `states.md` — a 429 folds into the existing
+retry-eligible state per R17, not a new one.

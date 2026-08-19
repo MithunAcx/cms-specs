@@ -141,3 +141,25 @@ than two components that would otherwise duplicate their layout.
 | Role-gated control | R4, R5 |
 | Session banner | R1, R6 (offline path on sign-in touches R2's failure surface), R10 |
 | App header (reused) | R3 |
+
+## Interaction addenda (2026-08-19) — mockup only, not new components
+
+Two additions were needed to make the mockup a real click-through prototype
+rather than a state switcher; neither changes a documented state or adds a
+component to the vocabulary above:
+
+- **Client-side required-field validation** on the credential form (both
+  sign-in and change-password) reuses the existing `.inp.err`/`.help-err`
+  pair with a generic "This field is required." message. This is the
+  convenience validation `design.md`'s cross-cutting section already
+  describes ("required fields, minimum password shape"); it is a micro-state
+  layered on `populated`, not a new row in `states.md`.
+- **Session diagnostics panel**, shown only inside the signed-in shell, is
+  scaffolding that simulates R8/R9/R10's silent-refresh-and-coalesce
+  behaviour (expire the access token, force a refresh failure, fire two
+  concurrent calls) since there is no real UNIT-CMS-0001 to call from a
+  static file. It is visually distinct from the design system (plain
+  monospace log, muted captions) precisely so it reads as demo tooling, not
+  a specified screen — consistent with `frame-inventory.md`'s "What must NOT
+  be drawn" list, which this panel does not violate because it draws no
+  entity screen, only a log of simulated HTTP outcomes.
